@@ -62,11 +62,11 @@ class Storage:
             rows = self.db.execute("SELECT * FROM history ORDER BY started DESC LIMIT ?", (limit,)).fetchall()
         return [dict(r) for r in rows]
 
-    def last_rx(self, reflector, limit=4):
-        """Most recent RX entries heard on one reflector."""
+    def last_heard(self, reflector, limit=4):
+        """Most recent overs on one reflector, received or our own transmissions."""
         with self.lock:
             rows = self.db.execute(
-                "SELECT * FROM history WHERE direction = 'RX' AND reflector = ? ORDER BY started DESC LIMIT ?",
+                "SELECT * FROM history WHERE reflector = ? ORDER BY started DESC LIMIT ?",
                 (reflector, limit)).fetchall()
         return [dict(r) for r in rows]
 

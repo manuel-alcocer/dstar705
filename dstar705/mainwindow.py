@@ -626,16 +626,25 @@ class MainWindow(QMainWindow):
     def _transmitting(self, tx):
         self.leds["tx"].set("red" if tx else "off")
         ref = self.current_reflector()
+        base = self.my_call.split()[0] if self.my_call.split() else "?"
         if tx:
             self.tx_since = time.time()
-            self.tx_entry = self.storage.start_entry("TX", self.my_call or "?", "", ref, self.r1, self.r2)
+            self.tx_entry = self.storage.start_entry("TX", base, "", ref, self.r1, self.r2)
+            self.lookup.request(base)  # our own name, for the last heard list
             self.log(f"TX → {ref or self.to}")
         elif self.tx_entry:
-            self.storage.update_entry(self.tx_entry, ended=time.time())
+            own = self.storage.cached_name(base) or {}
+            self.storage.update_entry(self.tx_entry, ended=time.time(), name=own.get("name") or "",
+                                      location=own.get("location") or "")
             self.log(f"Fin TX ({int(time.time() - self.tx_since)}s)")
             self.tx_entry = None
+            # Our over counts as the reflector's last heard right away; the reflector's
+            # dashboard catches up a few seconds later
+            QTimer.singleShot(3000, self.poller.refresh_now)
         self.screen.update_state(tx=tx, tx_since=self.tx_since, to=ref or self.to)
         self._load_history()
+        if not tx:
+            self._update_last_heard()
 
     def _name_resolved(self, callsign, name, location):
         if self.rx_info and self.rx_info["callsign"].split()[0] == callsign:
@@ -689,7 +698,7 @@ class MainWindow(QMainWindow):
                 remote.append({"callsign": h["callsign"].strip(), "suffix": "", "name": h.get("name", ""),
                                "location": "", "message": "", "ts": ts, "via": h.get("via", "")})
         local = []
-        for r in self.storage.last_rx(ref, 8) if ref else []:
+        for r in self.storage.last_heard(ref, 8) if ref else []:
             local.append({"callsign": r["callsign"], "suffix": r["suffix"] or "", "name": r["name"] or "",
                           "location": r["location"] or "", "message": r["message"] or "",
                           "ts": r["ended"] or r["started"], "via": ""})
