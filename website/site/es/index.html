@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QDStar — IC-705 D-STAR Terminal Mode</title>
+<meta name="description" content="QDStar: controlador de escritorio y gateway D-STAR integrado para el Icom IC-705 en Terminal Mode, para Windows y Linux.">
+<link rel="alternate" hreflang="en" href="/">
+<link rel="alternate" hreflang="es" href="/es/">
+<link rel="icon" href="/img/icon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/es/"><img src="/img/icon.png" alt="">QDStar</a>
+    <nav>
+      <a href="#funciones">Funciones</a>
+      <a href="#descarga">Descarga</a>
+      <a class="keep" href="/es/manual.html">Manual</a>
+      <a href="https://github.com/manuel-alcocer/qdstar">GitHub</a>
+      <a class="lang" href="/?lang=en" hreflang="en" lang="en">EN</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <div class="leds" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="off"></span></div>
+      <h1>QDStar<small>IC-705 · D-STAR Terminal Mode</small></h1>
+      <p class="lead">Controlador de escritorio y gateway D-STAR integrado para el Icom IC-705. Enlaza reflectores, mira quién está en el aire y desde dónde, y sigue las posiciones D-PRS y las estaciones meteorológicas, desde Windows o Linux.</p>
+      <div class="buttons">
+        <a class="btn primary" href="#descarga">Descargar</a>
+        <a class="btn" href="/es/manual.html">Leer el manual</a>
+      </div>
+      <p class="version" data-version="Última versión: {v}">Software libre · GPL-3.0</p>
+    </div>
+    <div class="photos">
+      <img src="/img/photo-history.jpg" width="673" height="1398" alt="QDStar enlazado a DCS214 D, recibiendo una estación de California, con la pestaña de histórico abierta">
+      <img src="/img/photo-weather.jpg" width="746" height="1382" alt="QDStar enlazado a DCS214 D con la pestaña de meteo mostrando una estación meteorológica D-PRS">
+    </div>
+  </div>
+
+  <section id="funciones">
+    <h2>Funciones</h2>
+    <div class="grid">
+      <div class="card"><h3>Por WiFi</h3><p>Habla con la radio con el protocolo de red de Icom (control y CI-V, sin audio). No hace falta wfview.</p></div>
+      <div class="card"><h3>Gateway integrado</h3><p>Terminal Mode por USB con su propio gateway: DPlus (REF), DCS (DCS, XLX) y DExtra (XRF). Sin DStarRepeater ni ircDDBGateway.</p></div>
+      <div class="card"><h3>Modos INT y EXT</h3><p>Usa el gateway interno de la radio con un servidor G3, o enlaza reflectores desde el PC. Se cambia con un clic.</p></div>
+      <div class="card"><h3>Pantalla del reflector</h3><p>Estado y nodos del reflector, la estación en el aire con nombre, localidad, distancia y rumbo, y los últimos oídos del reflector.</p></div>
+      <div class="card"><h3>D-PRS</h3><p>Posiciones, objetos, ítems e informes meteorológicos recibidos, también los reenviados. Gestiona tu propia baliza D-PRS desde la app.</p></div>
+      <div class="card"><h3>Meteo</h3><p>Una ficha por cada estación meteorológica D-PRS: temperatura, humedad, presión, lluvia y viento.</p></div>
+      <div class="card"><h3>Histórico</h3><p>Se guarda cada pasada: hora, indicativo, nombre, reflector, duración, mensaje y localidad.</p></div>
+      <div class="card"><h3>Windows y Linux</h3><p>Instalador para Windows; .deb, AppImage y tar.gz para Linux x86-64 y ARM64 (Raspberry Pi y otros mini PC).</p></div>
+      <div class="card"><h3>Español e inglés</h3><p>La interfaz sigue el idioma del sistema. Se aceptan traducciones nuevas.</p></div>
+    </div>
+  </section>
+
+  <section id="capturas">
+    <h2>Capturas</h2>
+    <div class="shots">
+      <figure><img src="/img/es-tab-history.png" width="404" height="420" alt="Pestaña Histórico" loading="lazy"><figcaption>Histórico de pasadas</figcaption></figure>
+      <figure><img src="/img/es-tab-dprs.png" width="404" height="250" alt="Pestaña D-PRS" loading="lazy"><figcaption>Informes D-PRS recibidos</figcaption></figure>
+      <figure><img src="/img/es-tab-weather.png" width="404" height="150" alt="Pestaña Meteo" loading="lazy"><figcaption>Estaciones meteorológicas D-PRS</figcaption></figure>
+      <figure><img src="/img/es-settings.png" width="550" height="592" alt="Ajustes" loading="lazy"><figcaption>Ajustes</figcaption></figure>
+      <figure><img src="/img/es-reflectors.png" width="560" height="460" alt="Gestión de reflectores" loading="lazy"><figcaption>Gestión de reflectores</figcaption></figure>
+    </div>
+    <p style="color:var(--dim);font-size:14px">En estas imágenes se ocultan los indicativos de otras estaciones.</p>
+  </section>
+
+  <section id="descarga">
+    <h2>Descarga</h2>
+    <table class="dl">
+      <tr><th>Sistema</th><th>Archivos</th></tr>
+      <tr><td>Windows 10/11 x64</td><td>
+        <a data-asset="-windows-x64-setup.exe" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Instalador (.exe)</a> ·
+        <a data-asset="-windows-x64-portable.zip" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Portable (.zip)</a></td></tr>
+      <tr><td>Linux x86-64</td><td>
+        <a data-asset="_amd64.deb" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.deb</a> ·
+        <a data-asset="-x86_64.AppImage" href="https://github.com/manuel-alcocer/qdstar/releases/latest">AppImage</a> ·
+        <a data-asset="-linux-amd64.tar.gz" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.tar.gz</a></td></tr>
+      <tr><td>Linux ARM64<br><small style="color:var(--dim)">Raspberry Pi OS bookworm, Debian 12+, Ubuntu 22.04+</small></td><td>
+        <a data-asset="_arm64.deb" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.deb</a> ·
+        <a data-asset="-aarch64.AppImage" href="https://github.com/manuel-alcocer/qdstar/releases/latest">AppImage</a> ·
+        <a data-asset="-linux-arm64.tar.gz" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.tar.gz</a></td></tr>
+    </table>
+    <p>Todas las versiones y sus novedades están en la <a href="https://github.com/manuel-alcocer/qdstar/releases">página de publicaciones</a>. La instalación y la configuración de la radio se explican en el <a href="/es/manual.html#instalacion">manual</a>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>QDStar · Manuel Alcocer Jiménez, EA7KLX · Sevilla, España</span>
+    <span><a href="https://github.com/manuel-alcocer/qdstar">Código fuente</a> · GPL-3.0-or-later</span>
+  </div>
+</footer>
+<script src="/latest.js" defer></script>
+</body>
+</html>

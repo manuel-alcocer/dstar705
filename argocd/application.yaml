@@ -1,0 +1,25 @@
+# ArgoCD Application for the QDStar website. It lives in this repo; the
+# app-of-apps entry in k8s-home-apps (deployments/qdstar.yml) points ArgoCD at
+# this directory, so syncing the parent creates this Application, which then
+# deploys deploy/k8s into the `qdstar` namespace.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qdstar
+  namespace: argo
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/manuel-alcocer/qdstar.git'
+    targetRevision: main
+    path: deploy/k8s
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: qdstar
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: false
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual de QDStar</title>
+<meta name="description" content="Manual de usuario de QDStar, el controlador y gateway D-STAR Terminal Mode para el Icom IC-705.">
+<link rel="alternate" hreflang="en" href="/manual.html">
+<link rel="alternate" hreflang="es" href="/es/manual.html">
+<link rel="icon" href="/img/icon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/es/"><img src="/img/icon.png" alt="">QDStar</a>
+    <nav>
+      <a href="/es/#funciones">Funciones</a>
+      <a href="/es/#descarga">Descarga</a>
+      <a class="keep here" href="/es/manual.html">Manual</a>
+      <a href="https://github.com/manuel-alcocer/qdstar">GitHub</a>
+      <a class="lang" href="/manual.html" hreflang="en" lang="en">EN</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap manual">
+  <aside class="toc">
+    <ol>
+      <li><a href="#que-es">Qué es QDStar</a></li>
+      <li><a href="#instalacion">Instalación</a></li>
+      <li><a href="#radio">Configurar la radio</a></li>
+      <li><a href="#primer-arranque">Primer arranque</a></li>
+      <li><a href="#ventana">La ventana principal</a></li>
+      <li><a href="#modos">Modos INT y EXT</a></li>
+      <li><a href="#reflectores">Reflectores</a></li>
+      <li><a href="#historico">Histórico y log</a></li>
+      <li><a href="#dprs">D-PRS y meteo</a></li>
+      <li><a href="#ajustes">Ajustes</a></li>
+      <li><a href="#actualizaciones">Actualizaciones</a></li>
+      <li><a href="#problemas">Problemas frecuentes</a></li>
+      <li><a href="#colaborar">Colaborar</a></li>
+    </ol>
+  </aside>
+
+  <article class="doc">
+    <h1>Manual</h1>
+    <p class="lead">QDStar para el Icom IC-705 · Windows y Linux</p>
+
+    <h2 id="que-es">Qué es QDStar</h2>
+    <p>QDStar controla un Icom <strong>IC-705</strong> en <strong>Terminal Mode</strong> D-STAR desde un ordenador con Windows o Linux:</p>
+    <ul>
+      <li>Habla con la radio por <strong>WiFi</strong> con el protocolo de red de Icom: los canales de control y CI-V, sin audio. Sustituye a wfview para D-STAR.</li>
+      <li>Lleva su propio <strong>gateway</strong> para Terminal Mode por USB, así que no necesitas DStarRepeater, ircDDBGateway ni ningún otro servicio. Enlaza reflectores por <strong>DPlus</strong> (REF), <strong>DCS</strong> (DCS, XLX) y <strong>DExtra</strong> (XRF).</li>
+      <li>Muestra quién está en el aire, con nombre, localidad, distancia y rumbo, y guarda un histórico de cada pasada.</li>
+      <li>Recoge las posiciones <strong>D-PRS</strong> y los informes meteorológicos que llegan con la voz, y gestiona tu propia baliza D-PRS.</li>
+    </ul>
+
+    <h2 id="instalacion">Instalación</h2>
+    <p>Descarga el archivo de tu sistema en la <a href="/es/#descarga">sección de descargas</a> o en la <a href="https://github.com/manuel-alcocer/qdstar/releases">página de publicaciones</a>.</p>
+    <h3>Windows 10/11 (x64)</h3>
+    <ul>
+      <li><strong>Instalador</strong> (<code>…-windows-x64-setup.exe</code>): instala QDStar para tu usuario y no pide permisos de administrador. Si QDStar ya está instalado, te ofrece actualizar, reinstalar o desinstalar. Al actualizar se conservan tus ajustes, el histórico y los reflectores.</li>
+      <li><strong>Portable</strong> (<code>…-portable.zip</code>): descomprímelo donde quieras y ejecuta <code>qdstar.exe</code>.</li>
+    </ul>
+    <p>La primera vez puede avisarte Windows SmartScreen, porque el programa no está firmado. Elige <em>Más información → Ejecutar de todas formas</em>.</p>
+    <h3>Linux (x86-64 y ARM64)</h3>
+    <ul>
+      <li><strong>.deb</strong> (Debian, Ubuntu, Raspberry Pi OS): <code>sudo apt install ./qdstar_x.y.z_amd64.deb</code>. QDStar aparece después en el menú de aplicaciones.</li>
+      <li><strong>AppImage</strong>: dale permiso de ejecución (<code>chmod +x QDStar-*.AppImage</code>) y ábrelo.</li>
+      <li><strong>tar.gz</strong>: descomprímelo y ejecuta <code>qdstar/qdstar</code>.</li>
+    </ul>
+    <p>Para el modo EXT tu usuario necesita acceso a los puertos serie USB de la radio:</p>
+    <p><code>sudo usermod -aG dialout $USER</code> en Debian, Ubuntu y Raspberry Pi OS, o el grupo <code>uucp</code> en Arch. Después cierra la sesión y vuelve a entrar.</p>
+    <p>Las versiones ARM64 funcionan en Raspberry Pi OS bookworm, Debian 12 o posterior y Ubuntu 22.04 o posterior.</p>
+
+    <h2 id="radio">Configurar la radio</h2>
+    <h3>Red (los dos modos)</h3>
+    <ol>
+      <li>Conecta el IC-705 a tu red WiFi (<em>SET › WLAN Set</em>) y dale una IP fija, o resérvala en el router.</li>
+      <li>En <em>WLAN Set › Remote Settings</em>, pon <strong>Network Control</strong> en ON y crea un <strong>Network User</strong> con usuario y contraseña.</li>
+    </ol>
+    <h3>Modo INT: gateway interno por WiFi</h3>
+    <ol>
+      <li><em>DV GW › Gateway Select</em>: <strong>Internal Gateway (WLAN)</strong>.</li>
+      <li><em>DV GW › Internal Gateway › Gateway Repeater (Server/IP/Domain)</em>: tu servidor G3 de Terminal Mode, por ejemplo <code>server1.dstar.es</code>.</li>
+      <li><em>Terminal/AP Call Sign</em>: tu indicativo con una <code>Z</code> en la 8.ª posición (<code>EA7KLX&nbsp;Z</code>).</li>
+      <li>Activa el <strong>Terminal Mode</strong> (<em>MENU › DV Gateway › Terminal Mode</em>).</li>
+    </ol>
+    <h3>Modo EXT: el gateway de QDStar por USB</h3>
+    <ol>
+      <li>Conecta el cable USB de la radio al ordenador.</li>
+      <li><em>DV GW › Gateway Select</em>: <strong>External Gateway USB (B)</strong>.</li>
+      <li><em>Terminal/AP Call Sign</em>: tu indicativo con una <code>B</code> en la 8.ª posición (<code>EA7KLX&nbsp;B</code>).</li>
+      <li>Activa el <strong>Terminal Mode</strong>.</li>
+    </ol>
+    <div class="note">Los reflectores REF usan DPlus, que solo acepta indicativos registrados en la red de confianza D-STAR (<a href="https://regist.dstargateway.org/">regist.dstargateway.org</a>). Los reflectores DCS, XLX y XRF no piden registro.</div>
+
+    <h2 id="primer-arranque">Primer arranque</h2>
+    <p>La primera vez, QDStar abre los ajustes. Escribe la <strong>IP o nombre</strong> de la radio, el <strong>usuario de red</strong> y la <strong>contraseña</strong> que creaste en la radio, y pulsa <em>Guardar</em>. QDStar se conecta y lee tu indicativo de la radio (MY call sign), así que no tienes que escribirlo.</p>
+    <p>Si tienes wfview configurado, QDStar importa de ahí los datos de conexión. Solo puede haber un QDStar abierto: si lo abres otra vez, se trae al frente la ventana que ya estaba abierta.</p>
+
+    <h2 id="ventana">La ventana principal</h2>
+    <p>La ventana es estrecha y alta para que quepa junto a otros programas. El ancho es fijo, y puedes hacerla más alta para ver más histórico.</p>
+    <h3>LEDs de estado</h3>
+    <table>
+      <tr><th>LED</th><th>Significado</th></tr>
+      <tr><td>Icom</td><td>Sesión de red con el IC-705. Está verde si hay conexión y parpadea en ámbar mientras conecta.</td></tr>
+      <tr><td>CI-V</td><td>La radio responde a los comandos CI-V.</td></tr>
+      <tr><td>Internet</td><td>Hay acceso a Internet (responde el directorio XLX).</td></tr>
+      <tr><td>USB</td><td>Solo EXT: el cable USB de la radio está conectado al ordenador.</td></tr>
+      <tr><td>Gateway</td><td>Solo EXT: el gateway responde.</td></tr>
+      <tr><td>Reflector</td><td>El reflector elegido está en línea.</td></tr>
+      <tr><td>Enlazado</td><td>Enlazado al reflector.</td></tr>
+      <tr><td>RX / TX</td><td>Recibiendo o transmitiendo voz.</td></tr>
+    </table>
+    <p>Si dejas el ratón sobre un LED, verás qué significa.</p>
+    <h3>La pantalla del reflector</h3>
+    <p>La pantalla negra muestra, de arriba abajo:</p>
+    <ul>
+      <li><strong>El reflector</strong>: nombre, descripción, si está en línea, cuántos nodos tiene conectados y el estado del enlace.</li>
+      <li><strong>La estación en el aire</strong>, o la última que se oyó. Muestra el indicativo, el nombre y la localidad de radioid.net, y el mensaje y la duración de la pasada. Si la estación manda su posición D-PRS, un recuadro muestra la distancia y el rumbo desde tu posición.</li>
+      <li><strong>Últimos oídos en el reflector</strong>: las últimas estaciones, según el dashboard del reflector o tu histórico.</li>
+      <li>El pie muestra tu indicativo, tu localizador (si la radio conoce tu posición), si envías D-PRS y la hora.</li>
+    </ul>
+    <h3>Modo, reflector y pestañas</h3>
+    <p>Debajo de la pantalla están los botones <strong>INT · WiFi</strong> y <strong>EXT · USB/PC</strong>, con un LED en el que está activo. Aparece un ⚠ cuando la radio no está en el modo elegido, por ejemplo si sigue en INT y tú elegiste EXT. Deja el ratón encima para ver qué revisar.</p>
+    <p>Después vienen la lista de reflectores con sus botones y las pestañas <strong>Histórico</strong>, <strong>Log</strong>, <strong>D-PRS</strong> y <strong>Meteo</strong>.</p>
+
+    <h2 id="modos">Modos INT y EXT</h2>
+    <table>
+      <tr><th></th><th>INT · WiFi</th><th>EXT · USB/PC</th></tr>
+      <tr><td>Gateway</td><td>El de la radio, a través de un servidor G3</td><td>El de QDStar, en tu ordenador</td></tr>
+      <tr><td>Conexión</td><td>Solo WiFi</td><td>WiFi para el control, y USB para los datos de voz</td></tr>
+      <tr><td>Cambiar de reflector</td><td>QDStar escribe el TO (UR) por CI-V: elígelo y pulsa <em>Cambiar</em></td><td>Elígelo y pulsa <em>Enlazar</em>. <em>Desenlazar</em> corta el enlace</td></tr>
+      <tr><td>Reflectores</td><td>Los que ofrezca tu servidor G3</td><td>REF, DCS, XLX y XRF</td></tr>
+    </table>
+    <p>Cambia de modo con los dos botones. Recuerda cambiar también en la radio el <em>Gateway Select</em> y el <em>Terminal/AP Call Sign</em> (mira <a href="#radio">Configurar la radio</a>).</p>
+    <p>En modo EXT, QDStar recuerda el reflector al que estabas enlazado y vuelve a enlazarlo la próxima vez que arranca.</p>
+
+    <h2 id="reflectores">Reflectores</h2>
+    <p>La lista viene con una selección de reflectores. Se gestiona en <em>Reflectores › Gestionar…</em>:</p>
+    <figure><img src="/img/es-reflectors.png" width="560" height="460" alt="Gestión de reflectores" loading="lazy"><figcaption>La gestión de reflectores</figcaption></figure>
+    <ul>
+      <li><strong>Tipo</strong>: INT (el TO se escribe en la radio) o EXT (lo enlaza el gateway de QDStar).</li>
+      <li><strong>TO / reflector</strong>: en INT, el TO que envía la radio (<code>/XLX214D</code>). En EXT, el reflector y el módulo (<code>REF001 C</code>, <code>DCS214 D</code>, <code>XLX048 A</code>, <code>XRF988 D</code>).</li>
+      <li><strong>Servidor</strong>: solo INT. Es el servidor G3 que lleva a ese TO. QDStar te avisa si no coincide con el de los ajustes.</li>
+      <li><strong>Nombre</strong> y <strong>Descripción</strong>: los textos que salen en la pantalla.</li>
+      <li><strong>Dashboard</strong> y <strong>API</strong> (opcionales): la web del reflector y su API JSON de xlxd, que se usan para contar los nodos y para los últimos oídos.</li>
+    </ul>
+    <p><em>Reflectores › Actualizar estado</em> pide al momento el estado de todos los reflectores.</p>
+
+    <h2 id="historico">Histórico y log</h2>
+    <figure><img src="/img/es-tab-history.png" width="404" height="420" alt="Pestaña Histórico" loading="lazy"><figcaption>La pestaña Histórico</figcaption></figure>
+    <p>La pestaña <strong>Histórico</strong> recoge cada pasada, recibida (RX) o transmitida (TX): hora, indicativo, distancia, nombre, reflector, duración, mensaje y localidad. Si el nombre o el mensaje llegan cuando la pasada ya ha terminado, se completan en su fila. <em>Histórico › Vaciar histórico…</em> lo borra.</p>
+    <p>La pestaña <strong>Log</strong> cuenta lo que va haciendo la aplicación: conexiones, enlaces y errores. <em>Radio › Registrar CI-V de RX/TX en el log</em> añade el tráfico CI-V en bruto, que viene bien para informar de un problema.</p>
+
+    <h2 id="dprs">D-PRS y meteo</h2>
+    <h3>Informes recibidos</h3>
+    <p>Muchas estaciones mandan su posición (D-PRS) en cada pasada. QDStar la lee de la radio y muestra la distancia y el rumbo en la pantalla y en el histórico.</p>
+    <p>La pestaña <strong>D-PRS</strong> recoge todos los informes recibidos: posiciones, objetos, ítems e informes meteorológicos. Eso incluye los que reenvían otras estaciones, como las pasarelas APRS que repiten informes hacia D-STAR, y la columna <em>Vía</em> dice qué estación trajo cada uno.</p>
+    <figure><img src="/img/es-tab-dprs.png" width="404" height="250" alt="Pestaña D-PRS" loading="lazy"><figcaption>La pestaña D-PRS</figcaption></figure>
+    <p>La pestaña <strong>Meteo</strong> muestra una ficha por cada estación meteorológica oída, con temperatura, humedad, presión, lluvia y viento.</p>
+    <figure><img src="/img/es-tab-weather.png" width="404" height="150" alt="Pestaña Meteo" loading="lazy"><figcaption>Una estación meteorológica recibida por D-PRS</figcaption></figure>
+    <p>Puedes ocultar las dos pestañas en los ajustes. La posición de la estación en el aire se sigue mostrando igualmente.</p>
+    <h3>Tu propia posición</h3>
+    <p><em>Radio › Posición D-PRS…</em> lee y cambia por CI-V los ajustes D-PRS de la radio:</p>
+    <ul>
+      <li><strong>Enviar mi posición en cada pasada</strong>: activa o desactiva la baliza D-PRS (GPS TX Mode = D-PRS).</li>
+      <li><strong>Fuente de la posición</strong>: el GPS interno de la radio, o una posición manual.</li>
+      <li><strong>Posición manual</strong>: latitud y longitud en grados (oeste en negativo), con altitud opcional. <em>Usar localizador</em> las rellena con el centro de una cuadrícula, para anunciar una zona y no tu casa exacta.</li>
+      <li><strong>Símbolo</strong>, <strong>SSID</strong> y <strong>Comentario</strong> de tu baliza.</li>
+    </ul>
+    <p>QDStar usa tu posición, la del GPS o la manual, para calcular las distancias. No se escribe nada en la radio hasta que pulsas <em>Guardar</em>.</p>
+
+    <h2 id="ajustes">Ajustes</h2>
+    <figure><img src="/img/es-settings.png" width="550" height="592" alt="Ajustes" loading="lazy"><figcaption>Radio › Ajustes…</figcaption></figure>
+    <ul>
+      <li><strong>Interfaz</strong>: el idioma (el del sistema por defecto), la búsqueda de versiones nuevas y las pestañas D-PRS y Meteo.</li>
+      <li><strong>Radio (WiFi)</strong>: indicativo (déjalo vacío para leerlo de la radio), IP o nombre, puerto de control (50001), usuario y contraseña de red, y si se conecta al arrancar.</li>
+      <li><strong>Modo INT</strong>: el servidor de Terminal Mode configurado en la radio y el Terminal/AP Call Sign (<em>indicativo + Z</em> si lo dejas vacío).</li>
+      <li><strong>Modo EXT</strong>: el Terminal/AP Call Sign (<em>indicativo + B</em> si lo dejas vacío), el gateway (el integrado de QDStar o un ircDDBGateway externo) y el puerto USB de datos (se detecta solo si lo dejas vacío).</li>
+    </ul>
+
+    <h2 id="actualizaciones">Actualizaciones</h2>
+    <p>QDStar busca en GitHub si hay versión nueva al arrancar y una vez al día. Cuando la hay, aparece un enlace <em>⬆ Nueva x.y.z</em> junto a los botones de modo, que lleva al archivo adecuado para tu sistema. También puedes buscarla a mano en <em>Ayuda › Buscar actualizaciones…</em>, y desactivar la búsqueda automática en los ajustes.</p>
+
+    <h2 id="problemas">Problemas frecuentes</h2>
+    <h3>El LED Icom nunca se pone verde</h3>
+    <ul>
+      <li>Revisa la IP, el usuario y la contraseña, y que <em>Network Control</em> esté en ON en la radio.</li>
+      <li>Solo un programa puede tener la sesión de red de la radio. Cierra wfview, RS-BA1 o cualquier otro programa de control remoto.</li>
+    </ul>
+    <h3>La radio rechaza la conexión después de un cuelgue</h3>
+    <p>Cierra QDStar antes de apagar la radio, para que cierre bien la sesión de red. Una sesión que se queda abierta puede tener ocupado el servidor de red de la radio hasta que la apagas y la enciendes.</p>
+    <h3>Modo EXT: el LED USB está en rojo</h3>
+    <p>Revisa el cable y, en Linux, que tu usuario esté en el grupo <code>dialout</code> (o <code>uucp</code>). Si no encuentra el puerto de datos, elígelo a mano en los ajustes.</p>
+    <h3>Un reflector REF no enlaza</h3>
+    <p>DPlus necesita tu indicativo registrado en la red de confianza D-STAR. Prueba con un reflector DCS o XLX para confirmar que todo lo demás funciona.</p>
+    <h3>Un ⚠ junto a los botones de modo</h3>
+    <p>El Terminal Mode de la radio no coincide con el modo elegido en QDStar. Deja el ratón encima para ver qué cambiar en la radio.</p>
+
+    <h2 id="colaborar">Colaborar</h2>
+    <ul>
+      <li><strong>Más reflectores</strong>: abre un pull request que añada entradas a <code>qdstar/default_reflectors.json</code>.</li>
+      <li><strong>Idiomas nuevos</strong>: copia <code>qdstar/translations/es.po</code> con el código de tu idioma, tradúcelo y abre un pull request. El <a href="https://github.com/manuel-alcocer/qdstar#translations">README</a> explica cómo.</li>
+      <li><strong>Fallos e ideas</strong>: abre una <a href="https://github.com/manuel-alcocer/qdstar/issues">issue en GitHub</a>.</li>
+    </ul>
+    <p>QDStar es software libre (GPL-3.0-or-later). El protocolo de red de Icom está reimplementado a partir de <a href="https://gitlab.com/eliggett/wfview">wfview</a>. El código de Terminal Mode, DPlus, DCS y DExtra está portado de DStarRepeater e ircDDBGateway de G4KLX.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>QDStar · Manuel Alcocer Jiménez, EA7KLX · Sevilla, España</span>
+    <span><a href="https://github.com/manuel-alcocer/qdstar">Código fuente</a> · GPL-3.0-or-later</span>
+  </div>
+</footer>
+</body>
+</html>

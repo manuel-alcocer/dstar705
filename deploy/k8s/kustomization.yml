@@ -1,0 +1,12 @@
+namespace: qdstar
+
+resources:
+  - namespace.yml
+  - web.yml
+
+# Bumped by CI (.github/workflows/website.yml) whenever website/ changes on
+# main: it builds the multi-arch image, rewrites `newTag` and commits it back
+# ([skip ci]). ArgoCD watches main and redeploys when it changes.
+images:
+  - name: ghcr.io/manuel-alcocer/qdstar-web
+    newTag: latest

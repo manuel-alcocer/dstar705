@@ -1,0 +1,66 @@
+name: website
+
+# When website/ changes on main: build the image for amd64 + arm64 (the cluster
+# mixes both), push it to GHCR as `main-<sha>` and `latest`, then pin the new
+# tag in deploy/k8s/kustomization.yml and commit it back ([skip ci]). ArgoCD
+# watches main and redeploys when the tag changes.
+on:
+  push:
+    branches: [main]
+    paths: ["website/**", ".github/workflows/website.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit the tag bump back to main
+  packages: write   # push the image to GHCR
+
+concurrency:
+  group: website
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/manuel-alcocer/qdstar-web
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: website
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:main-${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          labels: org.opencontainers.image.source=https://github.com/manuel-alcocer/qdstar
+          provenance: false
+
+  bump:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin the new tag in the kustomization
+        run: |
+          set -e
+          sed -i "s|newTag: .*|newTag: main-${GITHUB_SHA}|" deploy/k8s/kustomization.yml
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet deploy/k8s/kustomization.yml; then
+            echo "Tag already current, nothing to commit."
+            exit 0
+          fi
+          git add deploy/k8s/kustomization.yml
+          git commit -m "chore: deploy website main-${GITHUB_SHA} [skip ci]"
+          git pull --rebase
+          git push

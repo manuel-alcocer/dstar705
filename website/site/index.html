@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QDStar — IC-705 D-STAR Terminal Mode</title>
+<meta name="description" content="QDStar: desktop controller and built-in D-STAR gateway for the Icom IC-705 in Terminal Mode, for Windows and Linux.">
+<link rel="alternate" hreflang="es" href="/es/">
+<link rel="alternate" hreflang="en" href="/">
+<link rel="icon" href="/img/icon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a class="keep" href="/manual.html">Manual</a>
+      <a href="https://github.com/manuel-alcocer/qdstar">GitHub</a>
+      <a class="lang" href="/es/" hreflang="es" lang="es">ES</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <div class="leds" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="off"></span></div>
+      <h1>QDStar<small>IC-705 · D-STAR Terminal Mode</small></h1>
+      <p class="lead">A desktop controller and a built-in D-STAR gateway for the Icom IC-705. Link reflectors, see who is on the air and where they are, and follow D-PRS positions and weather stations, from Windows or Linux.</p>
+      <div class="buttons">
+        <a class="btn primary" href="#download">Download</a>
+        <a class="btn" href="/manual.html">Read the manual</a>
+      </div>
+      <p class="version" data-version="Latest version: {v}">Free software · GPL-3.0</p>
+    </div>
+    <div class="photos">
+      <img src="/img/photo-history.jpg" width="673" height="1398" alt="QDStar linked to DCS214 D, receiving a station from California, with the history tab open">
+      <img src="/img/photo-weather.jpg" width="746" height="1382" alt="QDStar linked to DCS214 D with the weather tab showing a D-PRS weather station">
+    </div>
+  </div>
+
+  <section id="features">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card"><h3>Over WiFi</h3><p>Talks to the radio with the Icom network protocol (control and CI-V, no audio). No wfview needed.</p></div>
+      <div class="card"><h3>Built-in gateway</h3><p>Terminal Mode over USB with its own gateway: DPlus (REF), DCS (DCS, XLX) and DExtra (XRF). No DStarRepeater or ircDDBGateway.</p></div>
+      <div class="card"><h3>INT and EXT modes</h3><p>Use the radio's internal gateway with a G3 server, or link reflectors from the PC. Switch with one click.</p></div>
+      <div class="card"><h3>Reflector screen</h3><p>Reflector state and nodes, the station on the air with name, location, distance and bearing, and the reflector's last heard list.</p></div>
+      <div class="card"><h3>D-PRS</h3><p>Positions, objects, items and weather reports received, relayed ones included. Manage your own D-PRS beacon from the app.</p></div>
+      <div class="card"><h3>Weather</h3><p>A card per D-PRS weather station: temperature, humidity, pressure, rain and wind.</p></div>
+      <div class="card"><h3>History</h3><p>Every over is saved: time, call sign, name, reflector, duration, message and location.</p></div>
+      <div class="card"><h3>Windows and Linux</h3><p>Installer for Windows, .deb, AppImage and tar.gz for Linux x86-64 and ARM64 (Raspberry Pi and other mini PCs).</p></div>
+      <div class="card"><h3>English and Spanish</h3><p>The interface follows the system language. New translations are welcome.</p></div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <h2>Screenshots</h2>
+    <div class="shots">
+      <figure><img src="/img/en-tab-history.png" width="404" height="420" alt="History tab" loading="lazy"><figcaption>History of overs</figcaption></figure>
+      <figure><img src="/img/en-tab-dprs.png" width="404" height="250" alt="D-PRS tab" loading="lazy"><figcaption>D-PRS reports received</figcaption></figure>
+      <figure><img src="/img/en-tab-weather.png" width="404" height="150" alt="Weather tab" loading="lazy"><figcaption>D-PRS weather stations</figcaption></figure>
+      <figure><img src="/img/en-settings.png" width="502" height="592" alt="Settings dialog" loading="lazy"><figcaption>Settings</figcaption></figure>
+      <figure><img src="/img/en-reflectors.png" width="560" height="460" alt="Reflector manager" loading="lazy"><figcaption>Reflector manager</figcaption></figure>
+    </div>
+    <p style="color:var(--dim);font-size:14px">Call signs of other stations are hidden in these images.</p>
+  </section>
+
+  <section id="download">
+    <h2>Download</h2>
+    <table class="dl">
+      <tr><th>System</th><th>Files</th></tr>
+      <tr><td>Windows 10/11 x64</td><td>
+        <a data-asset="-windows-x64-setup.exe" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Installer (.exe)</a> ·
+        <a data-asset="-windows-x64-portable.zip" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Portable (.zip)</a></td></tr>
+      <tr><td>Linux x86-64</td><td>
+        <a data-asset="_amd64.deb" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.deb</a> ·
+        <a data-asset="-x86_64.AppImage" href="https://github.com/manuel-alcocer/qdstar/releases/latest">AppImage</a> ·
+        <a data-asset="-linux-amd64.tar.gz" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.tar.gz</a></td></tr>
+      <tr><td>Linux ARM64<br><small style="color:var(--dim)">Raspberry Pi OS bookworm, Debian 12+, Ubuntu 22.04+</small></td><td>
+        <a data-asset="_arm64.deb" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.deb</a> ·
+        <a data-asset="-aarch64.AppImage" href="https://github.com/manuel-alcocer/qdstar/releases/latest">AppImage</a> ·
+        <a data-asset="-linux-arm64.tar.gz" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.tar.gz</a></td></tr>
+    </table>
+    <p>All versions and release notes are on the <a href="https://github.com/manuel-alcocer/qdstar/releases">releases page</a>. See the <a href="/manual.html#install">manual</a> for installation and radio setup.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>QDStar · Manuel Alcocer Jiménez, EA7KLX · Seville, Spain</span>
+    <span><a href="https://github.com/manuel-alcocer/qdstar">Source code</a> · GPL-3.0-or-later</span>
+  </div>
+</footer>
+<script src="/latest.js" defer></script>
+</body>
+</html>
