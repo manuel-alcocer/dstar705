@@ -110,6 +110,11 @@ class Storage:
                 " ORDER BY started DESC LIMIT 1", (callsign, time.time() - max_age)).fetchone()
         return (row["lat"], row["lon"]) if row else None
 
+    def clear_via(self, callsign):
+        """Remove a wrongly assigned relaying station (0.4.0-0.4.2 could use our own call sign)."""
+        with self.lock, self.db:
+            self.db.execute("UPDATE dprs SET via = '' WHERE via = ?", (callsign,))
+
     def add_dprs(self, pos, via, reflector):
         """Store a received D-PRS report, unless the same one arrived in the last 10 minutes."""
         with self.lock, self.db:

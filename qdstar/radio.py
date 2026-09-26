@@ -58,6 +58,7 @@ class Radio(QObject):
         self.last_message = None
         self.rx_message_sent = False
         self.last_dprs = None
+        self.last_dprs_time = 0.0
         self.last_raw = {}
         self.pending_to = None
 
@@ -165,15 +166,17 @@ class Radio(QObject):
         # D-PRS rides in the slow data: ask for the received position once it has arrived
         QTimer.singleShot(2500, lambda: self._send(civ.read_rx_dprs_position()))
 
-    def _on_header(self, header):
+    def _on_header(self, header, pushed=False):
+        """pushed: the radio sent it on its own (transceive), which it does once per received
+        header, so it is a new over even when identical to the previous one."""
         if header is None:
             return
         first = self.last_header is None
         changed = header != self.last_header
         self.last_header = header
-        if first:
+        if first and not pushed:
             return  # whatever was heard before we connected
-        if changed and header.caller:
+        if (changed or pushed) and header.caller:
             self._start_rx(header)
 
     def _on_data(self, data):
@@ -208,7 +211,7 @@ class Radio(QObject):
                 self.is_tx = value
                 self.transmitting.emit(value)
             elif kind == "rx_calls":
-                self._on_header(value)
+                self._on_header(value, pushed=body[0] == 0x00)
             elif kind == "rx_message":
                 # Deliver the message once per over, even when it equals the previous one
                 if value is not None and self.rx_active and not self.rx_message_sent and \
@@ -237,8 +240,10 @@ class Radio(QObject):
                 # from the station on air (a read may return an earlier station's position)
                 raw = bytes(body[3:])
                 caller = self.rx_caller.split()[:1]
-                if raw != self.last_dprs or value.callsign.split("-")[0].split()[:1] == caller:
+                repeated = raw == self.last_dprs and time.monotonic() - self.last_dprs_time < 300
+                if not repeated or value.callsign.split("-")[0].split()[:1] == caller:
                     self.last_dprs = raw
+                    self.last_dprs_time = time.monotonic()
                     self.dprs_received.emit(value)
             elif kind == "ack" and not value:
                 pass  # e.g. frequency reads are refused in Terminal Mode

@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         self._geo_origin = None    # position the displayed distances were computed from
         self.rx_entry = None
         self.rx_info = None
+        self.current_over = {}     # the received over on air or last ended: caller, live, ended
         self.tx_entry = None
         self.tx_since = None
 
@@ -514,6 +515,9 @@ class MainWindow(QMainWindow):
 
     def _my_call(self, call, note):
         self.my_call = call
+        if call.split():
+            self.storage.clear_via(call.split()[0])   # we never relay reports to ourselves
+            self._load_dprs()
         base = call.split()[0] if call.split() else ""
         if base and not config.callsign():
             # First run: the station call sign is the radio's MY call sign
@@ -686,6 +690,7 @@ class MainWindow(QMainWindow):
                  f"  UR={calls.called} R1={calls.rpt1} R2={calls.rpt2}")
         self.rx_entry = self.storage.start_entry("RX", base, calls.note, self.current_reflector(),
                                                  calls.rpt1, calls.rpt2)
+        self.current_over = {"caller": base, "live": True, "ended": 0.0}
         self.rx_info = {"callsign": calls.caller, "suffix": calls.note, "started": time.time(), "live": True,
                         "name": "", "location": "", "message": ""}
         self.leds["rx"].set("green")
@@ -710,6 +715,8 @@ class MainWindow(QMainWindow):
 
     def _rx_ended(self):
         self.leds["rx"].set("off")
+        if self.current_over.get("live"):
+            self.current_over.update(live=False, ended=time.time())
         if self.rx_info and self.rx_info.get("live"):
             self.rx_info["live"] = False
             self.rx_info["ended"] = time.time()
@@ -972,13 +979,14 @@ class MainWindow(QMainWindow):
         """D-PRS tab: every report, with the station whose over carried it when it is someone else."""
         if not config.get("dprs/show_all"):
             return
-        via = ""
-        if self.rx_info:
-            caller = self.rx_info["callsign"].split()[0]
-            recent = self.rx_info.get("live") or time.time() - self.rx_info.get("ended", 0) < 10
-            if recent and base and base != caller:
-                via = caller
-        name = pos.callsign or (self.rx_info["callsign"].split()[0] if self.rx_info else "?")
+        # The relaying station is the one whose over is on air (or just ended), taken from
+        # the received overs only: never the screen's "last heard" entry nor our own call sign
+        over = self.current_over
+        on_air = over.get("live") or time.time() - over.get("ended", 0) < 10
+        caller = over.get("caller", "") if on_air else ""
+        own = (self.my_call.split() or [""])[0]
+        via = caller if caller and base and base != caller and caller != own else ""
+        name = pos.callsign or caller or "?"
         pos = civ.DprsPosition(name, pos.symbol, pos.lat, pos.lon, pos.altitude, pos.kind, pos.weather)
         if self.storage.add_dprs(pos, via, self.current_reflector()):
             self._load_dprs()
