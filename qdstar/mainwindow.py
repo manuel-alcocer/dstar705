@@ -233,6 +233,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
         # Vertical layout: the window grows in height only, the width stays fixed
         self.setFixedWidth(WINDOW_WIDTH)
+        # Never maximized or full screen (the title bar double-click included): no maximize
+        # button, and changeEvent() undoes any maximize the window manager still applies
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, False)
+        self.setWindowFlag(Qt.WindowFullscreenButtonHint, False)
         geometry = config.get("ui/geometry")
         if geometry:
             self.restoreGeometry(QByteArray(geometry))
@@ -1060,7 +1064,7 @@ class MainWindow(QMainWindow):
             if r["weather"]:
                 details = self._weather_text(json.loads(r["weather"]))
             else:
-                details = tr(SYMBOL_NAMES.get(r["symbol"] or "", "")) if SYMBOL_NAMES.get(r["symbol"] or "") else (r["symbol"] or "")
+                details = tr(SYMBOL_NAMES.get(r["symbol"] or "", "")) if SYMBOL_NAMES.get(r["symbol"] or "") else (r["symbol"] or "").replace("\ufffd", "")
             values = [when, r["name"], tr(DPRS_KIND_NAMES.get(r["kind"], r["kind"])), dist, details,
                       r["via"] or "", r["reflector"] or ""]
             for c, v in enumerate(values):
@@ -1086,6 +1090,13 @@ class MainWindow(QMainWindow):
             self._load_history()
 
     # --- shutdown ----------------------------------------------------------
+
+    def changeEvent(self, event):
+        from PySide6.QtCore import QEvent
+        if event.type() == QEvent.WindowStateChange and \
+                self.windowState() & (Qt.WindowMaximized | Qt.WindowFullScreen):
+            QTimer.singleShot(0, self.showNormal)
+        super().changeEvent(event)
 
     def closeEvent(self, event):
         config.put("ui/geometry", self.saveGeometry())

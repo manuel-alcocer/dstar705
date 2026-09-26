@@ -346,8 +346,10 @@ def parse_dprs_position(data):
     kind = DPRS_KINDS[data[0]]
     weather = parse_weather(body) if kind == "weather" else None
     altitude = decode_altitude(body[22:26]) if len(body) >= 26 and kind != "weather" else None
+    symbol = body[9:11]
+    symbol = "" if b"\xFF" in symbol else symbol.decode("ascii", "replace")   # FF FF: no symbol
     return DprsPosition(body[0:9].decode("ascii", "replace").strip(),
-                        body[9:11].decode("ascii", "replace"), lat, lon, altitude, kind, weather)
+                        symbol, lat, lon, altitude, kind, weather)
 
 
 def read_my_position():
