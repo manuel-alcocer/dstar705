@@ -5,7 +5,7 @@ import shlex
 import time
 from datetime import datetime
 
-from PySide6.QtCore import QByteArray, QProcess, Qt, QTimer, QUrl
+from PySide6.QtCore import QByteArray, QProcess, QSize, Qt, QTimer, QUrl
 from PySide6.QtGui import QAction, QDesktopServices
 from PySide6.QtSerialPort import QSerialPortInfo
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
@@ -22,7 +22,7 @@ from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
 from .updates import UpdateChecker
-from .widgets import LedBar, ReflectorScreen, WeatherPanel, load_fonts
+from .widgets import LedBar, ReflectorScreen, WeatherPanel, load_fonts, mode_led_icon
 from .i18n import N_, tr
 
 # (key, caption, tooltip); translated when the window is built
@@ -152,6 +152,8 @@ class MainWindow(QMainWindow):
         self.mode_buttons = {}
         for key in ("int", "ext"):
             button = QPushButton(MODE_NAMES[key], checkable=True)
+            button.setIcon(mode_led_icon())      # green LED on the active mode, unlit on the other
+            button.setIconSize(QSize(12, 12))
             button.setToolTip(tr("Terminal Mode with the internal gateway over WiFi (G3 servers)") if key == "int" else
                               tr("Terminal Mode with an external gateway over USB (built into QDStar)"))
             self.mode_group.addButton(button)
@@ -449,7 +451,7 @@ class MainWindow(QMainWindow):
                 hints.append(tr("the radio is not in INT Terminal Mode (R1 {r1})", r1=self.r1 or tr("empty")))
         if self.mode == "ext" and self.usb_present is False:
             hints.append(tr("connect the USB"))
-        self.mode_hint.setText("⚠ " + tr("check") if hints else "")
+        self.mode_hint.setText("⚠" if hints else "")   # the tooltip says what to check
         self.mode_hint.setToolTip("; ".join(hints))
         self.screen.update_state(mode_warning="; ".join(hints))
 

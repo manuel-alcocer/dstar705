@@ -468,3 +468,33 @@ class WeatherPanel(QWidget):
             card.hide()
         self.empty.setText(empty_text if not stations else "")
         self.empty.setVisible(not stations)
+
+
+def led_pixmap(color_name, size=14):
+    """A small LED like the status ones, for buttons (e.g. the active mode)."""
+    from PySide6.QtGui import QPixmap
+    ratio = QGuiApplication.primaryScreen().devicePixelRatio() if QGuiApplication.primaryScreen() else 1.0
+    pixmap = QPixmap(int(size * ratio), int(size * ratio))
+    pixmap.setDevicePixelRatio(ratio)
+    pixmap.fill(Qt.transparent)
+    p = QPainter(pixmap)
+    p.setRenderHint(QPainter.Antialiasing)
+    color = LED_COLORS[color_name]
+    rect = QRectF(1.5, 1.5, size - 3, size - 3)
+    grad = QRadialGradient(rect.center().x() - 2, rect.center().y() - 2, size / 2)
+    grad.setColorAt(0, color.lighter(170) if color_name != "off" else color.lighter(130))
+    grad.setColorAt(1, color)
+    p.setBrush(grad)
+    p.setPen(QPen(QColor("#111"), 1))
+    p.drawEllipse(rect)
+    p.end()
+    return pixmap
+
+
+def mode_led_icon():
+    """Icon that shows a green LED when its checkable button is on, and an unlit one when off."""
+    from PySide6.QtGui import QIcon
+    icon = QIcon()
+    icon.addPixmap(led_pixmap("green"), QIcon.Normal, QIcon.On)
+    icon.addPixmap(led_pixmap("off"), QIcon.Normal, QIcon.Off)
+    return icon
