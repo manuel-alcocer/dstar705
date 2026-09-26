@@ -38,13 +38,25 @@ a.datas = [d for d in a.datas if "PySide6" not in d[0] or "/translations/" not i
            or "qtbase_" in d[0]]
 
 pyz = PYZ(a.pure)
+# Native start-up screen: the bootloader shows it at once, before Python and Qt are loaded
+splash = Splash(
+    str(root / "packaging" / "splash.png"),
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=(26, 190),
+    text_size=11,
+    text_color="#d8d8d8",
+    text_default="Loading…",
+    always_on_top=False,
+)
 exe = EXE(
     pyz,
     a.scripts,
+    splash,
     [],
     exclude_binaries=True,
     name="qdstar",
     console=False,
     icon=str(root / "packaging" / "qdstar.ico") if sys.platform == "win32" else None,
 )
-coll = COLLECT(exe, a.binaries, a.datas, name="qdstar")
+coll = COLLECT(exe, a.binaries, a.datas, splash.binaries, name="qdstar")

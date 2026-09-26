@@ -6,6 +6,10 @@ msgstr ""
 "Language-Name: Español\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: qdstar/__main__.py:30
+msgid "Loading modules…"
+msgstr "Cargando módulos…"
+
 #: qdstar/civ.py:337
 msgid "N"
 msgstr "N"
@@ -670,395 +674,411 @@ msgstr "TX"
 msgid "Transmitting"
 msgstr "Transmitiendo"
 
-#: qdstar/mainwindow.py:161
+#: qdstar/mainwindow.py:57
+msgid "Opening the database…"
+msgstr "Abriendo la base de datos…"
+
+#: qdstar/mainwindow.py:59
+msgid "Loading reflectors…"
+msgstr "Cargando reflectores…"
+
+#: qdstar/mainwindow.py:84
+msgid "Preparing the interface…"
+msgstr "Preparando la interfaz…"
+
+#: qdstar/mainwindow.py:113
+msgid "Starting the gateway…"
+msgstr "Arrancando el gateway…"
+
+#: qdstar/mainwindow.py:165
 msgid "Change"
 msgstr "Cambiar"
 
-#: qdstar/mainwindow.py:164
+#: qdstar/mainwindow.py:168
 msgid "Unlink"
 msgstr "Desenlazar"
 
-#: qdstar/mainwindow.py:168
+#: qdstar/mainwindow.py:172
 msgid "Manage reflectors"
 msgstr "Gestionar reflectores"
 
-#: qdstar/mainwindow.py:185
+#: qdstar/mainwindow.py:189
 msgid "History"
 msgstr "Histórico"
 
-#: qdstar/mainwindow.py:192
+#: qdstar/mainwindow.py:196
 msgid "Log"
 msgstr "Log"
 
-#: qdstar/mainwindow.py:205
+#: qdstar/mainwindow.py:209
 msgid "&Radio"
 msgstr "&Radio"
 
-#: qdstar/mainwindow.py:206
+#: qdstar/mainwindow.py:210
 msgid "Connect"
 msgstr "Conectar"
 
-#: qdstar/mainwindow.py:207
+#: qdstar/mainwindow.py:211
 msgid "Disconnect"
 msgstr "Desconectar"
 
-#: qdstar/mainwindow.py:213
+#: qdstar/mainwindow.py:217
 msgid "Log RX/TX CI-V frames"
 msgstr "Registrar CI-V de RX/TX en el log"
 
-#: qdstar/mainwindow.py:219
+#: qdstar/mainwindow.py:223
 msgid "R&eflectors"
 msgstr "R&eflectores"
 
-#: qdstar/mainwindow.py:222
+#: qdstar/mainwindow.py:226
 msgid "H&istory"
 msgstr "&Histórico"
 
-#: qdstar/mainwindow.py:224
+#: qdstar/mainwindow.py:228
 msgid "&Help"
 msgstr "A&yuda"
 
-#: qdstar/mainwindow.py:310
+#: qdstar/mainwindow.py:314
 msgid "EXT · built-in gateway"
 msgstr "EXT · gateway integrado"
 
-#: qdstar/mainwindow.py:594
+#: qdstar/mainwindow.py:598
 msgid "Changing the TO to {to}…"
 msgstr "Cambiando TO a {to}…"
 
-#: qdstar/mainwindow.py:668
+#: qdstar/mainwindow.py:672
 msgid "Message from {caller}: {message}"
 msgstr "Mensaje de {caller}: {message}"
 
-#: qdstar/mainwindow.py:791
+#: qdstar/mainwindow.py:795
 msgid "LAST HEARD ON THE REFLECTOR"
 msgstr "ÚLTIMOS EN EL REFLECTOR"
 
-#: qdstar/mainwindow.py:791
+#: qdstar/mainwindow.py:795
 msgid "LAST HEARD HERE ON THIS REFLECTOR"
 msgstr "ÚLTIMOS OÍDOS AQUÍ EN ESTE REFLECTOR"
 
-#: qdstar/mainwindow.py:878
+#: qdstar/mainwindow.py:882
 msgid "New version available: {version}"
 msgstr "Nueva versión disponible: {version}"
 
-#: qdstar/mainwindow.py:889
+#: qdstar/mainwindow.py:893
 msgid "Update available"
 msgstr "Actualización disponible"
 
-#: qdstar/mainwindow.py:891
+#: qdstar/mainwindow.py:895
 msgid "QDStar {version} is available (you have {current})."
 msgstr "QDStar {version} está disponible (tienes la {current})."
 
-#: qdstar/mainwindow.py:892
+#: qdstar/mainwindow.py:896
 msgid "Release notes: {page}"
 msgstr "Novedades: {page}"
 
-#: qdstar/mainwindow.py:895
+#: qdstar/mainwindow.py:899
 msgid "Download"
 msgstr "Descargar"
 
-#: qdstar/mainwindow.py:896
+#: qdstar/mainwindow.py:900
 msgid "Later"
 msgstr "Más tarde"
 
-#: qdstar/mainwindow.py:897
+#: qdstar/mainwindow.py:901
 msgid "Skip this version"
 msgstr "Omitir esta versión"
 
-#: qdstar/mainwindow.py:915
+#: qdstar/mainwindow.py:919
 msgid "About QDStar"
 msgstr "Acerca de QDStar"
 
-#: qdstar/mainwindow.py:134
+#: qdstar/mainwindow.py:138
 msgid "Mode:"
 msgstr "Modo:"
 
-#: qdstar/mainwindow.py:211
+#: qdstar/mainwindow.py:215
 msgid "Settings…"
 msgstr "Ajustes…"
 
-#: qdstar/mainwindow.py:212
+#: qdstar/mainwindow.py:216
 msgid "D-PRS position…"
 msgstr "Posición D-PRS…"
 
-#: qdstar/mainwindow.py:218
+#: qdstar/mainwindow.py:222
 msgid "Quit"
 msgstr "Salir"
 
-#: qdstar/mainwindow.py:220
+#: qdstar/mainwindow.py:224
 msgid "Manage…"
 msgstr "Gestionar…"
 
-#: qdstar/mainwindow.py:221
+#: qdstar/mainwindow.py:225
 msgid "Refresh status"
 msgstr "Actualizar estado"
 
-#: qdstar/mainwindow.py:223
+#: qdstar/mainwindow.py:227
 msgid "Clear history…"
 msgstr "Vaciar histórico…"
 
-#: qdstar/mainwindow.py:225
+#: qdstar/mainwindow.py:229
 msgid "Check for updates…"
 msgstr "Buscar actualizaciones…"
 
-#: qdstar/mainwindow.py:226
+#: qdstar/mainwindow.py:230
 msgid "About QDStar…"
 msgstr "Acerca de QDStar…"
 
-#: qdstar/mainwindow.py:252
+#: qdstar/mainwindow.py:256
 msgid "EXT mode (USB + PC)"
 msgstr "Modo EXT (USB + PC)"
 
-#: qdstar/mainwindow.py:254
+#: qdstar/mainwindow.py:258
 msgid "To work in EXT mode:"
 msgstr "Para trabajar en modo EXT:"
 
-#: qdstar/mainwindow.py:256
+#: qdstar/mainwindow.py:260
 msgid "1. Connect the radio's USB cable to the PC.\n2. On the radio: MENU > DV GW > Gateway Select = External Gateway USB (B).\n3. Terminal/AP Call Sign = {call}.\n4. Turn Terminal Mode on.\n\nQDStar will start its gateway."
 msgstr "1. Conecta el cable USB de la radio al PC.\n2. En la radio: MENU > DV GW > Gateway Select = External Gateway USB (B).\n3. Terminal/AP Call Sign = {call}.\n4. Activa Terminal Mode.\n\nQDStar arrancará su gateway."
 
-#: qdstar/mainwindow.py:267
+#: qdstar/mainwindow.py:271
 msgid "INT mode (WiFi)"
 msgstr "Modo INT (WiFi)"
 
-#: qdstar/mainwindow.py:269
+#: qdstar/mainwindow.py:273
 msgid "To work in INT mode:"
 msgstr "Para trabajar en modo INT:"
 
-#: qdstar/mainwindow.py:271
+#: qdstar/mainwindow.py:275
 msgid "1. On the radio: MENU > DV GW > Gateway Select = Internal Gateway (WLAN).\n2. Terminal/AP Call Sign = {call}.\n3. Turn Terminal Mode on.\n\nThe USB cable is no longer needed and the gateway stops."
 msgstr "1. En la radio: MENU > DV GW > Gateway Select = Internal Gateway (WLAN).\n2. Terminal/AP Call Sign = {call}.\n3. Activa Terminal Mode.\n\nEl cable USB ya no hace falta y se detiene el gateway."
 
-#: qdstar/mainwindow.py:290
+#: qdstar/mainwindow.py:294
 msgid "Link"
 msgstr "Enlazar"
 
-#: qdstar/mainwindow.py:291
+#: qdstar/mainwindow.py:295
 msgid "Links the reflector through the gateway"
 msgstr "Enlaza el reflector a través del gateway"
 
-#: qdstar/mainwindow.py:292
+#: qdstar/mainwindow.py:296
 msgid "Writes the TO (UR) to the radio"
 msgstr "Escribe el TO (UR) en la radio"
 
-#: qdstar/mainwindow.py:305
+#: qdstar/mainwindow.py:309
 msgid "Mode {mode}"
 msgstr "Modo {mode}"
 
-#: qdstar/mainwindow.py:321
+#: qdstar/mainwindow.py:325
 msgid "Ran: {command}"
 msgstr "Ejecutado: {command}"
 
-#: qdstar/mainwindow.py:323
+#: qdstar/mainwindow.py:327
 msgid "Could not run: {command}"
 msgstr "No se pudo ejecutar: {command}"
 
-#: qdstar/mainwindow.py:329
+#: qdstar/mainwindow.py:333
 msgid "Gateway: waiting to read your call sign (MY) from the radio"
 msgstr "Gateway: esperando a leer tu indicativo (MY) de la radio"
 
-#: qdstar/mainwindow.py:370
+#: qdstar/mainwindow.py:374
 msgid "Restoring the last link: {reflector}"
 msgstr "Restaurando el último enlace: {reflector}"
 
-#: qdstar/mainwindow.py:384
+#: qdstar/mainwindow.py:388
 msgid "Gateway error: {error}"
 msgstr "Error del gateway: {error}"
 
-#: qdstar/mainwindow.py:385
+#: qdstar/mainwindow.py:389
 msgid "Link reflector"
 msgstr "Enlazar reflector"
 
-#: qdstar/mainwindow.py:415
+#: qdstar/mainwindow.py:419
 msgid "connect the USB"
 msgstr "conecta el USB"
 
-#: qdstar/mainwindow.py:423
+#: qdstar/mainwindow.py:427
 msgid "Radio TO {old} → {new} for the linked reflector"
 msgstr "TO de la radio {old} → {new} para el reflector enlazado"
 
-#: qdstar/mainwindow.py:481
+#: qdstar/mainwindow.py:485
 msgid "Station call sign: {call} (read from the radio)"
 msgstr "Indicativo de la estación: {call} (leído de la radio)"
 
-#: qdstar/mainwindow.py:490
+#: qdstar/mainwindow.py:494
 msgid "Warning: the radio is in {mode}, not DV"
 msgstr "Aviso: la radio está en {mode}, no en DV"
 
-#: qdstar/mainwindow.py:529
+#: qdstar/mainwindow.py:533
 msgid "(not registered)"
 msgstr "(no registrado)"
 
-#: qdstar/mainwindow.py:529
+#: qdstar/mainwindow.py:533
 msgid "Add it in Reflectors > Manage"
 msgstr "Añádelo en Reflectores > Gestionar"
 
-#: qdstar/mainwindow.py:574
+#: qdstar/mainwindow.py:578
 msgid "Asking the gateway to link {reflector}…"
 msgstr "Pidiendo al gateway enlazar {reflector}…"
 
-#: qdstar/mainwindow.py:582
+#: qdstar/mainwindow.py:586
 msgid "{to} is already the current TO"
 msgstr "{to} ya es el TO actual"
 
-#: qdstar/mainwindow.py:588
+#: qdstar/mainwindow.py:592
 msgid "Change reflector"
 msgstr "Cambiar reflector"
 
-#: qdstar/mainwindow.py:589
+#: qdstar/mainwindow.py:593
 msgid "{to} is reached through {needed}, but the radio uses {server}.\n\nThe server cannot be changed over CI-V: change it in MENU > DV GW > Gateway Repeater and update Radio > Settings.\n\nWrite the TO anyway?"
 msgstr "{to} se alcanza a través de {needed}, pero la radio usa {server}.\n\nEl servidor no se puede cambiar por CI-V: hazlo en MENU > DV GW > Gateway Repeater y actualiza Radio > Ajustes.\n\n¿Escribir el TO de todas formas?"
 
-#: qdstar/mainwindow.py:601
+#: qdstar/mainwindow.py:605
 msgid "Unlinking {reflector}…"
 msgstr "Desenlazando {reflector}…"
 
-#: qdstar/mainwindow.py:606
+#: qdstar/mainwindow.py:610
 msgid "Radio TO = {to}"
 msgstr "TO de la radio = {to}"
 
-#: qdstar/mainwindow.py:620
+#: qdstar/mainwindow.py:624
 msgid "Settings saved"
 msgstr "Ajustes guardados"
 
-#: qdstar/mainwindow.py:641
+#: qdstar/mainwindow.py:645
 msgid "System reply: {caller} → {called}"
 msgstr "Respuesta del sistema: {caller} → {called}"
 
-#: qdstar/mainwindow.py:677
+#: qdstar/mainwindow.py:681
 msgid "End of RX {caller} ({seconds}s)"
 msgstr "Fin RX {caller} ({seconds}s)"
 
-#: qdstar/mainwindow.py:812
+#: qdstar/mainwindow.py:816
 msgid "Connect to the radio first."
 msgstr "Conecta primero con la radio."
 
-#: qdstar/mainwindow.py:866
+#: qdstar/mainwindow.py:870
 msgid "D-PRS from {caller}: {position}"
 msgstr "D-PRS de {caller}: {position}"
 
-#: qdstar/mainwindow.py:906
+#: qdstar/mainwindow.py:910
 msgid "Check for updates"
 msgstr "Buscar actualizaciones"
 
-#: qdstar/mainwindow.py:907
+#: qdstar/mainwindow.py:911
 msgid "You have the latest version ({version})."
 msgstr "Tienes la última versión ({version})."
 
-#: qdstar/mainwindow.py:911
+#: qdstar/mainwindow.py:915
 msgid "Could not check for updates: {error}"
 msgstr "No se pudo comprobar si hay actualizaciones: {error}"
 
-#: qdstar/mainwindow.py:920
+#: qdstar/mainwindow.py:924
 msgid "License GPL-3.0-or-later. Based on wfview (Icom network protocol) and on G4KLX's DStarRepeater / ircDDBGateway."
 msgstr "Licencia GPL-3.0-or-later. Basado en wfview (protocolo de red de Icom) y en DStarRepeater / ircDDBGateway de G4KLX."
 
-#: qdstar/mainwindow.py:924
+#: qdstar/mainwindow.py:928
 msgid "Delete the whole history?"
 msgstr "¿Borrar todo el histórico?"
 
-#: qdstar/mainwindow.py:139
+#: qdstar/mainwindow.py:143
 msgid "Terminal Mode with the internal gateway over WiFi (G3 servers)"
 msgstr "Terminal Mode con gateway interno por WiFi (servidores G3)"
 
-#: qdstar/mainwindow.py:140
+#: qdstar/mainwindow.py:144
 msgid "Terminal Mode with an external gateway over USB (built into QDStar)"
 msgstr "Terminal Mode con gateway externo por USB (integrado en QDStar)"
 
-#: qdstar/mainwindow.py:357
+#: qdstar/mainwindow.py:361
 msgid "Radio USB cable detected"
 msgstr "Cable USB de la radio detectado"
 
-#: qdstar/mainwindow.py:357
+#: qdstar/mainwindow.py:361
 msgid "Radio USB cable NOT detected"
 msgstr "Cable USB de la radio NO detectado"
 
-#: qdstar/mainwindow.py:374
+#: qdstar/mainwindow.py:378
 msgid "Gateway linked to {reflector}"
 msgstr "Gateway enlazado a {reflector}"
 
-#: qdstar/mainwindow.py:374
+#: qdstar/mainwindow.py:378
 msgid "Gateway not linked"
 msgstr "Gateway sin enlace"
 
-#: qdstar/mainwindow.py:411
+#: qdstar/mainwindow.py:415
 msgid "the radio is still in INT ({r1})"
 msgstr "la radio sigue en INT ({r1})"
 
-#: qdstar/mainwindow.py:413
+#: qdstar/mainwindow.py:417
 msgid "the radio is not in INT Terminal Mode (R1 {r1})"
 msgstr "la radio no está en Terminal Mode INT (R1 {r1})"
 
-#: qdstar/mainwindow.py:416
+#: qdstar/mainwindow.py:420
 msgid "check"
 msgstr "revisar"
 
-#: qdstar/mainwindow.py:438
+#: qdstar/mainwindow.py:442
 msgid "TX message: '{message}'"
 msgstr "Mensaje TX: '{message}'"
 
-#: qdstar/mainwindow.py:456
+#: qdstar/mainwindow.py:460
 msgid "Disconnected by the user"
 msgstr "Desconectado por el usuario"
 
-#: qdstar/mainwindow.py:572
+#: qdstar/mainwindow.py:576
 msgid "The gateway is already linked to {reflector}"
 msgstr "El gateway ya está enlazado a {reflector}"
 
-#: qdstar/mainwindow.py:608
+#: qdstar/mainwindow.py:612
 msgid "TO changed to {to}. Press PTT briefly to register on the reflector."
 msgstr "TO cambiado a {to}. Pulsa PTT un instante para registrarte en el reflector."
 
-#: qdstar/mainwindow.py:610
+#: qdstar/mainwindow.py:614
 msgid "Error changing the TO: {error}"
 msgstr "Error al cambiar el TO: {error}"
 
-#: qdstar/mainwindow.py:695
+#: qdstar/mainwindow.py:699
 msgid "End of TX ({seconds}s)"
 msgstr "Fin TX ({seconds}s)"
 
-#: qdstar/mainwindow.py:879
+#: qdstar/mainwindow.py:883
 msgid "New {version}"
 msgstr "Nueva {version}"
 
-#: qdstar/mainwindow.py:880
+#: qdstar/mainwindow.py:884
 msgid "New version {version} available"
 msgstr "Nueva versión {version} disponible"
 
-#: qdstar/mainwindow.py:535
+#: qdstar/mainwindow.py:539
 msgid "Not linked"
 msgstr "Sin enlace"
 
-#: qdstar/mainwindow.py:535
+#: qdstar/mainwindow.py:539
 msgid "Pick a reflector and press Link"
 msgstr "Elige un reflector y pulsa Enlazar"
 
-#: qdstar/mainwindow.py:538
+#: qdstar/mainwindow.py:542
 msgid "PC gateway"
 msgstr "Gateway PC"
 
-#: qdstar/mainwindow.py:538
+#: qdstar/mainwindow.py:542
 msgid "Waiting for the gateway…"
 msgstr "Esperando al gateway…"
 
-#: qdstar/mainwindow.py:918
+#: qdstar/mainwindow.py:922
 msgid "Author: {author}"
 msgstr "Autor: {author}"
 
-#: qdstar/mainwindow.py:260
+#: qdstar/mainwindow.py:264
 msgid "<call sign> B"
 msgstr "<indicativo> B"
 
-#: qdstar/mainwindow.py:275
+#: qdstar/mainwindow.py:279
 msgid "<call sign> Z"
 msgstr "<indicativo> Z"
 
-#: qdstar/mainwindow.py:413
+#: qdstar/mainwindow.py:417
 msgid "empty"
 msgstr "vacío"
 
-#: qdstar/mainwindow.py:917
+#: qdstar/mainwindow.py:921
 msgid "IC-705 D-STAR Terminal Mode controller and built-in gateway."
 msgstr "Control del IC-705 en D-STAR Terminal Mode y gateway integrado."
 

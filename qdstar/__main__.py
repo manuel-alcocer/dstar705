@@ -2,12 +2,16 @@ import signal
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QLibraryInfo, QTimer, QTranslator
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
+from . import startup
 
-from . import config, i18n
-from .mainwindow import MainWindow
+startup.progress(1, "Loading Qt…")
+
+from PySide6.QtCore import QLibraryInfo, QTimer, QTranslator  # noqa: E402
+from PySide6.QtGui import QIcon  # noqa: E402
+from PySide6.QtWidgets import QApplication  # noqa: E402
+
+from . import config, i18n  # noqa: E402
+from .i18n import tr  # noqa: E402
 
 
 def main():
@@ -23,8 +27,11 @@ def main():
     if language != "en" and translator.load(f"qtbase_{language}", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
         app.installTranslator(translator)
     config.import_wfview_credentials()
+    startup.progress(2, tr("Loading modules…"))
+    from .mainwindow import MainWindow
     window = MainWindow()
     window.show()
+    startup.done()
     # Close the radio session cleanly on Ctrl+C / SIGTERM: a session that is
     # not closed stays stuck in the IC-705 until it is power cycled.
     for sig in (signal.SIGINT, signal.SIGTERM):

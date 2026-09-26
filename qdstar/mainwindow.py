@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBox
                                QMainWindow, QMessageBox, QPlainTextEdit, QPushButton, QTableWidget, QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
 
-from . import __author__, __url__, __version__, config
+from . import __author__, __url__, __version__, config, startup
 from . import civ
 from .dialogs import DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
@@ -54,7 +54,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("QDStar — IC-705 D-STAR")
+        startup.progress(3, tr("Opening the database…"))
         self.storage = Storage()
+        startup.progress(4, tr("Loading reflectors…"))
         self.registry = Registry()
         self.lookup = NameLookup(self.storage)
         self.lookup.resolved.connect(self._name_resolved)
@@ -79,6 +81,7 @@ class MainWindow(QMainWindow):
         self.tx_entry = None
         self.tx_since = None
 
+        startup.progress(5, tr("Preparing the interface…"))
         load_fonts()
         self._build_ui()
         self._build_menu()
@@ -107,6 +110,7 @@ class MainWindow(QMainWindow):
         self.usb_timer = QTimer(self, interval=2000)
         self.usb_timer.timeout.connect(self._check_usb)
 
+        startup.progress(6, tr("Starting the gateway…"))
         self._apply_mode(self.mode, startup=True)
         self._load_history()
         self._update_last_heard()
