@@ -6,6 +6,7 @@ from PySide6.QtCore import QObject, QTimer, Signal
 
 from . import civ
 from .icom_udp import IcomConnection
+from .i18n import tr
 
 FAST_POLL = 700       # ms: RX status and TX state
 SLOW_POLL = 5000      # ms: call sign settings (can be changed on the radio itself)
@@ -31,6 +32,8 @@ class Radio(QObject):
     rx_ended = Signal()
     to_write_result = Signal(bool, str)
     raw = Signal(str)                   # changed RX/TX related frames, for the debug log
+    setting_received = Signal(str, bytes)   # '0287', data
+    dprs_received = Signal(object)          # civ.DprsPosition
 
     def __init__(self, host, username, password, control_port=50001):
         super().__init__()
@@ -52,6 +55,7 @@ class Radio(QObject):
         self.rx_voice_seen = False
         self.last_header = None         # last RX header read from the radio (baseline)
         self.last_message = None
+        self.rx_message_sent = False
         self.last_raw = {}
         self.pending_to = None
 
@@ -76,12 +80,18 @@ class Radio(QObject):
         In EXT mode the TO is CQCQCQ and the gateway does the linking."""
         ur, r1, r2 = self.cur_tx_calls
         if not r1:
-            self.to_write_result.emit(False, "Aún no se han leído R1/R2 de la radio")
+            self.to_write_result.emit(False, tr("R1/R2 have not been read from the radio yet"))
             return
         self.pending_to = to
         self._send(civ.set_tx_calls(to, r1, r2))
         QTimer.singleShot(400, lambda: self._send(civ.read_tx_calls()))
         QTimer.singleShot(3000, self._check_to_written)
+
+    def read_setting(self, number):
+        self._send(civ.read_setting(number))
+
+    def write_setting(self, number, data):
+        self._send(civ.write_setting(number, data))
 
     def set_tx_message(self, text):
         self._send(civ.set_tx_message(text))
@@ -97,6 +107,7 @@ class Radio(QObject):
         if state == "connected":
             for frame in civ.set_auto_rx_output(True):
                 self._send(frame)
+            self._send(civ.auto_dprs_output(True))
             for frame in (civ.read_mode(), civ.read_my_call(), civ.read_tx_calls(), civ.read_tx_message(),
                           civ.read_rx_status()):
                 self._send(frame)
@@ -131,19 +142,23 @@ class Radio(QObject):
         if self.pending_to is None:
             return
         to, self.pending_to = self.pending_to, None
-        self.to_write_result.emit(False, f"La radio no confirmó el TO {to}")
+        self.to_write_result.emit(False, tr("The radio did not confirm the TO {to}", to=to))
 
     def _end_rx(self):
         self.rx_active = False
         self.rx_ended.emit()
+        self._send(civ.read_rx_dprs_position())
 
     def _start_rx(self, header):
+        self.rx_message_sent = False
         if self.rx_active:
             self._end_rx()
         self.rx_active = True
         self.rx_caller = header.caller
         self.rx_last_voice = time.monotonic()
         self.rx_started.emit(header)
+        # D-PRS rides in the slow data: ask for the received position once it has arrived
+        QTimer.singleShot(2500, lambda: self._send(civ.read_rx_dprs_position()))
 
     def _on_header(self, header):
         if header is None:
@@ -190,7 +205,13 @@ class Radio(QObject):
             elif kind == "rx_calls":
                 self._on_header(value)
             elif kind == "rx_message":
-                if value is not None and value != self.last_message:
+                # Deliver the message once per over, even when it equals the previous one
+                if value is not None and self.rx_active and not self.rx_message_sent and \
+                        value[1].split()[:1] == self.rx_caller.split()[:1]:
+                    self.rx_message_sent = True
+                    self.last_message = value
+                    self.rx_message.emit(value[0], value[1])
+                elif value is not None and value != self.last_message:
                     first = self.last_message is None
                     self.last_message = value
                     if not first:
@@ -202,5 +223,9 @@ class Radio(QObject):
                     if not self.rx_active and self.last_header is not None:
                         # A new over with the same header as the previous one
                         self._start_rx(self.last_header)
+            elif kind == "setting":
+                self.setting_received.emit(*value)
+            elif kind == "dprs" and value is not None:
+                self.dprs_received.emit(value)
             elif kind == "ack" and not value:
                 pass  # e.g. frequency reads are refused in Terminal Mode

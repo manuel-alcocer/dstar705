@@ -14,6 +14,7 @@ from PySide6.QtNetwork import QHostAddress, QUdpSocket
 from ..qtutil import safe_emit
 
 from .protocol import DPLUS_PORT, END_PATTERN_BYTES, NULL_AMBE_DATA_BYTES, Header, ccitt_crc, pad
+from ..i18n import tr
 
 AUTH_HOST = "auth.dstargateway.org"
 AUTH_PORT = 20001
@@ -90,10 +91,10 @@ class DPlusAuthenticator(QObject):
             hosts = authenticate(self.login)
             self.hosts = hosts
             self.authenticated_at = time.time()
-            safe_emit(self.log, f"DPlus: autenticado como {self.login} ({len(hosts)} reflectores REF)")
+            safe_emit(self.log, tr("DPlus: authenticated as {call} ({count} REF reflectors)", call=self.login, count=len(hosts)))
             safe_emit(self.done, True, hosts)
         except OSError as exc:
-            safe_emit(self.log, f"DPlus: fallo de autenticación en {AUTH_HOST}: {exc}")
+            safe_emit(self.log, tr("DPlus: authentication failed at {host}: {error}", host=AUTH_HOST, error=exc))
             safe_emit(self.done, False, {})
 
 
@@ -180,7 +181,7 @@ class DPlusLink(QObject):
         if self.state == "linked":
             self._send(b"\x03\x60\x00")
         if self.state in ("linking", "linked") and time.monotonic() - self.last_rx > POLL_TIMEOUT_S:
-            self.log.emit(f"DPlus: {self.reflector.strip()} no responde, reenlazando")
+            self.log.emit(tr("{protocol}: {reflector} does not answer, relinking", protocol="DPlus", reflector=self.reflector.strip()))
             self.link()
 
     def _retry(self):
@@ -218,17 +219,17 @@ class DPlusLink(QObject):
             pkt[20:28] = b"DV019999"
             self._send(bytes(pkt))
         elif len(data) == 5 and data[4] == 0x00:
-            self.log.emit(f"DPlus: {self.reflector.strip()} ha cerrado el enlace")
+            self.log.emit(tr("{protocol}: {reflector} closed the link", protocol="DPlus", reflector=self.reflector.strip()))
             self.poll_timer.stop()
             self._set_state("unlinked")
         elif len(data) == 8:
             reply = data[4:8].decode(errors="replace")
             self.try_timer.stop()
             if reply == "OKRW":
-                self.log.emit(f"DPlus: enlazado a {self.reflector.strip()} (OKRW)")
+                self.log.emit(tr("{protocol}: linked to {reflector}", protocol="DPlus", reflector=self.reflector.strip()) + " (OKRW)")
                 self._set_state("linked")
             else:
-                self.log.emit(f"DPlus: {self.reflector.strip()} rechaza el enlace ({reply})")
+                self.log.emit(tr("{protocol}: {reflector} refuses the link ({reply})", protocol="DPlus", reflector=self.reflector.strip(), reply=reply))
                 self._send(b"\x05\x00\x18\x00\x00")
                 self.poll_timer.stop()
                 self._set_state("refused")

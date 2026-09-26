@@ -2,11 +2,11 @@ import signal
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QLibraryInfo, QTimer, QTranslator
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
-from . import config
+from . import config, i18n
 from .mainwindow import MainWindow
 
 
@@ -14,8 +14,14 @@ def main():
     app = QApplication(sys.argv)
     app.setOrganizationName(config.ORG)
     app.setApplicationName(config.APP)
-    app.setDesktopFileName("dstar705")
+    app.setDesktopFileName("qdstar")
     app.setWindowIcon(QIcon(str(Path(__file__).with_name("icon.svg"))))
+    config.migrate_legacy()
+    language = i18n.set_language(config.get("ui/language"))
+    # Qt's own buttons and dialogs in the same language
+    translator = QTranslator(app)
+    if language != "en" and translator.load(f"qtbase_{language}", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
+        app.installTranslator(translator)
     config.import_wfview_credentials()
     window = MainWindow()
     window.show()

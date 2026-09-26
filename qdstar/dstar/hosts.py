@@ -4,9 +4,9 @@ import json
 import re
 import threading
 import time
-import urllib.request
 
 from .. import config
+from ..net import http_get
 
 HOST_FILES = {
     "DCS": "http://www.pistar.uk/downloads/DCS_Hosts.txt",
@@ -15,7 +15,6 @@ HOST_FILES = {
 }
 XLX_API = "http://xlxapi.rlx.lu/api.php?do=GetReflectorList"
 REFRESH_S = 24 * 3600
-USER_AGENT = "DStar705/0.2 (+https://github.com/manuel-alcocer/dstar705)"
 
 
 def protocol_for(name):
@@ -39,9 +38,7 @@ class HostDirectory:
 
     @staticmethod
     def _get(url):
-        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return resp.read(5_000_000).decode("utf-8", "replace")
+        return http_get(url, timeout=20)
 
     def refresh(self, force=False):
         """Blocking download; call from a worker thread."""

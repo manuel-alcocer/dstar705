@@ -1,0 +1,1019 @@
+# Spanish translation of QDStar.
+# Each msgid is the English text in the code; msgstr is its translation.
+# Keep the {placeholders} unchanged.
+msgid ""
+msgstr ""
+"Language-Name: Español\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: qdstar/civ.py:302
+msgid "Invalid locator (e.g. IN80DK)"
+msgstr "Localizador no válido (ej. IN80DK)"
+
+#: qdstar/dialogs.py:242
+msgid "House"
+msgstr "Casa"
+
+#: qdstar/dialogs.py:242
+msgid "House (HF)"
+msgstr "Casa (HF)"
+
+#: qdstar/dialogs.py:242
+msgid "Car"
+msgstr "Coche"
+
+#: qdstar/dialogs.py:242
+msgid "Person"
+msgstr "Persona"
+
+#: qdstar/dialogs.py:242
+msgid "Bicycle"
+msgstr "Bicicleta"
+
+#: qdstar/dialogs.py:242
+msgid "Pick-up"
+msgstr "Pick-up"
+
+#: qdstar/dialogs.py:243
+msgid "Van"
+msgstr "Furgoneta"
+
+#: qdstar/dialogs.py:243
+msgid "Truck"
+msgstr "Camión"
+
+#: qdstar/dialogs.py:243
+msgid "Ship"
+msgstr "Barco"
+
+#: qdstar/dialogs.py:243
+msgid "Sailboat"
+msgstr "Velero"
+
+#: qdstar/dialogs.py:243
+msgid "Antenna"
+msgstr "Antena"
+
+#: qdstar/dialogs.py:243
+msgid "Motorhome"
+msgstr "Autocaravana"
+
+#: qdstar/dialogs.py:244
+msgid "Jeep"
+msgstr "Jeep"
+
+#: qdstar/dialogs.py:244
+msgid "Motorbike"
+msgstr "Moto"
+
+#: qdstar/dialogs.py:244
+msgid "Small aircraft"
+msgstr "Avioneta"
+
+#: qdstar/dialogs.py:244
+msgid "Weather"
+msgstr "Meteo"
+
+#: qdstar/dialogs.py:16
+msgid "Settings"
+msgstr "Ajustes"
+
+#: qdstar/dialogs.py:22
+msgid "Connect on start-up"
+msgstr "Conectar al arrancar"
+
+#: qdstar/dialogs.py:25
+msgid "The same value as MENU > DV GW > Gateway Repeater (Server/IP/Domain) in the radio.\nThe radio does not expose it over CI-V."
+msgstr "El mismo valor que MENU > DV GW > Gateway Repeater (Server/IP/Domain) en la radio.\nLa radio no lo expone por CI-V."
+
+#: qdstar/dialogs.py:29
+msgid "System language"
+msgstr "Idioma del sistema"
+
+#: qdstar/dialogs.py:35
+msgid "read from the radio (MY)"
+msgstr "se lee de la radio (MY)"
+
+#: qdstar/dialogs.py:41
+msgid "Built-in (QDStar)"
+msgstr "Integrado (QDStar)"
+
+#: qdstar/dialogs.py:42
+msgid "External ircDDBGateway"
+msgstr "ircDDBGateway externo"
+
+#: qdstar/dialogs.py:45
+msgid "automatic"
+msgstr "automático"
+
+#: qdstar/dialogs.py:50
+msgid "empty: read from ~/.config/dstar/ircddbgateway"
+msgstr "vacío: leer de ~/.config/dstar/ircddbgateway"
+
+#: qdstar/dialogs.py:55
+msgid "Radio (WiFi)"
+msgstr "Radio (WiFi)"
+
+#: qdstar/dialogs.py:57
+msgid "Call sign"
+msgstr "Indicativo"
+
+#: qdstar/dialogs.py:58
+msgid "Radio IP / host"
+msgstr "IP / host de la radio"
+
+#: qdstar/dialogs.py:59
+msgid "Control port (UDP)"
+msgstr "Puerto de control (UDP)"
+
+#: qdstar/dialogs.py:60
+msgid "Network user"
+msgstr "Usuario de red"
+
+#: qdstar/dialogs.py:61
+msgid "Password"
+msgstr "Contraseña"
+
+#: qdstar/dialogs.py:64
+msgid "INT mode (internal gateway, WiFi)"
+msgstr "Modo INT (gateway interno, WiFi)"
+
+#: qdstar/dialogs.py:66
+msgid "Terminal Mode server"
+msgstr "Servidor Terminal Mode"
+
+#: qdstar/dialogs.py:69
+msgid "EXT mode (external gateway, USB + PC)"
+msgstr "Modo EXT (gateway externo, USB + PC)"
+
+#: qdstar/dialogs.py:73
+msgid "USB data port"
+msgstr "Puerto USB de datos"
+
+#: qdstar/dialogs.py:75
+msgid "Remote control port"
+msgstr "Puerto de control remoto"
+
+#: qdstar/dialogs.py:76
+msgid "Remote password"
+msgstr "Contraseña remota"
+
+#: qdstar/dialogs.py:77
+msgid "Command when entering EXT"
+msgstr "Comando al entrar en EXT"
+
+#: qdstar/dialogs.py:78
+msgid "Command when leaving EXT"
+msgstr "Comando al salir de EXT"
+
+#: qdstar/dialogs.py:79
+msgid "Command when the USB is plugged in"
+msgstr "Comando al conectar el USB"
+
+#: qdstar/dialogs.py:81
+msgid "Interface"
+msgstr "Interfaz"
+
+#: qdstar/dialogs.py:83
+msgid "Language"
+msgstr "Idioma"
+
+#: qdstar/dialogs.py:123
+msgid "Reflectors"
+msgstr "Reflectores"
+
+#: qdstar/dialogs.py:132
+msgid "INT (WiFi, writes the TO)"
+msgstr "INT (WiFi, se escribe el TO)"
+
+#: qdstar/dialogs.py:133
+msgid "EXT (USB + PC, linked by the gateway)"
+msgstr "EXT (USB + PC, enlaza ircDDBGateway)"
+
+#: qdstar/dialogs.py:145
+msgid "Type"
+msgstr "Tipo"
+
+#: qdstar/dialogs.py:147
+msgid "Server"
+msgstr "Servidor"
+
+#: qdstar/dialogs.py:148
+msgid "Name"
+msgstr "Nombre"
+
+#: qdstar/dialogs.py:149
+msgid "Description"
+msgstr "Descripción"
+
+#: qdstar/dialogs.py:152
+msgid "Notes"
+msgstr "Notas"
+
+#: qdstar/dialogs.py:154
+msgid "New"
+msgstr "Nuevo"
+
+#: qdstar/dialogs.py:156
+msgid "Save"
+msgstr "Guardar"
+
+#: qdstar/dialogs.py:158
+msgid "Delete"
+msgstr "Borrar"
+
+#: qdstar/dialogs.py:160
+msgid "Close"
+msgstr "Cerrar"
+
+#: qdstar/dialogs.py:269
+msgid "D-PRS position"
+msgstr "Posición D-PRS"
+
+#: qdstar/dialogs.py:273
+msgid "Send my position with every over (GPS TX Mode = D-PRS)"
+msgstr "Enviar mi posición en cada pasada (GPS TX Mode = D-PRS)"
+
+#: qdstar/dialogs.py:275
+msgid "The radio's internal GPS"
+msgstr "GPS interno de la radio"
+
+#: qdstar/dialogs.py:276
+msgid "Manual position"
+msgstr "Posición manual"
+
+#: qdstar/dialogs.py:282
+msgid "Use locator"
+msgstr "Usar localizador"
+
+#: qdstar/dialogs.py:283
+msgid "Centre of the grid square: announces an area, not your exact home"
+msgstr "Centro de la cuadrícula: anuncia una zona, no tu casa exacta"
+
+#: qdstar/dialogs.py:291
+msgid "Reading the radio's settings…"
+msgstr "Leyendo la configuración de la radio…"
+
+#: qdstar/dialogs.py:300
+msgid "Position source"
+msgstr "Fuente de la posición"
+
+#: qdstar/dialogs.py:301
+msgid "Latitude (degrees)"
+msgstr "Latitud (grados)"
+
+#: qdstar/dialogs.py:302
+msgid "Longitude (degrees, west negative)"
+msgstr "Longitud (grados, oeste negativa)"
+
+#: qdstar/dialogs.py:304
+msgid "Altitude"
+msgstr "Altitud"
+
+#: qdstar/dialogs.py:305
+msgid "Locator"
+msgstr "Localizador"
+
+#: qdstar/dialogs.py:306
+msgid "Symbol"
+msgstr "Símbolo"
+
+#: qdstar/dialogs.py:308
+msgid "Comment"
+msgstr "Comentario"
+
+#: qdstar/dialogs.py:356
+msgid "Settings read from the radio"
+msgstr "Configuración leída de la radio"
+
+#: qdstar/dialogs.py:408
+msgid "Saving in the radio…"
+msgstr "Guardando en la radio…"
+
+#: qdstar/dialogs.py:37
+msgid "call sign + Z"
+msgstr "indicativo + Z"
+
+#: qdstar/dialogs.py:39
+msgid "call sign + B"
+msgstr "indicativo + B"
+
+#: qdstar/dialogs.py:104
+msgid "The new language is used after restarting QDStar."
+msgstr "El nuevo idioma se aplica al reiniciar QDStar."
+
+#: qdstar/dialogs.py:136
+msgid "e.g. server1.dstar.es"
+msgstr "ej. server1.dstar.es"
+
+#: qdstar/dialogs.py:140
+msgid "https://…/dashboard/index.php (JSON API, optional)"
+msgstr "https://…/dashboard/index.php (API JSON, opcional)"
+
+#: qdstar/dialogs.py:234
+msgid "Delete {reflector}?"
+msgstr "¿Borrar {reflector}?"
+
+#: qdstar/dialogs.py:280
+msgid "optional, metres"
+msgstr "opcional, metros"
+
+#: qdstar/dialogs.py:350
+msgid "No. {n}: {name} ({code})"
+msgstr "Nº {n}: {name} ({code})"
+
+#: qdstar/dialogs.py:377
+msgid "Coordinates out of range"
+msgstr "Coordenadas fuera de rango"
+
+#: qdstar/dialogs.py:330
+msgid "The radio did not accept setting {number}"
+msgstr "La radio no aceptó el ajuste {number}"
+
+#: qdstar/dialogs.py:332
+msgid "Saved in the radio and verified ✓"
+msgstr "Guardado en la radio y verificado ✓"
+
+#: qdstar/dialogs.py:394
+msgid "Check the latitude, longitude and altitude."
+msgstr "Revisa la latitud, la longitud y la altitud."
+
+#: qdstar/dstar/core.py:160
+msgid "{protocol}: linking {reflector} ({address})"
+msgstr "{protocol}: enlazando {reflector} ({address})"
+
+#: qdstar/dstar/core.py:98
+msgid "DPlus: waiting for authentication before linking"
+msgstr "DPlus: esperando a la autenticación para enlazar"
+
+#: qdstar/dstar/core.py:114
+msgid "unlinked from {reflector}"
+msgstr "desenlazado de {reflector}"
+
+#: qdstar/dstar/core.py:114
+msgid "no link"
+msgstr "sin enlace"
+
+#: qdstar/dstar/core.py:145
+msgid "{reflector}: address not found"
+msgstr "{reflector}: no encuentro su dirección"
+
+#: qdstar/dstar/core.py:167
+msgid "linked to {reflector}"
+msgstr "enlazado a {reflector}"
+
+#: qdstar/dstar/core.py:219
+msgid "RX: network stream cut, closing"
+msgstr "RX: stream de red cortado, cerrando"
+
+#: qdstar/dstar/core.py:124
+msgid "Could not authenticate on the DPlus network"
+msgstr "No se pudo autenticar en la red DPlus"
+
+#: qdstar/dstar/core.py:169
+msgid "{reflector} refuses the link"
+msgstr "{reflector} rechaza el enlace"
+
+#: qdstar/dstar/dcs.py:88
+msgid "{protocol}: {reflector} does not answer, relinking"
+msgstr "{protocol}: {reflector} no responde, reenlazando"
+
+#: qdstar/dstar/dcs.py:102
+msgid "{protocol}: linked to {reflector}"
+msgstr "{protocol}: enlazado a {reflector}"
+
+#: qdstar/dstar/dcs.py:105
+msgid "{protocol}: {reflector} refuses the link ({reply})"
+msgstr "{protocol}: {reflector} rechaza el enlace ({reply})"
+
+#: qdstar/dstar/dcs.py:189
+msgid "{protocol}: {reflector} closed the link"
+msgstr "{protocol}: {reflector} ha cerrado el enlace"
+
+#: qdstar/dstar/dplus.py:94
+msgid "DPlus: authenticated as {call} ({count} REF reflectors)"
+msgstr "DPlus: autenticado como {call} ({count} reflectores REF)"
+
+#: qdstar/dstar/dplus.py:97
+msgid "DPlus: authentication failed at {host}: {error}"
+msgstr "DPlus: fallo de autenticación en {host}: {error}"
+
+#: qdstar/dstar/icom_terminal.py:98
+msgid "USB: cannot open {port}: {error}"
+msgstr "USB: no se puede abrir {port}: {error}"
+
+#: qdstar/dstar/icom_terminal.py:105
+msgid "USB: port {port} open"
+msgstr "USB: puerto {port} abierto"
+
+#: qdstar/dstar/icom_terminal.py:172
+msgid "USB: port error ({error}), retrying"
+msgstr "USB: error del puerto ({error}), reintentando"
+
+#: qdstar/dstar/icom_terminal.py:87
+msgid "USB: the radio's data port was not found"
+msgstr "USB: no se encuentra el puerto de datos de la radio"
+
+#: qdstar/dstar/icom_terminal.py:153
+msgid "USB: radio connected (Terminal Mode)"
+msgstr "USB: radio conectada (Terminal Mode)"
+
+#: qdstar/dstar/icom_terminal.py:153
+msgid "USB: no answer from the radio"
+msgstr "USB: sin respuesta de la radio"
+
+#: qdstar/gateway.py:31
+msgid "Invalid reflector format (e.g. REF001 C)"
+msgstr "Formato de reflector no válido (ej. REF001 C)"
+
+#: qdstar/gateway.py:152
+msgid "could not log into the gateway"
+msgstr "no se pudo iniciar sesión en el gateway"
+
+#: qdstar/gateway.py:110
+msgid "ircDDBGateway connected"
+msgstr "ircDDBGateway conectado"
+
+#: qdstar/gateway.py:128
+msgid "unexpected login reply"
+msgstr "respuesta inesperada al login"
+
+#: qdstar/gateway.py:132
+msgid "login refused"
+msgstr "login rechazado"
+
+#: qdstar/gateway.py:108
+msgid "ircDDBGateway does not answer at {host}:{port} ({error})"
+msgstr "ircDDBGateway no responde en {host}:{port} ({error})"
+
+#: qdstar/gateway.py:94
+msgid "unlinked"
+msgstr "desenlazado"
+
+#: qdstar/icom_udp.py:323
+msgid "Connecting to {host}:{port}"
+msgstr "Conectando con {host}:{port}"
+
+#: qdstar/icom_udp.py:392
+msgid "Radio ready, sending login"
+msgstr "Radio lista, enviando login"
+
+#: qdstar/icom_udp.py:499
+msgid "Opening the CI-V stream (remote port {port})"
+msgstr "Abriendo stream CI-V (puerto remoto {port})"
+
+#: qdstar/icom_udp.py:506
+msgid "CI-V stream open"
+msgstr "Stream CI-V abierto"
+
+#: qdstar/icom_udp.py:316
+msgid "The radio closed the session"
+msgstr "La radio cerró la sesión"
+
+#: qdstar/icom_udp.py:372
+msgid "No answer from the radio (timeout)"
+msgstr "Sin respuesta de la radio (timeout)"
+
+#: qdstar/icom_udp.py:312
+msgid "No network route to {host}: {error}"
+msgstr "Sin red hacia {host}: {error}"
+
+#: qdstar/icom_udp.py:374
+msgid "The radio does not open the stream: it probably still holds a stale session. If it persists, switch the radio off and on."
+msgstr "La radio no abre el stream: seguramente conserva una sesión anterior colgada. Si persiste, apaga y enciende la radio."
+
+#: qdstar/icom_udp.py:445
+msgid "Wrong user name or password"
+msgstr "Usuario o contraseña incorrectos"
+
+#: qdstar/icom_udp.py:451
+msgid "Login OK (connection {kind})"
+msgstr "Login OK (conexión {kind})"
+
+#: qdstar/icom_udp.py:378
+msgid "The radio does not answer, still trying…"
+msgstr "La radio no responde, sigo intentándolo…"
+
+#: qdstar/icom_udp.py:460
+msgid "The radio refused the token renewal"
+msgstr "La radio rechazó la renovación del token"
+
+#: qdstar/icom_udp.py:467
+msgid "Connection refused by the radio (try restarting it)"
+msgstr "Conexión rechazada por la radio (prueba a reiniciarla)"
+
+#: qdstar/icom_udp.py:469
+msgid "The radio disconnected the stream"
+msgstr "La radio desconectó el stream"
+
+#: qdstar/icom_udp.py:480
+msgid "Radio in use by {computer} ({ip}); close wfview or the other client"
+msgstr "Radio ocupada por {computer} ({ip}); cierra wfview u otro cliente"
+
+#: qdstar/mainwindow.py:43
+msgid "Time"
+msgstr "Hora"
+
+#: qdstar/mainwindow.py:43
+msgid "Reflector"
+msgstr "Reflector"
+
+#: qdstar/mainwindow.py:43
+msgid "Dur."
+msgstr "Dur."
+
+#: qdstar/mainwindow.py:43
+msgid "Message"
+msgstr "Mensaje"
+
+#: qdstar/mainwindow.py:44
+msgid "Location"
+msgstr "Ubicación"
+
+#: qdstar/mainwindow.py:44
+msgid "Dist."
+msgstr "Dist."
+
+#: qdstar/mainwindow.py:29
+msgid "Icom"
+msgstr "Icom"
+
+#: qdstar/mainwindow.py:29
+msgid "Network session with the IC-705"
+msgstr "Sesión de red con la IC-705"
+
+#: qdstar/mainwindow.py:30
+msgid "CI-V"
+msgstr "CI-V"
+
+#: qdstar/mainwindow.py:30
+msgid "The radio answers CI-V commands"
+msgstr "La radio responde a comandos CI-V"
+
+#: qdstar/mainwindow.py:31
+msgid "Internet"
+msgstr "Internet"
+
+#: qdstar/mainwindow.py:31
+msgid "Internet access (XLX directory)"
+msgstr "Acceso a internet (directorio XLX)"
+
+#: qdstar/mainwindow.py:32
+msgid "USB"
+msgstr "USB"
+
+#: qdstar/mainwindow.py:32
+msgid "EXT mode: the radio's USB cable is connected to the PC"
+msgstr "Modo EXT: cable USB de la radio conectado al PC"
+
+#: qdstar/mainwindow.py:33
+msgid "Gateway"
+msgstr "Gateway"
+
+#: qdstar/mainwindow.py:33
+msgid "EXT mode: the gateway answers"
+msgstr "Modo EXT: el gateway responde"
+
+#: qdstar/mainwindow.py:34
+msgid "The selected reflector is online"
+msgstr "El reflector seleccionado está en línea"
+
+#: qdstar/mainwindow.py:35
+msgid "Linked"
+msgstr "Enlazado"
+
+#: qdstar/mainwindow.py:35
+msgid "Linked to the reflector"
+msgstr "Enlazado con el reflector"
+
+#: qdstar/mainwindow.py:36
+msgid "RX"
+msgstr "RX"
+
+#: qdstar/mainwindow.py:36
+msgid "Receiving voice"
+msgstr "Recibiendo voz"
+
+#: qdstar/mainwindow.py:37
+msgid "TX"
+msgstr "TX"
+
+#: qdstar/mainwindow.py:37
+msgid "Transmitting"
+msgstr "Transmitiendo"
+
+#: qdstar/mainwindow.py:140
+msgid "Change"
+msgstr "Cambiar"
+
+#: qdstar/mainwindow.py:143
+msgid "Unlink"
+msgstr "Desenlazar"
+
+#: qdstar/mainwindow.py:147
+msgid "Manage reflectors"
+msgstr "Gestionar reflectores"
+
+#: qdstar/mainwindow.py:164
+msgid "History"
+msgstr "Histórico"
+
+#: qdstar/mainwindow.py:171
+msgid "Log"
+msgstr "Log"
+
+#: qdstar/mainwindow.py:184
+msgid "&Radio"
+msgstr "&Radio"
+
+#: qdstar/mainwindow.py:185
+msgid "Connect"
+msgstr "Conectar"
+
+#: qdstar/mainwindow.py:186
+msgid "Disconnect"
+msgstr "Desconectar"
+
+#: qdstar/mainwindow.py:192
+msgid "Log RX/TX CI-V frames"
+msgstr "Registrar CI-V de RX/TX en el log"
+
+#: qdstar/mainwindow.py:198
+msgid "R&eflectors"
+msgstr "R&eflectores"
+
+#: qdstar/mainwindow.py:201
+msgid "H&istory"
+msgstr "&Histórico"
+
+#: qdstar/mainwindow.py:203
+msgid "&Help"
+msgstr "A&yuda"
+
+#: qdstar/mainwindow.py:288
+msgid "EXT · built-in gateway"
+msgstr "EXT · gateway integrado"
+
+#: qdstar/mainwindow.py:564
+msgid "Changing the TO to {to}…"
+msgstr "Cambiando TO a {to}…"
+
+#: qdstar/mainwindow.py:633
+msgid "Message from {caller}: {message}"
+msgstr "Mensaje de {caller}: {message}"
+
+#: qdstar/mainwindow.py:749
+msgid "LAST HEARD ON THE REFLECTOR"
+msgstr "ÚLTIMOS EN EL REFLECTOR"
+
+#: qdstar/mainwindow.py:749
+msgid "LAST HEARD HERE ON THIS REFLECTOR"
+msgstr "ÚLTIMOS OÍDOS AQUÍ EN ESTE REFLECTOR"
+
+#: qdstar/mainwindow.py:800
+msgid "D-PRS from {caller}: {position}"
+msgstr "D-PRS de {caller}: {position}"
+
+#: qdstar/mainwindow.py:807
+msgid "About QDStar"
+msgstr "Acerca de QDStar"
+
+#: qdstar/mainwindow.py:118
+msgid "Mode:"
+msgstr "Modo:"
+
+#: qdstar/mainwindow.py:135
+msgid "Reflector:"
+msgstr "Reflector:"
+
+#: qdstar/mainwindow.py:190
+msgid "Settings…"
+msgstr "Ajustes…"
+
+#: qdstar/mainwindow.py:191
+msgid "D-PRS position…"
+msgstr "Posición D-PRS…"
+
+#: qdstar/mainwindow.py:197
+msgid "Quit"
+msgstr "Salir"
+
+#: qdstar/mainwindow.py:199
+msgid "Manage…"
+msgstr "Gestionar…"
+
+#: qdstar/mainwindow.py:200
+msgid "Refresh status"
+msgstr "Actualizar estado"
+
+#: qdstar/mainwindow.py:202
+msgid "Clear history…"
+msgstr "Vaciar histórico…"
+
+#: qdstar/mainwindow.py:204
+msgid "About QDStar…"
+msgstr "Acerca de QDStar…"
+
+#: qdstar/mainwindow.py:230
+msgid "EXT mode (USB + PC)"
+msgstr "Modo EXT (USB + PC)"
+
+#: qdstar/mainwindow.py:232
+msgid "To work in EXT mode:"
+msgstr "Para trabajar en modo EXT:"
+
+#: qdstar/mainwindow.py:234
+msgid "1. Connect the radio's USB cable to the PC.\n2. On the radio: MENU > DV GW > Gateway Select = External Gateway USB (B).\n3. Terminal/AP Call Sign = {call}.\n4. Turn Terminal Mode on.\n\nQDStar will start its gateway."
+msgstr "1. Conecta el cable USB de la radio al PC.\n2. En la radio: MENU > DV GW > Gateway Select = External Gateway USB (B).\n3. Terminal/AP Call Sign = {call}.\n4. Activa Terminal Mode.\n\nQDStar arrancará su gateway."
+
+#: qdstar/mainwindow.py:245
+msgid "INT mode (WiFi)"
+msgstr "Modo INT (WiFi)"
+
+#: qdstar/mainwindow.py:247
+msgid "To work in INT mode:"
+msgstr "Para trabajar en modo INT:"
+
+#: qdstar/mainwindow.py:249
+msgid "1. On the radio: MENU > DV GW > Gateway Select = Internal Gateway (WLAN).\n2. Terminal/AP Call Sign = {call}.\n3. Turn Terminal Mode on.\n\nThe USB cable is no longer needed and the gateway stops."
+msgstr "1. En la radio: MENU > DV GW > Gateway Select = Internal Gateway (WLAN).\n2. Terminal/AP Call Sign = {call}.\n3. Activa Terminal Mode.\n\nEl cable USB ya no hace falta y se detiene el gateway."
+
+#: qdstar/mainwindow.py:268
+msgid "Link"
+msgstr "Enlazar"
+
+#: qdstar/mainwindow.py:269
+msgid "Links the reflector through the gateway"
+msgstr "Enlaza el reflector a través del gateway"
+
+#: qdstar/mainwindow.py:270
+msgid "Writes the TO (UR) to the radio"
+msgstr "Escribe el TO (UR) en la radio"
+
+#: qdstar/mainwindow.py:283
+msgid "Mode {mode}"
+msgstr "Modo {mode}"
+
+#: qdstar/mainwindow.py:299
+msgid "Ran: {command}"
+msgstr "Ejecutado: {command}"
+
+#: qdstar/mainwindow.py:301
+msgid "Could not run: {command}"
+msgstr "No se pudo ejecutar: {command}"
+
+#: qdstar/mainwindow.py:307
+msgid "Gateway: waiting to read your call sign (MY) from the radio"
+msgstr "Gateway: esperando a leer tu indicativo (MY) de la radio"
+
+#: qdstar/mainwindow.py:356
+msgid "Gateway error: {error}"
+msgstr "Error del gateway: {error}"
+
+#: qdstar/mainwindow.py:357
+msgid "Link reflector"
+msgstr "Enlazar reflector"
+
+#: qdstar/mainwindow.py:387
+msgid "connect the USB"
+msgstr "conecta el USB"
+
+#: qdstar/mainwindow.py:395
+msgid "Radio TO {old} → {new} for the linked reflector"
+msgstr "TO de la radio {old} → {new} para el reflector enlazado"
+
+#: qdstar/mainwindow.py:453
+msgid "Station call sign: {call} (read from the radio)"
+msgstr "Indicativo de la estación: {call} (leído de la radio)"
+
+#: qdstar/mainwindow.py:462
+msgid "Warning: the radio is in {mode}, not DV"
+msgstr "Aviso: la radio está en {mode}, no en DV"
+
+#: qdstar/mainwindow.py:501
+msgid "(not registered)"
+msgstr "(no registrado)"
+
+#: qdstar/mainwindow.py:501
+msgid "Add it in Reflectors > Manage"
+msgstr "Añádelo en Reflectores > Gestionar"
+
+#: qdstar/mainwindow.py:546
+msgid "Asking the gateway to link {reflector}…"
+msgstr "Pidiendo al gateway enlazar {reflector}…"
+
+#: qdstar/mainwindow.py:552
+msgid "{to} is already the current TO"
+msgstr "{to} ya es el TO actual"
+
+#: qdstar/mainwindow.py:558
+msgid "Change reflector"
+msgstr "Cambiar reflector"
+
+#: qdstar/mainwindow.py:559
+msgid "{to} is reached through {needed}, but the radio uses {server}.\n\nThe server cannot be changed over CI-V: change it in MENU > DV GW > Gateway Repeater and update Radio > Settings.\n\nWrite the TO anyway?"
+msgstr "{to} se alcanza a través de {needed}, pero la radio usa {server}.\n\nEl servidor no se puede cambiar por CI-V: hazlo en MENU > DV GW > Gateway Repeater y actualiza Radio > Ajustes.\n\n¿Escribir el TO de todas formas?"
+
+#: qdstar/mainwindow.py:574
+msgid "Radio TO = {to}"
+msgstr "TO de la radio = {to}"
+
+#: qdstar/mainwindow.py:588
+msgid "Settings saved"
+msgstr "Ajustes guardados"
+
+#: qdstar/mainwindow.py:609
+msgid "System reply: {caller} → {called}"
+msgstr "Respuesta del sistema: {caller} → {called}"
+
+#: qdstar/mainwindow.py:642
+msgid "End of RX {caller} ({seconds}s)"
+msgstr "Fin RX {caller} ({seconds}s)"
+
+#: qdstar/mainwindow.py:769
+msgid "Connect to the radio first."
+msgstr "Conecta primero con la radio."
+
+#: qdstar/mainwindow.py:812
+msgid "License GPL-3.0-or-later. Based on wfview (Icom network protocol) and on G4KLX's DStarRepeater / ircDDBGateway."
+msgstr "Licencia GPL-3.0-or-later. Basado en wfview (protocolo de red de Icom) y en DStarRepeater / ircDDBGateway de G4KLX."
+
+#: qdstar/mainwindow.py:816
+msgid "Delete the whole history?"
+msgstr "¿Borrar todo el histórico?"
+
+#: qdstar/mainwindow.py:123
+msgid "Terminal Mode with the internal gateway over WiFi (G3 servers)"
+msgstr "Terminal Mode con gateway interno por WiFi (servidores G3)"
+
+#: qdstar/mainwindow.py:124
+msgid "Terminal Mode with an external gateway over USB (built into QDStar)"
+msgstr "Terminal Mode con gateway externo por USB (integrado en QDStar)"
+
+#: qdstar/mainwindow.py:333
+msgid "Radio USB cable detected"
+msgstr "Cable USB de la radio detectado"
+
+#: qdstar/mainwindow.py:333
+msgid "Radio USB cable NOT detected"
+msgstr "Cable USB de la radio NO detectado"
+
+#: qdstar/mainwindow.py:346
+msgid "Gateway linked to {reflector}"
+msgstr "Gateway enlazado a {reflector}"
+
+#: qdstar/mainwindow.py:346
+msgid "Gateway not linked"
+msgstr "Gateway sin enlace"
+
+#: qdstar/mainwindow.py:383
+msgid "the radio is still in INT ({r1})"
+msgstr "la radio sigue en INT ({r1})"
+
+#: qdstar/mainwindow.py:385
+msgid "the radio is not in INT Terminal Mode (R1 {r1})"
+msgstr "la radio no está en Terminal Mode INT (R1 {r1})"
+
+#: qdstar/mainwindow.py:388
+msgid "check"
+msgstr "revisar"
+
+#: qdstar/mainwindow.py:410
+msgid "TX message: '{message}'"
+msgstr "Mensaje TX: '{message}'"
+
+#: qdstar/mainwindow.py:428
+msgid "Disconnected by the user"
+msgstr "Desconectado por el usuario"
+
+#: qdstar/mainwindow.py:544
+msgid "The gateway is already linked to {reflector}"
+msgstr "El gateway ya está enlazado a {reflector}"
+
+#: qdstar/mainwindow.py:576
+msgid "TO changed to {to}. Press PTT briefly to register on the reflector."
+msgstr "TO cambiado a {to}. Pulsa PTT un instante para registrarte en el reflector."
+
+#: qdstar/mainwindow.py:578
+msgid "Error changing the TO: {error}"
+msgstr "Error al cambiar el TO: {error}"
+
+#: qdstar/mainwindow.py:660
+msgid "End of TX ({seconds}s)"
+msgstr "Fin TX ({seconds}s)"
+
+#: qdstar/mainwindow.py:507
+msgid "Not linked"
+msgstr "Sin enlace"
+
+#: qdstar/mainwindow.py:507
+msgid "Pick a reflector and press Link"
+msgstr "Elige un reflector y pulsa Enlazar"
+
+#: qdstar/mainwindow.py:510
+msgid "PC gateway"
+msgstr "Gateway PC"
+
+#: qdstar/mainwindow.py:510
+msgid "Waiting for the gateway…"
+msgstr "Esperando al gateway…"
+
+#: qdstar/mainwindow.py:810
+msgid "Author: {author}"
+msgstr "Autor: {author}"
+
+#: qdstar/mainwindow.py:238
+msgid "<call sign> B"
+msgstr "<indicativo> B"
+
+#: qdstar/mainwindow.py:253
+msgid "<call sign> Z"
+msgstr "<indicativo> Z"
+
+#: qdstar/mainwindow.py:385
+msgid "empty"
+msgstr "vacío"
+
+#: qdstar/mainwindow.py:809
+msgid "IC-705 D-STAR Terminal Mode controller and built-in gateway."
+msgstr "Control del IC-705 en D-STAR Terminal Mode y gateway integrado."
+
+#: qdstar/radio.py:145
+msgid "The radio did not confirm the TO {to}"
+msgstr "La radio no confirmó el TO {to}"
+
+#: qdstar/radio.py:83
+msgid "R1/R2 have not been read from the radio yet"
+msgstr "Aún no se han leído R1/R2 de la radio"
+
+#: qdstar/reflectors.py:42
+msgid "Invalid TO format (e.g. /XLX214D)"
+msgstr "Formato de TO no válido (ej. /XLX214D)"
+
+#: qdstar/widgets.py:143
+msgid "{n} d ago"
+msgstr "hace {n} d"
+
+#: qdstar/widgets.py:138
+msgid "{n}s ago"
+msgstr "hace {n}s"
+
+#: qdstar/widgets.py:140
+msgid "{n} min ago"
+msgstr "hace {n} min"
+
+#: qdstar/widgets.py:142
+msgid "{n} h ago"
+msgstr "hace {n} h"
+
+#: qdstar/widgets.py:221
+msgid "REFLECTOR"
+msgstr "REFLECTOR"
+
+#: qdstar/widgets.py:222
+msgid "server ?"
+msgstr "servidor ?"
+
+#: qdstar/widgets.py:254
+msgid "transmitting"
+msgstr "transmitiendo"
+
+#: qdstar/widgets.py:289
+msgid "(no records for this reflector)"
+msgstr "(sin registros de este reflector)"
+
+#: qdstar/widgets.py:235
+msgid "{n} nodes"
+msgstr "{n} nodos"
+
+#: qdstar/widgets.py:237
+msgid "linked"
+msgstr "enlazado"
+
+#: qdstar/widgets.py:241
+msgid "different server!"
+msgstr "¡otro servidor!"
+
+#: qdstar/widgets.py:280
+msgid "no activity"
+msgstr "sin actividad"
+
+#: qdstar/widgets.py:232
+msgid "ONLINE"
+msgstr "EN LÍNEA"
+
+#: qdstar/widgets.py:239
+msgid "not linked"
+msgstr "no enlazado"
+
+#: qdstar/widgets.py:260
+msgid "LAST"
+msgstr "ÚLTIMO"
+
+#: qdstar/widgets.py:232
+msgid "NO DATA"
+msgstr "SIN DATOS"
+
+#: qdstar/widgets.py:233
+msgid "DOWN"
+msgstr "CAÍDO"

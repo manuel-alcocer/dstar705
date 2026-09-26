@@ -1,25 +1,25 @@
 [project]
-name = "dstar705"
-version = "0.2.1"
+name = "qdstar"
+version = "0.3.0"
 license = "GPL-3.0-or-later"
 authors = [{ name = "Manuel Alcocer Jiménez (EA7KLX)" }]
 readme = "README.md"
 description = "IC-705 D-STAR Terminal Mode (internal gateway, WLAN) controller"
 requires-python = ">=3.10"
-dependencies = ["PySide6>=6.5"]
+dependencies = ["PySide6>=6.5", "certifi"]
 
 [project.urls]
-Homepage = "https://github.com/manuel-alcocer/dstar705"
+Homepage = "https://github.com/manuel-alcocer/qdstar"
 
 [project.gui-scripts]
-dstar705 = "dstar705.__main__:main"
+qdstar = "qdstar.__main__:main"
 
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["dstar705", "dstar705.dstar"]
+packages = ["qdstar", "qdstar.dstar"]
 
 [tool.setuptools.package-data]
-dstar705 = ["icon.svg", "fonts/*", "default_reflectors.json"]
+qdstar = ["icon.svg", "fonts/*", "default_reflectors.json", "translations/*.po"]

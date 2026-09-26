@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from .i18n import tr
+
 RADIO_ADDR = 0xA4
 CONTROLLER_ADDR = 0xE0
 
@@ -163,6 +165,12 @@ def parse(body):
             return ("tx_calls", (raw_callsign(data[:8]), raw_callsign(data[8:16]), raw_callsign(data[16:24])))
         if sub == 0x02:
             return ("tx_message", decode_text(data[:20]))
+    if cmd == 0x1A and len(rest) >= 3 and rest[0] == 0x05:
+        return ("setting", (rest[1:3].hex(), bytes(rest[3:])))
+    if cmd == 0x20 and len(rest) >= 3 and rest[0] == 0x03:
+        if rest[1:3] in (b"\x01\x00", b"\x02\x00"):
+            return ("dprs", parse_dprs_position(bytes(rest[3:])))
+        return None
     if cmd == 0x20 and len(rest) >= 2:
         group, sub, data = rest[0], rest[1], rest[2:]
         if sub not in (0x01, 0x02):
@@ -182,3 +190,129 @@ def parse(body):
             return ("rx_status", RxStatus(bool(b & 0x40), bool(b & 0x20), bool(b & 0x10), bool(b & 0x08),
                                           bool(b & 0x04), bool(b & 0x02), bool(b & 0x01)))
     return ("other", body.hex(" "))
+
+
+# --- settings (1A 05 nnnn) ------------------------------------------------
+
+def read_setting(number):
+    """number: 4-digit string, e.g. '0287'."""
+    return frame(0x1A, b"\x05" + bytes.fromhex(number))
+
+
+def write_setting(number, data):
+    return frame(0x1A, b"\x05" + bytes.fromhex(number), bytes(data))
+
+
+def auto_dprs_output(enabled=True):
+    return frame(0x20, b"\x03\x00", b"\x01" if enabled else b"\x00")
+
+
+def read_rx_dprs_position():
+    return frame(0x20, b"\x03\x02\x00")
+
+
+# --- positions (IC-705 CI-V reference, "Manually entered position data" and "GPS/D-PRS data") ---
+
+def _digits(data):
+    out = []
+    for b in data:
+        out += [b >> 4, b & 0x0F]
+    return out
+
+
+def _bcd(digits):
+    return bytes((digits[i] << 4) | digits[i + 1] for i in range(0, len(digits), 2))
+
+
+def decode_latitude(data):
+    """5 bytes dd mm.mmm + N/S -> signed degrees, or None."""
+    if len(data) < 5 or data[:5] == b"\xFF" * 5:
+        return None
+    d = _digits(data[:5])
+    value = d[0] * 10 + d[1] + (d[2] * 10 + d[3] + d[4] / 10 + d[5] / 100 + d[6] / 1000) / 60
+    return value if d[9] == 1 else -value
+
+
+def decode_longitude(data):
+    """6 bytes ddd mm.mmm + E/W -> signed degrees, or None."""
+    if len(data) < 6 or data[:6] == b"\xFF" * 6:
+        return None
+    d = _digits(data[:6])
+    value = d[1] * 100 + d[2] * 10 + d[3] + (d[4] * 10 + d[5] + d[6] / 10 + d[7] / 100 + d[8] / 1000) / 60
+    return value if d[11] == 1 else -value
+
+
+def decode_altitude(data):
+    """4 bytes, 0.1 m steps + sign -> metres, or None."""
+    if len(data) < 4 or data[:4] == b"\xFF" * 4:
+        return None
+    d = _digits(data[:4])
+    value = (d[0] * 10000 + d[1] * 1000 + d[2] * 100 + d[3] * 10 + d[4] + d[5] / 10)
+    return -value if d[7] == 1 else value
+
+
+def _minutes_digits(value):
+    """Absolute degrees -> (whole degrees, [m10, m1, m0.1, m0.01, m0.001])."""
+    thousandths = round(abs(value) * 60000)       # minutes * 1000
+    deg, rest = divmod(thousandths, 60000)
+    return deg, [int(c) for c in f"{rest:05d}"]
+
+
+def encode_position(lat, lon, alt=None):
+    """Manual Position (1A 05 0286) payload: latitude, longitude and altitude."""
+    deg, m = _minutes_digits(lat)
+    lat_bytes = _bcd([deg // 10, deg % 10, *m, 0, 0, 1 if lat >= 0 else 0])
+    deg, m = _minutes_digits(lon)
+    lon_bytes = _bcd([0, deg // 100, (deg // 10) % 10, deg % 10, *m, 0, 0, 1 if lon >= 0 else 0])
+    if alt is None:
+        alt_bytes = b"\xFF\xFF\xFF\xFF"
+    else:
+        tenths = min(round(abs(alt) * 10), 999999)
+        alt_bytes = _bcd([int(c) for c in f"{tenths:06d}"] + [0, 1 if alt < 0 else 0])
+    return lat_bytes + lon_bytes + alt_bytes
+
+
+@dataclass
+class DprsPosition:
+    callsign: str      # 'EA7JTR-7'
+    symbol: str        # '/['
+    lat: float
+    lon: float
+    altitude: float = None
+
+
+def parse_dprs_position(data):
+    """Data after '20 03 01 00' / '20 03 02 00': number 00 + position fields."""
+    if len(data) < 1 + 9 + 2 + 5 + 6 or data[0] != 0x00 or data[1:10] == b"\xFF" * 9:
+        return None
+    body = data[1:]
+    lat = decode_latitude(body[11:16])
+    lon = decode_longitude(body[16:22])
+    if lat is None or lon is None:
+        return None
+    return DprsPosition(body[0:9].decode("ascii", "replace").strip(),
+                        body[9:11].decode("ascii", "replace"), lat, lon,
+                        decode_altitude(body[22:26]) if len(body) >= 26 else None)
+
+
+def locator_to_latlon(locator):
+    """Maidenhead locator (4 or 6 characters) -> centre of the square."""
+    loc = locator.strip().upper()
+    if len(loc) not in (4, 6) or not (loc[0:2].isalpha() and loc[2:4].isdigit()):
+        raise ValueError(tr("Invalid locator (e.g. IN80DK)"))
+    lon = (ord(loc[0]) - 65) * 20 - 180 + int(loc[2]) * 2
+    lat = (ord(loc[1]) - 65) * 10 - 90 + int(loc[3])
+    if len(loc) == 6:
+        lon += (ord(loc[4]) - 65) * 5 / 60 + 2.5 / 60
+        lat += (ord(loc[5]) - 65) * 2.5 / 60 + 1.25 / 60
+    else:
+        lon += 1
+        lat += 0.5
+    return lat, lon
+
+
+def distance_km(lat1, lon1, lat2, lon2):
+    from math import asin, cos, radians, sin, sqrt
+    dlat, dlon = radians(lat2 - lat1), radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * 6371.0 * asin(sqrt(a))

@@ -33,11 +33,16 @@ CREATE TABLE IF NOT EXISTS names (
 
 class Storage:
     def __init__(self, path=None):
-        self.path = path or config.data_dir() / "dstar705.db"
+        self.path = path or config.data_dir() / "qdstar.db"
         self.lock = threading.Lock()
         self.db = sqlite3.connect(self.path, check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
+        columns = {row[1] for row in self.db.execute("PRAGMA table_info(history)")}
+        for column in ("lat", "lon"):          # added in 0.3.0 (D-PRS positions)
+            if column not in columns:
+                self.db.execute(f"ALTER TABLE history ADD COLUMN {column} REAL")
+        self.db.commit()
 
     # --- history -------------------------------------------------------
 
@@ -56,6 +61,17 @@ class Storage:
         cols = ", ".join(f"{k} = ?" for k in fields)
         with self.lock, self.db:
             self.db.execute(f"UPDATE history SET {cols} WHERE id = ?", (*fields.values(), entry_id))
+
+    def fill_recent(self, callsign, field, value, window=900):
+        """Set a field on this station's recent entries that still lack it (late name/message)."""
+        if not value:
+            return 0
+        since = time.time() - window
+        with self.lock, self.db:
+            cur = self.db.execute(
+                f"UPDATE history SET {field} = ? WHERE callsign = ? AND started >= ?"
+                f" AND ({field} IS NULL OR {field} = '')", (value, callsign, since))
+            return cur.rowcount
 
     def recent(self, limit=500):
         with self.lock:

@@ -14,6 +14,7 @@ from .dplus import DPlusAuthenticator, DPlusLink
 from .hosts import HostDirectory, protocol_for
 from .icom_terminal import IcomTerminal
 from .protocol import FRAMES_PER_SUPERFRAME, Header, pad
+from ..i18n import tr
 
 NET_STREAM_TIMEOUT_MS = 1000
 
@@ -94,7 +95,7 @@ class LocalGateway(QObject):
         name, _ = split_reflector(reflector)
         protocol = protocol_for(name)
         if protocol == "DPlus" and not self.auth.authenticated_at:
-            self.log.emit("DPlus: esperando a la autenticación para enlazar")
+            self.log.emit(tr("DPlus: waiting for authentication before linking"))
             self.pending_link = reflector
             return
         address = self.auth.hosts.get(name) if protocol == "DPlus" else None
@@ -110,7 +111,7 @@ class LocalGateway(QObject):
         old, self.reflector = self.reflector, ""
         self.link_changed.emit("", "unlinked")
         self.refresh()
-        self.result.emit(True, f"desenlazado de {old.strip()}" if old else "sin enlace")
+        self.result.emit(True, tr("unlinked from {reflector}", reflector=old.strip()) if old else tr("no link"))
 
     # --- linking ----------------------------------------------------------------------
 
@@ -120,7 +121,7 @@ class LocalGateway(QObject):
             if ok:
                 self.link(reflector)
             else:
-                self.result.emit(False, "No se pudo autenticar en la red DPlus")
+                self.result.emit(False, tr("Could not authenticate on the DPlus network"))
 
     def _resolve(self, reflector, protocol):
         """Worker thread: host files, then DNS for REF reflectors."""
@@ -141,7 +142,7 @@ class LocalGateway(QObject):
 
     def _on_resolved(self, reflector, protocol, address):
         if not address:
-            self.result.emit(False, f"{reflector.strip()}: no encuentro su dirección")
+            self.result.emit(False, tr("{reflector}: address not found", reflector=reflector.strip()))
             return
         self._start_link(reflector, protocol, address)
 
@@ -156,16 +157,16 @@ class LocalGateway(QObject):
         self.conn.state_changed.connect(self._link_state)
         self.conn.header_received.connect(self._net_header)
         self.conn.data_received.connect(self._net_data)
-        self.log.emit(f"{protocol}: enlazando {self.reflector.strip()} ({address})")
+        self.log.emit(tr("{protocol}: linking {reflector} ({address})", protocol=protocol, reflector=self.reflector.strip(), address=address))
         self.conn.link()
 
     def _link_state(self, state):
         self.link_changed.emit(self.reflector if state == "linked" else "", state)
         self.refresh()
         if state == "linked":
-            self.result.emit(True, f"enlazado a {self.reflector.strip()}")
+            self.result.emit(True, tr("linked to {reflector}", reflector=self.reflector.strip()))
         elif state == "refused":
-            self.result.emit(False, f"{self.reflector.strip()} rechaza el enlace")
+            self.result.emit(False, tr("{reflector} refuses the link", reflector=self.reflector.strip()))
 
     # --- radio -> network --------------------------------------------------------------
 
@@ -215,7 +216,7 @@ class LocalGateway(QObject):
 
     def _net_stream_lost(self):
         if self.rx_id is not None:
-            self.log.emit("RX: stream de red cortado, cerrando")
+            self.log.emit(tr("RX: network stream cut, closing"))
             self._end_net_stream()
 
     def _end_net_stream(self):

@@ -6,20 +6,20 @@ import re
 import threading
 import time
 import urllib.parse
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
 from . import config
+from .net import http_get
 from .qtutil import safe_emit
+from .i18n import tr
 
 XLX_API_URL = "http://xlxapi.rlx.lu/api.php?do=GetReflectorList"
 XLX_API_REFRESH = 600
 STATUS_REFRESH = 30
 ONLINE_MAX_AGE = 3600
-USER_AGENT = "DStar705/0.2 (+https://github.com/manuel-alcocer/dstar705)"
 MODULE_ROW_RE = re.compile(r"\|\s*([A-Z])\s*\|\s*([^|]*?)\s*\|\s*(\d+)\s*\|\s*REF\d{3}\1L", re.I)
 
 FIELDS = ("via", "to", "server", "name", "description", "notes", "dashboard", "api")
@@ -34,12 +34,12 @@ def normalize_to(text, via="int"):
     if via == "ext":
         text = text.lstrip("/")
         if not re.fullmatch(r"[A-Z0-9]{4,7}[A-Z]", text):
-            raise ValueError("Formato de reflector no válido (ej. REF001 C)")
+            raise ValueError(tr("Invalid reflector format (e.g. REF001 C)"))
         return text[:-1].ljust(7) + text[-1]
     if not text.startswith("/"):
         text = "/" + text
     if not re.fullmatch(r"/[A-Z0-9]{3,6}[A-Z]", text):
-        raise ValueError("Formato de TO no válido (ej. /XLX214D)")
+        raise ValueError(tr("Invalid TO format (e.g. /XLX214D)"))
     return text
 
 
@@ -112,9 +112,7 @@ class Registry(QObject):
 
 
 def _fetch(url, limit=2_000_000):
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        return resp.read(limit).decode("utf-8", "replace")
+    return http_get(url, limit=limit)
 
 
 def _page_text(raw):

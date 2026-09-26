@@ -13,7 +13,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBox
                                QTabWidget, QVBoxLayout, QWidget)
 
 from . import __author__, __url__, __version__, config
-from .dialogs import ReflectorsDialog, SettingsDialog
+from . import civ
+from .dialogs import DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
 from .gateway import GatewayClient
 from .lookup import NameLookup
@@ -21,31 +22,36 @@ from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
 from .widgets import LedBar, ReflectorScreen, load_fonts
+from .i18n import N_, tr
 
+# (key, caption, tooltip); translated when the window is built
 LEDS = [
-    ("radio", "Icom", "Sesión de red con la IC-705"),
-    ("civ", "CI-V", "La radio responde a comandos CI-V"),
-    ("internet", "Internet", "Acceso a internet (directorio XLX)"),
-    ("usb", "USB", "Modo EXT: cable USB de la radio conectado al PC"),
-    ("gateway", "Gateway", "Modo EXT: ircDDBGateway responde"),
-    ("reflector", "Reflector", "El reflector seleccionado está en línea"),
-    ("linked", "Enlazado", "Enlazado con el reflector"),
-    ("rx", "RX", "Recibiendo voz"),
-    ("tx", "TX", "Transmitiendo"),
+    ("radio", N_("Icom"), N_("Network session with the IC-705")),
+    ("civ", N_("CI-V"), N_("The radio answers CI-V commands")),
+    ("internet", N_("Internet"), N_("Internet access (XLX directory)")),
+    ("usb", N_("USB"), N_("EXT mode: the radio's USB cable is connected to the PC")),
+    ("gateway", N_("Gateway"), N_("EXT mode: the gateway answers")),
+    ("reflector", N_("Reflector"), N_("The selected reflector is online")),
+    ("linked", N_("Linked"), N_("Linked to the reflector")),
+    ("rx", N_("RX"), N_("Receiving voice")),
+    ("tx", N_("TX"), N_("Transmitting")),
 ]
 EXT_ONLY_LEDS = ("usb", "gateway")
 ICOM_USB_VENDOR = 0x0C26
 
 MODE_NAMES = {"int": "INT · WiFi", "ext": "EXT · USB/PC"}
-HISTORY_COLUMNS = ["Hora", "", "Indicativo", "Nombre", "Reflector", "Dur.", "Mensaje", "Ubicación"]
+HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Name"), N_("Reflector"), N_("Dur."), N_("Message"),
+                   N_("Location"), N_("Dist.")]
 LOG_MAX_BYTES = 2_000_000
+WINDOW_WIDTH = 560
+ALL_TIME = 100 * 365 * 86400
 EXT_UR = "CQCQCQ"
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("DStar705 — IC-705 D-STAR")
+        self.setWindowTitle("QDStar — IC-705 D-STAR")
         self.storage = Storage()
         self.registry = Registry()
         self.lookup = NameLookup(self.storage)
@@ -64,6 +70,7 @@ class MainWindow(QMainWindow):
         self.gw_links = []
         self.usb_present = None
         self.radio_connected = False
+        self.own_gps = {}          # radio settings 0281 (GPS select), 0286 (manual position), 0287 (TX mode)
         self.rx_entry = None
         self.rx_info = None
         self.tx_entry = None
@@ -87,6 +94,7 @@ class MainWindow(QMainWindow):
         self._apply_mode(self.mode, startup=True)
         self._load_history()
         self._update_last_heard()
+        self._backfill_names()
         if config.get("radio/auto_connect") and config.get("radio/username"):
             QTimer.singleShot(200, self.connect_radio)
         elif not config.get("radio/username"):
@@ -100,20 +108,20 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(8, 6, 8, 8)
         layout.setSpacing(6)
 
-        self.leds = LedBar(LEDS)
+        self.leds = LedBar([(key, tr(caption), tr(tip)) for key, caption, tip in LEDS])
         layout.addWidget(self.leds)
 
         self.screen = ReflectorScreen()
         layout.addWidget(self.screen, 0)
 
         mode_bar = QHBoxLayout()
-        mode_bar.addWidget(QLabel("Modo:"))
+        mode_bar.addWidget(QLabel(tr("Mode:")))
         self.mode_group = QButtonGroup(self)
         self.mode_buttons = {}
         for key in ("int", "ext"):
             button = QPushButton(MODE_NAMES[key], checkable=True)
-            button.setToolTip("Terminal Mode con gateway interno por WiFi (servidores G3)" if key == "int" else
-                              "Terminal Mode con gateway externo por USB (DStarRepeater + ircDDBGateway en el PC)")
+            button.setToolTip(tr("Terminal Mode with the internal gateway over WiFi (G3 servers)") if key == "int" else
+                              tr("Terminal Mode with an external gateway over USB (built into QDStar)"))
             self.mode_group.addButton(button)
             self.mode_buttons[key] = button
             mode_bar.addWidget(button)
@@ -124,19 +132,19 @@ class MainWindow(QMainWindow):
         layout.addLayout(mode_bar)
 
         bar = QHBoxLayout()
-        bar.addWidget(QLabel("Reflector:"))
+        bar.addWidget(QLabel(tr("Reflector:")))
         self.reflector_combo = QComboBox()
         self.reflector_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.reflector_combo.setMinimumContentsLength(12)
         bar.addWidget(self.reflector_combo, 1)
-        self.change_btn = QPushButton("Cambiar")
+        self.change_btn = QPushButton(tr("Change"))
         self.change_btn.clicked.connect(self.change_reflector)
         bar.addWidget(self.change_btn)
-        self.unlink_btn = QPushButton("Desenlazar")
+        self.unlink_btn = QPushButton(tr("Unlink"))
         self.unlink_btn.clicked.connect(self.unlink_reflector)
         bar.addWidget(self.unlink_btn)
         manage_btn = QPushButton("…")
-        manage_btn.setToolTip("Gestionar reflectores")
+        manage_btn.setToolTip(tr("Manage reflectors"))
         manage_btn.setFixedWidth(32)
         manage_btn.clicked.connect(self.manage_reflectors)
         bar.addWidget(manage_btn)
@@ -144,7 +152,7 @@ class MainWindow(QMainWindow):
 
         self.tabs = QTabWidget()
         self.history = QTableWidget(0, len(HISTORY_COLUMNS))
-        self.history.setHorizontalHeaderLabels(HISTORY_COLUMNS)
+        self.history.setHorizontalHeaderLabels([tr(c) if c else c for c in HISTORY_COLUMNS])
         self.history.verticalHeader().setVisible(False)
         self.history.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.history.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -153,49 +161,52 @@ class MainWindow(QMainWindow):
         header = self.history.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
-        self.tabs.addTab(self.history, "Histórico")
+        self.tabs.addTab(self.history, tr("History"))
 
         self.log_view = QPlainTextEdit(readOnly=True)
         self.log_view.setMaximumBlockCount(3000)
         font = self.log_view.font()
         font.setFamily("monospace")
         self.log_view.setFont(font)
-        self.tabs.addTab(self.log_view, "Log")
+        self.tabs.addTab(self.log_view, tr("Log"))
         layout.addWidget(self.tabs, 1)
 
         self.setCentralWidget(central)
+        # Vertical layout: the window grows in height only, the width stays fixed
+        self.setFixedWidth(WINDOW_WIDTH)
         geometry = config.get("ui/geometry")
         if geometry:
             self.restoreGeometry(QByteArray(geometry))
         else:
-            self.resize(560, 1000)
+            self.resize(WINDOW_WIDTH, 1000)
 
     def _build_menu(self):
-        radio_menu = self.menuBar().addMenu("&Radio")
-        self.connect_action = QAction("Conectar", self, triggered=self.connect_radio)
-        self.disconnect_action = QAction("Desconectar", self, triggered=self.disconnect_radio)
+        radio_menu = self.menuBar().addMenu(tr("&Radio"))
+        self.connect_action = QAction(tr("Connect"), self, triggered=self.connect_radio)
+        self.disconnect_action = QAction(tr("Disconnect"), self, triggered=self.disconnect_radio)
         radio_menu.addAction(self.connect_action)
         radio_menu.addAction(self.disconnect_action)
         radio_menu.addSeparator()
-        radio_menu.addAction(QAction("Ajustes…", self, triggered=self.open_settings))
-        self.debug_action = QAction("Registrar CI-V de RX/TX en el log", self, checkable=True)
+        radio_menu.addAction(QAction(tr("Settings…"), self, triggered=self.open_settings))
+        radio_menu.addAction(QAction(tr("D-PRS position…"), self, triggered=self.open_dprs))
+        self.debug_action = QAction(tr("Log RX/TX CI-V frames"), self, checkable=True)
         self.debug_action.setChecked(config.get("ui/debug_civ"))
         self.debug_action.toggled.connect(lambda on: config.put("ui/debug_civ", on))
         radio_menu.addAction(self.debug_action)
         radio_menu.addSeparator()
-        radio_menu.addAction(QAction("Salir", self, triggered=self.close))
-        ref_menu = self.menuBar().addMenu("R&eflectores")
-        ref_menu.addAction(QAction("Gestionar…", self, triggered=self.manage_reflectors))
-        ref_menu.addAction(QAction("Actualizar estado", self, triggered=self._refresh_all))
-        hist_menu = self.menuBar().addMenu("&Histórico")
-        hist_menu.addAction(QAction("Vaciar histórico…", self, triggered=self.clear_history))
-        help_menu = self.menuBar().addMenu("A&yuda")
-        help_menu.addAction(QAction("Acerca de DStar705…", self, triggered=self.about))
+        radio_menu.addAction(QAction(tr("Quit"), self, triggered=self.close))
+        ref_menu = self.menuBar().addMenu(tr("R&eflectors"))
+        ref_menu.addAction(QAction(tr("Manage…"), self, triggered=self.manage_reflectors))
+        ref_menu.addAction(QAction(tr("Refresh status"), self, triggered=self._refresh_all))
+        hist_menu = self.menuBar().addMenu(tr("H&istory"))
+        hist_menu.addAction(QAction(tr("Clear history…"), self, triggered=self.clear_history))
+        help_menu = self.menuBar().addMenu(tr("&Help"))
+        help_menu.addAction(QAction(tr("About QDStar…"), self, triggered=self.about))
 
     # --- logging ---------------------------------------------------------
 
     def _open_log(self):
-        path = config.data_dir() / "dstar705.log"
+        path = config.data_dir() / "qdstar.log"
         try:
             if path.exists() and path.stat().st_size > LOG_MAX_BYTES:
                 path.replace(path.with_suffix(".log.1"))
@@ -216,29 +227,30 @@ class MainWindow(QMainWindow):
             return
         if mode == "ext":
             box = QMessageBox(self)
-            box.setWindowTitle("Modo EXT (USB + PC)")
+            box.setWindowTitle(tr("EXT mode (USB + PC)"))
             box.setIcon(QMessageBox.Information)
-            box.setText("Para trabajar en modo EXT:")
+            box.setText(tr("To work in EXT mode:"))
             box.setInformativeText(
-                "1. Conecta el cable USB de la radio al PC.\n"
-                "2. En la radio: MENU > DV GW > Gateway Select = External Gateway USB (B).\n"
-                f"3. Terminal/AP Call Sign = {config.terminal_call('ext') or '<indicativo> B'}.\n"
-                "4. Activa Terminal Mode.\n\n"
-                "La aplicación arrancará el gateway del PC (ircDDBGateway).")
+                tr("1. Connect the radio's USB cable to the PC.\n"
+                   "2. On the radio: MENU > DV GW > Gateway Select = External Gateway USB (B).\n"
+                   "3. Terminal/AP Call Sign = {call}.\n"
+                   "4. Turn Terminal Mode on.\n\n"
+                   "QDStar will start its gateway.", call=config.terminal_call("ext") or tr("<call sign> B")))
             box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             if box.exec() != QMessageBox.Ok:
                 self.mode_buttons[self.mode].setChecked(True)
                 return
         else:
             box = QMessageBox(self)
-            box.setWindowTitle("Modo INT (WiFi)")
+            box.setWindowTitle(tr("INT mode (WiFi)"))
             box.setIcon(QMessageBox.Information)
-            box.setText("Para trabajar en modo INT:")
+            box.setText(tr("To work in INT mode:"))
             box.setInformativeText(
-                "1. En la radio: MENU > DV GW > Gateway Select = Internal Gateway (WLAN).\n"
-                f"2. Terminal/AP Call Sign = {config.terminal_call('int') or '<indicativo> Z'}.\n"
-                "3. Activa Terminal Mode.\n\n"
-                "El cable USB ya no hace falta y se detendrá el gateway del PC.")
+                tr("1. On the radio: MENU > DV GW > Gateway Select = Internal Gateway (WLAN).\n"
+                   "2. Terminal/AP Call Sign = {call}.\n"
+                   "3. Turn Terminal Mode on.\n\n"
+                   "The USB cable is no longer needed and the gateway stops.",
+                   call=config.terminal_call("int") or tr("<call sign> Z")))
             box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             if box.exec() != QMessageBox.Ok:
                 self.mode_buttons[self.mode].setChecked(True)
@@ -253,9 +265,9 @@ class MainWindow(QMainWindow):
         for key in EXT_ONLY_LEDS:
             self.leds[key].setVisible(mode == "ext")
         self.unlink_btn.setVisible(mode == "ext")
-        self.change_btn.setText("Enlazar" if mode == "ext" else "Cambiar")
-        self.change_btn.setToolTip("Enlaza el reflector con ircDDBGateway" if mode == "ext" else
-                                   "Escribe el TO (UR) en la radio")
+        self.change_btn.setText(tr("Link") if mode == "ext" else tr("Change"))
+        self.change_btn.setToolTip(tr("Links the reflector through the gateway") if mode == "ext" else
+                                   tr("Writes the TO (UR) to the radio"))
         if mode == "ext":
             if not startup or previous == "ext":
                 self._run_command(config.get("ext/start_cmd"))
@@ -268,12 +280,12 @@ class MainWindow(QMainWindow):
             if not startup and previous == "ext":
                 self._run_command(config.get("ext/stop_cmd"))
         if not startup:
-            self.log(f"Modo {MODE_NAMES[mode]}")
+            self.log(tr("Mode {mode}", mode=MODE_NAMES[mode]))
         self._fill_reflectors()
         self._refresh_screen_reflector()
 
     def _gateway_label(self):
-        return "EXT · ircDDBGateway" if self._external_gateway() else "EXT · gateway integrado"
+        return "EXT · ircDDBGateway" if self._external_gateway() else tr("EXT · built-in gateway")
 
     def _external_gateway(self):
         return config.get("ext/backend") == "ircddbgateway"
@@ -284,15 +296,15 @@ class MainWindow(QMainWindow):
             return
         args = shlex.split(command)
         if QProcess.startDetached(args[0], args[1:]):
-            self.log(f"Ejecutado: {command}")
+            self.log(tr("Ran: {command}", command=command))
         else:
-            self.log(f"No se pudo ejecutar: {command}")
+            self.log(tr("Could not run: {command}", command=command))
 
     def _start_gateway(self):
         self._stop_gateway()
         terminal_call = config.terminal_call("ext")
         if not terminal_call:
-            self.log("Gateway: esperando a leer tu indicativo (MY) de la radio")
+            self.log(tr("Gateway: waiting to read your call sign (MY) from the radio"))
             return
         if self._external_gateway():
             self.gateway = GatewayClient(config.get("ext/gateway_host"), config.get("ext/gateway_port"),
@@ -318,7 +330,7 @@ class MainWindow(QMainWindow):
         if present != self.usb_present:
             plugged_in = present and self.usb_present is False
             self.usb_present = present
-            self.log("Cable USB de la radio detectado" if present else "Cable USB de la radio NO detectado")
+            self.log(tr("Radio USB cable detected") if present else tr("Radio USB cable NOT detected"))
             if plugged_in:
                 self._run_command(config.get("ext/usb_cmd"))
         self.leds["usb"].set("green" if present else "red")
@@ -331,7 +343,7 @@ class MainWindow(QMainWindow):
         self.leds["gateway"].set("green" if ok else "amber", blink=not ok)
         if changed:
             linked = self.ext_reflector()
-            self.log(f"Gateway enlazado a {linked}" if linked else "Gateway sin enlace")
+            self.log(tr("Gateway linked to {reflector}", reflector=linked) if linked else tr("Gateway not linked"))
             self._select_combo(linked)
             self.poller.refresh_now()
         self._refresh_screen_reflector()
@@ -341,8 +353,8 @@ class MainWindow(QMainWindow):
             self.log(f"Gateway: {detail}")
             self._ensure_ext_ur()
         else:
-            self.log(f"Error del gateway: {detail}")
-            QMessageBox.warning(self, "Enlazar reflector", detail)
+            self.log(tr("Gateway error: {error}", error=detail))
+            QMessageBox.warning(self, tr("Link reflector"), detail)
 
     def ext_reflector(self):
         """Reflector the PC gateway is linked to, e.g. 'REF001 C'."""
@@ -368,19 +380,19 @@ class MainWindow(QMainWindow):
         radio_mode = self.radio_mode()
         if self.radio_connected and radio_mode != self.mode:
             if self.mode == "ext":
-                hints.append(f"la radio sigue en INT ({self.r1})")
+                hints.append(tr("the radio is still in INT ({r1})", r1=self.r1))
             else:
-                hints.append(f"la radio no está en Terminal Mode INT (R1 {self.r1 or 'vacío'})")
+                hints.append(tr("the radio is not in INT Terminal Mode (R1 {r1})", r1=self.r1 or tr("empty")))
         if self.mode == "ext" and self.usb_present is False:
-            hints.append("conecta el USB")
-        self.mode_hint.setText("⚠ revisar" if hints else "")
+            hints.append(tr("connect the USB"))
+        self.mode_hint.setText("⚠ " + tr("check") if hints else "")
         self.mode_hint.setToolTip("; ".join(hints))
         self.screen.update_state(mode_warning="; ".join(hints))
 
     def _ensure_ext_ur(self):
         """In EXT the radio must transmit to CQCQCQ so the gateway sends it to the linked reflector."""
         if self.mode == "ext" and self.radio and self.radio_mode() == "ext" and self.to and self.to != EXT_UR:
-            self.log(f"TO de la radio {self.to} → {EXT_UR} para el reflector enlazado")
+            self.log(tr("Radio TO {old} → {new} for the linked reflector", old=self.to, new=EXT_UR))
             self.radio.set_to(EXT_UR)
 
     # --- radio -----------------------------------------------------------
@@ -395,7 +407,7 @@ class MainWindow(QMainWindow):
         r.civ_alive.connect(lambda ok: self.leds["civ"].set("green" if ok else "off"))
         r.my_call.connect(self._my_call)
         r.tx_calls.connect(self._tx_calls)
-        r.tx_message.connect(lambda m: self.log(f"Mensaje TX: '{m}'"))
+        r.tx_message.connect(lambda m: self.log(tr("TX message: '{message}'", message=m)))
         r.mode.connect(self._mode)
         r.transmitting.connect(self._transmitting)
         r.rx_started.connect(self._rx_started)
@@ -403,6 +415,8 @@ class MainWindow(QMainWindow):
         r.rx_ended.connect(self._rx_ended)
         r.to_write_result.connect(self._to_written)
         r.raw.connect(lambda line: self.debug_action.isChecked() and self.log(f"CI-V {line}"))
+        r.setting_received.connect(self._setting_received)
+        r.dprs_received.connect(self._dprs_received)
         r.start()
 
     def disconnect_radio(self, quiet=False):
@@ -411,7 +425,7 @@ class MainWindow(QMainWindow):
             self.radio.deleteLater()
             self.radio = None
             if not quiet:
-                self.log("Desconectado por el usuario")
+                self.log(tr("Disconnected by the user"))
         self._link_state("disconnected")
 
     def _link_state(self, state):
@@ -426,6 +440,9 @@ class MainWindow(QMainWindow):
         self.connect_action.setEnabled(state == "disconnected")
         self.disconnect_action.setEnabled(self.radio is not None)
         self.radio_connected = state == "connected"
+        if self.radio_connected:
+            for number in ("0281", "0286", "0287"):
+                self.radio.read_setting(number)
 
     def _my_call(self, call, note):
         self.my_call = call
@@ -433,7 +450,7 @@ class MainWindow(QMainWindow):
         if base and not config.callsign():
             # First run: the station call sign is the radio's MY call sign
             config.put("station/callsign", base)
-            self.log(f"Indicativo de la estación: {base} (leído de la radio)")
+            self.log(tr("Station call sign: {call} (read from the radio)", call=base))
             if self.mode == "ext" and not self.gateway:
                 self._start_gateway()
         self.log(f"MY: {call}" + (f" /{note}" if note else ""))
@@ -442,7 +459,7 @@ class MainWindow(QMainWindow):
     def _mode(self, mode):
         self.screen.update_state(mode=mode)
         if mode != "DV":
-            self.log(f"Aviso: la radio está en {mode}, no en DV")
+            self.log(tr("Warning: the radio is in {mode}, not DV", mode=mode))
 
     def _tx_calls(self, ur, r1, r2):
         changed = ur != self.to
@@ -481,16 +498,16 @@ class MainWindow(QMainWindow):
         ref = self.current_reflector()
         item = self.registry.get(ref) if ref else None
         if item is None and ref:
-            item = {"to": ref, "name": "(no registrado)", "description": "Añádelo en Reflectores > Gestionar",
+            item = {"to": ref, "name": tr("(not registered)"), "description": tr("Add it in Reflectors > Manage"),
                     "server": ""}
         if self.mode == "ext":
             if item is not None:
                 item = dict(item, server=self._gateway_label())
             elif self.gw_ok:
-                item = {"to": "", "name": "Sin enlace", "description": "Elige un reflector y pulsa Enlazar",
+                item = {"to": "", "name": tr("Not linked"), "description": tr("Pick a reflector and press Link"),
                         "server": self._gateway_label()}
             else:
-                item = {"to": "", "name": "Gateway PC", "description": "Esperando a ircDDBGateway…",
+                item = {"to": "", "name": tr("PC gateway"), "description": tr("Waiting for the gateway…"),
                         "server": self._gateway_label()}
             mismatch = False
         else:
@@ -524,27 +541,27 @@ class MainWindow(QMainWindow):
             if not self.gateway:
                 return
             if to == self.ext_reflector():
-                self.log(f"El gateway ya está enlazado a {to}")
+                self.log(tr("The gateway is already linked to {reflector}", reflector=to))
                 return
-            self.log(f"Pidiendo al gateway enlazar {to}…")
+            self.log(tr("Asking the gateway to link {reflector}…", reflector=to))
             self.gateway.link(to)
             return
         if not self.radio:
             return
         if to == self.to:
-            self.log(f"{to} ya es el TO actual")
+            self.log(tr("{to} is already the current TO", to=to))
             return
         item = self.registry.get(to) or {}
         server = config.get("dstar/server")
         if item.get("server") and server and item["server"].lower() != server.lower():
             answer = QMessageBox.question(
-                self, "Cambiar reflector",
-                f"{to} se alcanza a través de {item['server']}, pero la radio usa {server}.\n\n"
-                "El servidor no se puede cambiar por CI-V: hazlo en MENU > DV GW > Gateway Repeater "
-                "y actualiza Radio > Ajustes.\n\n¿Escribir el TO de todas formas?")
+                self, tr("Change reflector"),
+                tr("{to} is reached through {needed}, but the radio uses {server}.\n\n"
+                   "The server cannot be changed over CI-V: change it in MENU > DV GW > Gateway Repeater "
+                   "and update Radio > Settings.\n\nWrite the TO anyway?", to=to, needed=item["server"], server=server))
             if answer != QMessageBox.Yes:
                 return
-        self.log(f"Cambiando TO a {to}…")
+        self.log(tr("Changing the TO to {to}…", to=to))
         self.radio.set_to(to)
 
     def unlink_reflector(self):
@@ -554,12 +571,12 @@ class MainWindow(QMainWindow):
 
     def _to_written(self, ok, detail):
         if ok and detail == EXT_UR:
-            self.log(f"TO de la radio = {EXT_UR}")
+            self.log(tr("Radio TO = {to}", to=EXT_UR))
         elif ok:
-            self.log(f"TO cambiado a {detail}. Pulsa PTT un instante para registrarte en el reflector.")
+            self.log(tr("TO changed to {to}. Press PTT briefly to register on the reflector.", to=detail))
         else:
-            self.log(f"Error al cambiar el TO: {detail}")
-            QMessageBox.warning(self, "Cambiar reflector", detail)
+            self.log(tr("Error changing the TO: {error}", error=detail))
+            QMessageBox.warning(self, tr("Change reflector"), detail)
 
     def manage_reflectors(self):
         ReflectorsDialog(self.registry, self.mode, self).exec()
@@ -568,7 +585,7 @@ class MainWindow(QMainWindow):
         dialog = SettingsDialog(self)
         if dialog.exec():
             dialog.save()
-            self.log("Ajustes guardados")
+            self.log(tr("Settings saved"))
             if self.mode == "ext":
                 self._start_gateway()
             self._update_mode_hint()
@@ -589,7 +606,7 @@ class MainWindow(QMainWindow):
 
     def _rx_started(self, calls):
         if self._is_system_call(calls.caller):
-            self.log(f"Respuesta del sistema: {calls.caller} → {calls.called}")
+            self.log(tr("System reply: {caller} → {called}", caller=calls.caller, called=calls.called))
             return
         base = calls.caller.split()[0]
         self.log(f"RX {calls.caller}" + (f" /{calls.note}" if calls.note else "") +
@@ -604,12 +621,16 @@ class MainWindow(QMainWindow):
         self._load_history()
 
     def _rx_message(self, message, caller):
-        if self.rx_info and caller.split()[:1] == self.rx_info["callsign"].split()[:1]:
-            self.rx_info["message"] = message
-            self.storage.update_entry(self.rx_entry, message=message)
-            self.screen.update_state(rx=self.rx_info)
-            self.log(f"Mensaje de {caller}: {message}")
+        base = caller.split()[0] if caller.split() else ""
+        if not base or not message:
+            return
+        # Messages can arrive after the over ended: fill the station's latest entry
+        if self.storage.fill_recent(base, "message", message, window=120):
             self._load_history()
+        if self.rx_info and self.rx_info["callsign"].split()[:1] == [base]:
+            self.rx_info["message"] = message
+            self.screen.update_state(rx=self.rx_info)
+        self.log(tr("Message from {caller}: {message}", caller=caller, message=message))
 
     def _rx_ended(self):
         self.leds["rx"].set("off")
@@ -618,7 +639,7 @@ class MainWindow(QMainWindow):
             self.rx_info["ended"] = time.time()
             self.storage.update_entry(self.rx_entry, ended=self.rx_info["ended"])
             secs = int(self.rx_info["ended"] - self.rx_info["started"])
-            self.log(f"Fin RX {self.rx_info['callsign']} ({secs}s)")
+            self.log(tr("End of RX {caller} ({seconds}s)", caller=self.rx_info["callsign"], seconds=secs))
             self.screen.update_state(rx=self.rx_info)
             self._load_history()
             self._update_last_heard()
@@ -636,7 +657,7 @@ class MainWindow(QMainWindow):
             own = self.storage.cached_name(base) or {}
             self.storage.update_entry(self.tx_entry, ended=time.time(), name=own.get("name") or "",
                                       location=own.get("location") or "")
-            self.log(f"Fin TX ({int(time.time() - self.tx_since)}s)")
+            self.log(tr("End of TX ({seconds}s)", seconds=int(time.time() - self.tx_since)))
             self.tx_entry = None
             # Our over counts as the reflector's last heard right away; the reflector's
             # dashboard catches up a few seconds later
@@ -647,12 +668,22 @@ class MainWindow(QMainWindow):
             self._update_last_heard()
 
     def _name_resolved(self, callsign, name, location):
+        # The lookup may finish after the over: fill every recent entry of this station
+        # (names do not change: any entry of this station still without one gets it)
+        changed = self.storage.fill_recent(callsign, "name", name, window=ALL_TIME) + \
+            self.storage.fill_recent(callsign, "location", location, window=ALL_TIME)
+        if changed:
+            self._load_history()
         if self.rx_info and self.rx_info["callsign"].split()[0] == callsign:
-            self.rx_info.update(name=self.rx_info.get("name") or name, location=location)
+            self.rx_info.update(name=self.rx_info.get("name") or name,
+                                location=self.rx_info.get("location") or location)
             self.screen.update_state(rx=self.rx_info)
-            if self.rx_entry and self.rx_info.get("live"):
-                self.storage.update_entry(self.rx_entry, name=name, location=location)
-                self._load_history()
+
+    def _backfill_names(self):
+        """Look up names for history entries saved while radioid.net was unreachable."""
+        missing = {r["callsign"] for r in self.storage.recent() if not r["name"] and r["callsign"] not in ("?", "")}
+        for callsign in missing:
+            self.lookup.request(callsign)
 
     def _load_history(self):
         rows = self.storage.recent()
@@ -667,8 +698,13 @@ class MainWindow(QMainWindow):
             reflector = r["reflector"] or ""
             if item and item.get("name"):
                 reflector = f"{item['name']} ({reflector})"
+            dist = ""
+            own = self.own_position()
+            if r.get("lat") is not None and r.get("lon") is not None:
+                dist = (f"{civ.distance_km(own[0], own[1], r['lat'], r['lon']):.0f} km" if own
+                        else format_position(r["lat"], r["lon"]))
             values = [when, r["direction"], call, r["name"] or "", reflector, dur, r["message"] or "",
-                      r["location"] or ""]
+                      r["location"] or "", dist]
             for c, v in enumerate(values):
                 cell = QTableWidgetItem(v)
                 if c == 1:
@@ -710,7 +746,7 @@ class MainWindow(QMainWindow):
                 unique.append(e)
         heard = [{"callsign": e["callsign"], "name": e["name"],
                   "time": time.strftime("%H:%M:%S", time.localtime(e["ts"]))} for e in unique[:4]]
-        title = ("ÚLTIMOS EN EL REFLECTOR" if remote else "ÚLTIMOS OÍDOS AQUÍ EN ESTE REFLECTOR")
+        title = tr("LAST HEARD ON THE REFLECTOR") if remote else tr("LAST HEARD HERE ON THIS REFLECTOR")
         self.screen.update_state(heard=heard, heard_title=title)
         if self.rx_info and self.rx_info.get("live"):
             return
@@ -726,18 +762,58 @@ class MainWindow(QMainWindow):
         if not last["location"]:
             self.lookup.request(last["callsign"])
 
+    # --- D-PRS --------------------------------------------------------------
+
+    def open_dprs(self):
+        if not (self.radio and self.radio_connected):
+            QMessageBox.information(self, tr("D-PRS position"), tr("Connect to the radio first."))
+            return
+        DprsDialog(self.radio, self).exec()
+        for number in ("0281", "0286", "0287"):
+            self.radio.read_setting(number)
+
+    def own_position(self):
+        """Our position when it is entered manually in the radio (used for distances)."""
+        data = self.own_gps.get("0286", b"")
+        if self.own_gps.get("0281", b"")[:1] != b"\x02" or len(data) < 11:
+            return None
+        lat, lon = civ.decode_latitude(data[:5]), civ.decode_longitude(data[5:11])
+        return (lat, lon) if lat is not None and lon is not None else None
+
+    def _setting_received(self, number, data):
+        if number in ("0281", "0286", "0287"):
+            self.own_gps[number] = data
+            sending = self.own_gps.get("0287", b"")[:1] == b"\x01"
+            self.screen.update_state(dprs_on=sending)
+
+    def _dprs_received(self, pos):
+        base = pos.callsign.split("-")[0].strip()
+        if not self.rx_info or self.rx_info["callsign"].split()[0] != base:
+            return
+        if self.rx_info.get("pos") == (pos.lat, pos.lon):
+            return
+        own = self.own_position()
+        distance = civ.distance_km(own[0], own[1], pos.lat, pos.lon) if own else None
+        self.rx_info.update(pos=(pos.lat, pos.lon), distance=distance)
+        self.screen.update_state(rx=self.rx_info)
+        text = format_position(pos.lat, pos.lon) + (f" · {distance:.0f} km" if distance is not None else "")
+        self.log(tr("D-PRS from {caller}: {position}", caller=pos.callsign, position=text))
+        if self.rx_entry:
+            self.storage.update_entry(self.rx_entry, lat=pos.lat, lon=pos.lon)
+            self._load_history()
+
     def about(self):
         QMessageBox.about(
-            self, "Acerca de DStar705",
-            f"<b>DStar705 {__version__}</b><br>"
-            "Control del IC-705 en D-STAR Terminal Mode y gateway integrado.<br><br>"
-            f"Autor: {__author__}<br>"
+            self, tr("About QDStar"),
+            f"<b>QDStar {__version__}</b><br>"
+            + tr("IC-705 D-STAR Terminal Mode controller and built-in gateway.") + "<br><br>"
+            + tr("Author: {author}", author=__author__) + "<br>"
             f'<a href="{__url__}">{__url__}</a><br><br>'
-            "Licencia GPL-3.0-or-later. Basado en wfview (protocolo de red de Icom) "
-            "y en DStarRepeater / ircDDBGateway de G4KLX.")
+            + tr("License GPL-3.0-or-later. Based on wfview (Icom network protocol) "
+                 "and on G4KLX's DStarRepeater / ircDDBGateway."))
 
     def clear_history(self):
-        if QMessageBox.question(self, "Histórico", "¿Borrar todo el histórico?") == QMessageBox.Yes:
+        if QMessageBox.question(self, tr("History"), tr("Delete the whole history?")) == QMessageBox.Yes:
             self.storage.clear_history()
             self._load_history()
 

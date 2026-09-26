@@ -10,11 +10,12 @@ from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtNetwork import QHostAddress, QUdpSocket
 
 from .protocol import DCS_PORT, DEXTRA_PORT, END_PATTERN_BYTES, NULL_AMBE_DATA_BYTES, Header, ccitt_crc, pad
+from ..i18n import tr
 
 LINK_RETRY_MS = 1000
 POLL_TIMEOUT_S = 60
 DCS_HTML = ("<table border=\"0\" width=\"95%\"><tr><td width=\"4%\"><img border=\"0\" src=dongle.jpg></td>"
-            "<td width=\"96%\"><font size=\"2\"><b>DONGLE</b> DStar705</font></td></tr></table>")
+            "<td width=\"96%\"><font size=\"2\"><b>DONGLE</b> QDStar</font></td></tr></table>")
 
 
 class _Link(QObject):
@@ -84,7 +85,7 @@ class _Link(QObject):
         if self.state == "linked":
             self._send(self._poll_packet())
         if self.state in ("linking", "linked") and time.monotonic() - self.last_rx > POLL_TIMEOUT_S:
-            self.log.emit(f"{self.NAME}: {self.reflector.strip()} no responde, reenlazando")
+            self.log.emit(tr("{protocol}: {reflector} does not answer, relinking", protocol=self.NAME, reflector=self.reflector.strip()))
             self.link()
 
     def _read(self):
@@ -98,10 +99,10 @@ class _Link(QObject):
         reply = data[10:13]
         self.try_timer.stop()
         if reply == b"ACK":
-            self.log.emit(f"{self.NAME}: enlazado a {self.reflector.strip()}")
+            self.log.emit(tr("{protocol}: linked to {reflector}", protocol=self.NAME, reflector=self.reflector.strip()))
             self._set_state("linked")
         else:
-            self.log.emit(f"{self.NAME}: {self.reflector.strip()} rechaza el enlace ({reply.decode(errors='replace')})")
+            self.log.emit(tr("{protocol}: {reflector} refuses the link ({reply})", protocol=self.NAME, reflector=self.reflector.strip(), reply=reply.decode(errors="replace")))
             self.poll_timer.stop()
             self._set_state("refused")
 
@@ -185,7 +186,7 @@ class DCSLink(_Link):
             # Poll from the reflector: answer it
             self._send(self._poll_packet())
         elif n == 19 and self.state == "linked":
-            self.log.emit(f"DCS: {self.reflector.strip()} ha cerrado el enlace")
+            self.log.emit(tr("{protocol}: {reflector} closed the link", protocol="DCS", reflector=self.reflector.strip()))
             self.poll_timer.stop()
             self._set_state("unlinked")
 
@@ -242,6 +243,6 @@ class DExtraLink(_Link):
         elif n == 9:
             return  # keepalive from the reflector
         elif n == 11 and data[9] == 0x20 and self.state == "linked":
-            self.log.emit(f"DExtra: {self.reflector.strip()} ha cerrado el enlace")
+            self.log.emit(tr("{protocol}: {reflector} closed the link", protocol="DExtra", reflector=self.reflector.strip()))
             self.poll_timer.stop()
             self._set_state("unlinked")

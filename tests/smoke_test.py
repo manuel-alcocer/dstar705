@@ -14,12 +14,12 @@ QStandardPaths.setTestModeEnabled(True)
 
 def main():
     app = QApplication(sys.argv)
-    app.setOrganizationName("DStar705test")
-    app.setApplicationName("DStar705test")
+    app.setOrganizationName("QDStartest")
+    app.setApplicationName("QDStartest")
 
-    from dstar705 import civ, config
-    from dstar705.dstar.protocol import Header, ccitt_crc
-    from dstar705.mainwindow import MainWindow
+    from qdstar import civ, config
+    from qdstar.dstar.protocol import Header, ccitt_crc
+    from qdstar.mainwindow import MainWindow
 
     # CI-V: MY call sign reply
     body = civ.FrameSplitter().feed(b"\xfe\xfe\xe0\xa4\x1f\x00N0CALL      \xfd")[0]

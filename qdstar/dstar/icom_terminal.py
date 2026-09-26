@@ -17,6 +17,7 @@ from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtSerialPort import QSerialPort, QSerialPortInfo
 
 from .protocol import DATA_SYNC_BYTES, END_PATTERN_BYTES, FRAMES_PER_SUPERFRAME, VOICE_FRAME_LENGTH, Header
+from ..i18n import tr
 
 ICOM_USB_VENDOR = 0x0C26
 VALID_LENGTHS = (0x03, 0x04, 0x10, 0x2C)
@@ -83,7 +84,7 @@ class IcomTerminal(QObject):
         name = self.port_name or default_data_port()
         if not name:
             if self.last_open_error != "missing":
-                self.log.emit("USB: no se encuentra el puerto de datos de la radio")
+                self.log.emit(tr("USB: the radio's data port was not found"))
                 self.last_open_error = "missing"
             self.reopen_timer.start()
             return False
@@ -94,14 +95,14 @@ class IcomTerminal(QObject):
         self.serial.setStopBits(QSerialPort.OneStop)
         self.serial.setFlowControl(QSerialPort.HardwareControl)
         if not self.serial.open(QSerialPort.ReadWrite):
-            message = f"USB: no se puede abrir {name}: {self.serial.errorString()}"
+            message = tr("USB: cannot open {port}: {error}", port=name, error=self.serial.errorString())
             if message != self.last_open_error:  # retried every 2 s: log each problem once
                 self.log.emit(message)
                 self.last_open_error = message
             self.reopen_timer.start()
             return False
         self.last_open_error = ""
-        self.log.emit(f"USB: puerto {name} abierto")
+        self.log.emit(tr("USB: port {port} open", port=name))
         self._reset_link()
         self.lost_timer.start()
         return True
@@ -149,7 +150,7 @@ class IcomTerminal(QObject):
     def _set_connected(self, ok):
         if ok != self.is_connected:
             self.is_connected = ok
-            self.log.emit("USB: radio conectada (Terminal Mode)" if ok else "USB: sin respuesta de la radio")
+            self.log.emit(tr("USB: radio connected (Terminal Mode)") if ok else tr("USB: no answer from the radio"))
             self.connected.emit(ok)
 
     def _poll(self):
@@ -168,7 +169,7 @@ class IcomTerminal(QObject):
         if error == QSerialPort.NoError or not self.serial.isOpen():
             return  # failures to open are handled in open()
         if error in (QSerialPort.ResourceError, QSerialPort.DeviceNotFoundError, QSerialPort.PermissionError):
-            self.log.emit(f"USB: error del puerto ({self.serial.errorString()}), reintentando")
+            self.log.emit(tr("USB: port error ({error}), retrying", error=self.serial.errorString()))
             self.close()
             self.reopen_timer.start()
 

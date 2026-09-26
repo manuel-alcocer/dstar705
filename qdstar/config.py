@@ -3,10 +3,11 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QStandardPaths
+from PySide6.QtCore import QCoreApplication, QSettings, QStandardPaths
 
-ORG = "DStar705"
-APP = "DStar705"
+ORG = "QDStar"
+APP = "QDStar"
+LEGACY_NAME = "DStar705"      # name of versions up to 0.2.x
 
 DEFAULTS = {
     "radio/host": "",
@@ -25,7 +26,7 @@ DEFAULTS = {
     # Terminal/AP call signs; empty = call sign + Z (INT) / B (EXT)
     "int/terminal_call": "",
     "ext/terminal_call": "",
-    # builtin = DStar705's own gateway (USB Terminal Mode + DPlus); ircddbgateway = external G4KLX stack
+    # builtin = QDStar's own gateway (USB Terminal Mode + DPlus); ircddbgateway = external G4KLX stack
     "ext/backend": "builtin",
     "ext/usb_port": "",          # empty: auto-detect the IC-705 data port
     "ext/gateway_host": "127.0.0.1",
@@ -37,6 +38,7 @@ DEFAULTS = {
     "ext/stop_cmd": "systemctl --user stop dstar.target" if sys.platform.startswith("linux") else "",
     "ui/geometry": None,
     "ui/debug_civ": True,
+    "ui/language": "",           # empty: the system language
 }
 
 
@@ -102,3 +104,27 @@ def gateway_call():
     call = callsign()
     return (call.ljust(7)[:7] + "G") if call else ""
 
+
+
+def migrate_legacy():
+    """Carry settings and data over from the DStar705 versions (0.2.x) on first run."""
+    new = settings()
+    if new.allKeys():
+        return
+    old = QSettings(LEGACY_NAME, LEGACY_NAME)
+    for key in old.allKeys():
+        new.setValue(key, old.value(key))
+    new.sync()
+    new_dir = data_dir()
+    # AppDataLocation is derived from the organization/application names
+    QCoreApplication.setOrganizationName(LEGACY_NAME)
+    QCoreApplication.setApplicationName(LEGACY_NAME)
+    old_dir = Path(QStandardPaths.writableLocation(QStandardPaths.AppDataLocation))
+    QCoreApplication.setOrganizationName(ORG)
+    QCoreApplication.setApplicationName(APP)
+    renames = {"dstar705.db": "qdstar.db", "dstar705.log": "qdstar.log"}
+    if old_dir.is_dir() and old_dir != new_dir:
+        for item in old_dir.iterdir():
+            target = new_dir / renames.get(item.name, item.name)
+            if not target.exists():
+                item.replace(target)

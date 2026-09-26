@@ -3,15 +3,14 @@
 import json
 import threading
 import urllib.parse
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import QObject, Signal
 
+from .net import http_get
 from .qtutil import safe_emit
 
 RADIOID_URL = "https://radioid.net/api/dmr/user/?callsign={}"
-USER_AGENT = "DStar705/0.2 (+https://github.com/manuel-alcocer/dstar705)"
 
 
 class NameLookup(QObject):
@@ -42,10 +41,7 @@ class NameLookup(QObject):
         name = location = ""
         ok = False
         try:
-            req = urllib.request.Request(RADIOID_URL.format(urllib.parse.quote(callsign)),
-                                         headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read(200_000))
+            data = json.loads(http_get(RADIOID_URL.format(urllib.parse.quote(callsign)), limit=200_000))
             ok = True
             results = [r for r in data.get("results", []) if r.get("callsign", "").upper() == callsign]
             if results:

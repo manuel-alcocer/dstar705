@@ -12,6 +12,8 @@ import time
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtNetwork import QHostAddress, QUdpSocket
 
+from .i18n import tr
+
 PING_PERIOD = 500
 IDLE_PERIOD = 100
 AREYOUTHERE_PERIOD = 500
@@ -281,7 +283,7 @@ class IcomConnection(QObject):
     radio_info = Signal(dict)
     error = Signal(str)
 
-    def __init__(self, host, username, password, control_port=50001, client_name="dstar705", parent=None):
+    def __init__(self, host, username, password, control_port=50001, client_name="qdstar", parent=None):
         super().__init__(parent)
         self.host = host
         self.username = username
@@ -307,18 +309,18 @@ class IcomConnection(QObject):
             self.local_ip = local_ip_towards(self.host)
             self.control = _Stream(self.host, self.control_port, self.local_ip, parent=self)
         except OSError as exc:
-            self._fail(f"Sin red hacia {self.host}: {exc}")
+            self._fail(tr("No network route to {host}: {error}", host=self.host, error=exc))
             return
         self.control.on_ready = self._send_login
         self.control.on_packet = self._on_control_packet
-        self.control.on_disconnect = lambda: self._fail("La radio cerró la sesión")
+        self.control.on_disconnect = lambda: self._fail(tr("The radio closed the session"))
         self.auth_seq = 0x30
         self.tok_request = random.getrandbits(16)
         self.token = 0
         self.radio = None
         self.stream_requested = False
         self._set_state("connecting")
-        self.log.emit(f"Conectando con {self.host}:{self.control_port}")
+        self.log.emit(tr("Connecting to {host}:{port}", host=self.host, port=self.control_port))
         self.control.start()
         self.watchdog.start()
 
@@ -367,13 +369,13 @@ class IcomConnection(QObject):
     def _check_alive(self):
         streams = [s for s in (self.control, self.civ_stream) if s]
         if self.state == "connected" and any(time.monotonic() - s.last_rx > STALE_TIMEOUT for s in streams):
-            self._fail("Sin respuesta de la radio (timeout)")
+            self._fail(tr("No answer from the radio (timeout)"))
         elif self.state == "authenticated" and time.monotonic() - self.auth_time > 12:
-            self._fail("La radio no abre el stream: seguramente conserva una sesión anterior colgada. "
-                       "Si persiste, apaga y enciende la radio.")
+            self._fail(tr("The radio does not open the stream: it probably still holds a stale session. "
+                          "If it persists, switch the radio off and on."))
         elif self.state == "connecting" and time.monotonic() - self.control.last_rx > 15:
             self.control.last_rx = time.monotonic()
-            self.log.emit("La radio no responde, sigo intentándolo…")
+            self.log.emit(tr("The radio does not answer, still trying…"))
 
     def _inner_header(self, size, request_type):
         pkt = self.control._header(size)
@@ -387,7 +389,7 @@ class IcomConnection(QObject):
         return pkt
 
     def _send_login(self):
-        self.log.emit("Radio lista, enviando login")
+        self.log.emit(tr("Radio ready, sending login"))
         pkt = self._inner_header(LOGIN_SIZE, 0x00)
         user, pw = passcode(self.username), passcode(self.password)
         pkt[0x40:0x40 + len(user)] = user
@@ -440,13 +442,13 @@ class IcomConnection(QObject):
             error = struct.unpack_from("<I", data, 0x30)[0]
             if error == 0xFEFFFFFF:
                 self.auto_reconnect = False
-                self._fail("Usuario o contraseña incorrectos")
+                self._fail(tr("Wrong user name or password"))
                 return
             tok_request = struct.unpack_from("<H", data, 0x1A)[0]
             if tok_request == self.tok_request and not self.token:
                 self.token = struct.unpack_from("<I", data, 0x1C)[0]
                 conn = data[0x40:0x50].split(b"\0")[0].decode(errors="replace")
-                self.log.emit(f"Login OK (conexión {conn})")
+                self.log.emit(tr("Login OK (connection {kind})", kind=conn))
                 self._send_token(0x02)
                 self.token_timer.start()
                 self.auth_time = time.monotonic()
@@ -455,16 +457,16 @@ class IcomConnection(QObject):
             if data[0x15] == 0x05 and data[0x14] == 0x02:
                 response = struct.unpack_from("<I", data, 0x30)[0]
                 if response == 0xFFFFFFFF:
-                    self.log.emit("La radio rechazó la renovación del token")
+                    self.log.emit(tr("The radio refused the token renewal"))
                     self.token = struct.unpack_from("<I", data, 0x1C)[0]
                     if self.radio:
                         self._request_stream()
         elif size == STATUS_SIZE:
             error = struct.unpack_from("<I", data, 0x30)[0]
             if error == 0xFFFFFFFF:
-                self._fail("Conexión rechazada por la radio (prueba a reiniciarla)")
+                self._fail(tr("Connection refused by the radio (try restarting it)"))
             elif error == 0 and data[0x40] == 0x01:
-                self._fail("La radio desconectó el stream")
+                self._fail(tr("The radio disconnected the stream"))
             else:
                 civ_port = struct.unpack_from(">H", data, 0x42)[0]
                 if civ_port and not self.civ_stream:
@@ -475,7 +477,7 @@ class IcomConnection(QObject):
             if self.radio and not self.stream_requested:
                 if busy and computer and computer != self.client_name:
                     ip = socket.inet_ntoa(data[0x84:0x88])
-                    self._fail(f"Radio ocupada por {computer} ({ip}); cierra wfview u otro cliente")
+                    self._fail(tr("Radio in use by {computer} ({ip}); close wfview or the other client", computer=computer, ip=ip))
                 else:
                     self.civ_local_port = self._free_port()
                     self.audio_local_port = self._free_port()
@@ -494,12 +496,12 @@ class IcomConnection(QObject):
             self.radio_info.emit(dict(self.radio))
 
     def _open_civ(self, civ_port):
-        self.log.emit(f"Abriendo stream CI-V (puerto remoto {civ_port})")
+        self.log.emit(tr("Opening the CI-V stream (remote port {port})", port=civ_port))
         self.civ_stream = CivStream(self.host, civ_port, self.local_ip, self.civ_local_port, parent=self)
         self.civ_stream.civ.connect(self.civ_received)
         self.civ_stream.opened.connect(self._civ_opened)
         self.civ_stream.start()
 
     def _civ_opened(self):
-        self.log.emit("Stream CI-V abierto")
+        self.log.emit(tr("CI-V stream open"))
         self._set_state("connected")

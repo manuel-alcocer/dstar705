@@ -13,6 +13,7 @@ from pathlib import Path
 from PySide6.QtCore import QObject, Signal
 
 from .qtutil import safe_emit
+from .i18n import tr
 
 PROTOCOLS = {0: "DExtra", 1: "DPlus", 2: "DCS", 3: "CCS"}
 LINUX_GATEWAY_CONFIG = Path.home() / ".config/dstar/ircddbgateway"
@@ -27,7 +28,7 @@ def normalize_reflector(text):
     """'ref001c', 'REF001 C' or 'XLX048A' -> 'REF001 C' (8 chars)."""
     text = re.sub(r"\s+", "", str(text).upper())
     if not re.fullmatch(r"[A-Z0-9]{4,7}[A-Z]", text):
-        raise ValueError("Formato de reflector no válido (ej. REF001 C)")
+        raise ValueError(tr("Invalid reflector format (e.g. REF001 C)"))
     return text[:-1].ljust(7) + text[-1]
 
 
@@ -90,7 +91,7 @@ class GatewayClient(QObject):
             if kind == "link":
                 try:
                     self._link(arg)
-                    safe_emit(self.result, True, arg.strip() or "desenlazado")
+                    safe_emit(self.result, True, arg.strip() or tr("unlinked"))
                 except (OSError, RuntimeError) as exc:
                     safe_emit(self.result, False, str(exc))
             self._poll_status()
@@ -104,9 +105,9 @@ class GatewayClient(QObject):
         except (OSError, RuntimeError) as exc:
             links, ok = [], False
             if self.reachable is not False:
-                safe_emit(self.log, f"ircDDBGateway no responde en {self.addr[0]}:{self.addr[1]} ({exc})")
+                safe_emit(self.log, tr("ircDDBGateway does not answer at {host}:{port} ({error})", host=self.addr[0], port=self.addr[1], error=exc))
         if ok and self.reachable is not True:
-            safe_emit(self.log, "ircDDBGateway conectado")
+            safe_emit(self.log, tr("ircDDBGateway connected"))
         self.reachable = ok
         safe_emit(self.status, ok, links)
 
@@ -124,11 +125,11 @@ class GatewayClient(QObject):
         self._open()
         reply = self._request(b"LIN")
         if reply[:3] != b"RND":
-            raise RuntimeError("respuesta inesperada al login")
+            raise RuntimeError(tr("unexpected login reply"))
         digest = hashlib.sha256(reply[3:7] + self.password.encode()).digest()
         reply = self._request(b"SHA" + digest)
         if reply[:3] != b"ACK":
-            raise RuntimeError(reply[3:].split(b"\0")[0].decode(errors="replace") or "login rechazado")
+            raise RuntimeError(reply[3:].split(b"\0")[0].decode(errors="replace") or tr("login refused"))
         self.logged_in = True
 
     def _call(self, payload):
@@ -148,7 +149,7 @@ class GatewayClient(QObject):
                     self.sock = None
                 if attempt == 1:
                     raise
-        raise RuntimeError("no se pudo iniciar sesión en el gateway")
+        raise RuntimeError(tr("could not log into the gateway"))
 
     def _status(self):
         reply = self._call(b"GRP" + self.repeater.encode())

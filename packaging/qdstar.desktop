@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=DStar705
+Name=QDStar
 Comment=IC-705 D-STAR Terminal Mode controller and gateway
-Exec=dstar705
-Icon=dstar705
+Exec=qdstar
+Icon=qdstar
 Terminal=false
 Categories=HamRadio;Network;
-StartupWMClass=dstar705
+StartupWMClass=qdstar

@@ -7,6 +7,8 @@ from PySide6.QtCore import QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QGuiApplication, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
+from .i18n import tr
+
 FONTS_DIR = Path(__file__).with_name("fonts")
 _fonts_loaded = False
 
@@ -133,12 +135,12 @@ W, H = 640, 480  # virtual canvas
 def _ago(ts):
     secs = int(time.time() - ts)
     if secs < 60:
-        return f"hace {secs}s"
+        return tr("{n}s ago", n=secs)
     if secs < 3600:
-        return f"hace {secs // 60} min"
+        return tr("{n} min ago", n=secs // 60)
     if secs < 86400:
-        return f"hace {secs // 3600} h"
-    return f"hace {secs // 86400} d"
+        return tr("{n} h ago", n=secs // 3600)
+    return tr("{n} d ago", n=secs // 86400)
 
 
 class ReflectorScreen(QWidget):
@@ -216,8 +218,8 @@ class ReflectorScreen(QWidget):
         st = s.get("status") or {}
 
         # --- reflector block
-        self._text(p, L, 34, "REFLECTOR", 14, DIM, True)
-        self._text(p, R, 34, ref.get("server", "") or "servidor ?", 14, DIM, align=Qt.AlignRight)
+        self._text(p, L, 34, tr("REFLECTOR"), 14, DIM, True)
+        self._text(p, R, 34, ref.get("server", "") or tr("server ?"), 14, DIM, align=Qt.AlignRight)
         self._text(p, L, 72, ref.get("name") or "—", 32, AMBER, True, width=400)
         self._text(p, R, 72, ref.get("to") or s.get("to", ""), 26, CYAN, True, align=Qt.AlignRight)
         if s.get("mode_warning"):
@@ -227,16 +229,16 @@ class ReflectorScreen(QWidget):
 
         online = st.get("online")
         parts = []
-        parts.append(("● EN LÍNEA", GREEN) if online else ("● SIN DATOS", DIM) if online is None else
-                     ("● CAÍDO", RED))
+        parts.append(("● " + tr("ONLINE"), GREEN) if online else ("● " + tr("NO DATA"), DIM) if online is None else
+                     ("● " + tr("DOWN"), RED))
         if st.get("users") is not None:
-            parts.append((f"{st['users']} nodos", WHITE))
+            parts.append((tr("{n} nodes", n=st["users"]), WHITE))
         if st.get("linked") is True:
-            parts.append(("enlazado", GREEN))
+            parts.append((tr("linked"), GREEN))
         elif st.get("linked") is False:
-            parts.append(("no enlazado", AMBER))
+            parts.append((tr("not linked"), AMBER))
         if s.get("server_mismatch"):
-            parts.append(("¡otro servidor!", RED))
+            parts.append((tr("different server!"), RED))
         x = L
         for text, color in parts:
             self._text(p, x, 124, text, 16, color, True)
@@ -249,13 +251,13 @@ class ReflectorScreen(QWidget):
         rx = s.get("rx")
         if s.get("tx"):
             self._text(p, L, 176, "TX", 22, RED, True)
-            self._text(p, L + 50, 176, "transmitiendo", 18, RED)
+            self._text(p, L + 50, 176, tr("transmitting"), 18, RED)
             self._text(p, L, 232, s.get("my_call", ""), 52, RED, True)
             self._text(p, L, 262, f"→ {s.get('to', '')}", 18, WHITE)
             self._elapsed(p, s.get("tx_since"), RED)
         elif rx:
             live = rx.get("live")
-            self._text(p, L, 176, "RX" if live else "ÚLTIMO", 22, GREEN if live else DIM, True)
+            self._text(p, L, 176, "RX" if live else tr("LAST"), 22, GREEN if live else DIM, True)
             if not live and rx.get("ended"):
                 self._text(p, L + 110, 176, _ago(rx["ended"]), 18, DIM)
             call = rx.get("callsign", "")
@@ -263,22 +265,28 @@ class ReflectorScreen(QWidget):
                 call += f" /{rx['suffix']}"
             self._text(p, L, 232, call, 52, GREEN if live else AMBER, True)
             self._text(p, L, 264, rx.get("name") or "", 22, WHITE, width=R - L)
-            self._text(p, L, 290, rx.get("location") or "", 16, DIM)
+            self._text(p, L, 290, rx.get("location") or "", 16, DIM, width=280)
+            if rx.get("pos"):
+                lat, lon = rx["pos"]
+                where = f"{abs(lat):.2f}°{'N' if lat >= 0 else 'S'} {abs(lon):.2f}°{'E' if lon >= 0 else 'W'}"
+                if rx.get("distance") is not None:
+                    where = f"📍 {rx['distance']:.0f} km · " + where
+                self._text(p, R, 290, where, 16, CYAN, True, align=Qt.AlignRight, width=320)
             if rx.get("message"):
                 self._text(p, L, 314, f"« {rx['message']} »", 17, CYAN)
             if live:
                 self._elapsed(p, rx.get("started"), GREEN)
         else:
-            self._text(p, W / 2, 240, "sin actividad", 24, DIM, align=Qt.AlignHCenter)
+            self._text(p, W / 2, 240, tr("no activity"), 24, DIM, align=Qt.AlignHCenter)
 
         p.setPen(QPen(QColor("#333"), 2))
         p.drawLine(L, 330, R, 330)
 
         # --- last heard on the reflector (from its API, when available)
-        self._text(p, L, 354, s.get("heard_title", "ÚLTIMOS EN EL REFLECTOR"), 13, DIM, True)
+        self._text(p, L, 354, s.get("heard_title", tr("LAST HEARD ON THE REFLECTOR")), 13, DIM, True)
         heard = s.get("heard") or []
         if not heard:
-            self._text(p, L, 380, "(sin registros de este reflector)", 14, DIM)
+            self._text(p, L, 380, tr("(no records for this reflector)"), 14, DIM)
         for i, h in enumerate(heard[:4]):
             y = 378 + i * 21
             self._text(p, L, y, h.get("callsign", ""), 16, AMBER, True, width=110)
@@ -287,6 +295,8 @@ class ReflectorScreen(QWidget):
 
         # --- footer
         footer = f"MY {s.get('my_call', '—')}   {s.get('mode', '')}"
+        if s.get("dprs_on") is not None:
+            footer += "   D-PRS " + ("ON" if s["dprs_on"] else "OFF")
         self._text(p, L, H - 14, footer, 13, DIM)
         self._text(p, R, H - 14, time.strftime("%H:%M:%S"), 13, DIM, align=Qt.AlignRight)
 

@@ -1,4 +1,4 @@
-# DStar705
+# QDStar
 
 Desktop controller and built-in D-STAR gateway for the Icom **IC-705** in
 **Terminal Mode**, for Windows and Linux (x86-64 and ARM64 mini PCs).
@@ -16,12 +16,16 @@ Desktop controller and built-in D-STAR gateway for the Icom **IC-705** in
   the station on air or the last one heard (name and location from
   radioid.net), and the reflector's last heard list.
 - Conversation history (SQLite) and application log.
+- **D-PRS positions**: shows the position and distance of the station on air,
+  and manages your own D-PRS beacon from *Radio > Posición D-PRS…*. You can
+  turn it on or off, choose the internal GPS or a manual position (or a
+  locator, to announce only an area), and set the symbol, SSID and comment.
 - Two working modes:
   - **INT**: Terminal Mode with the radio's internal gateway (WLAN) and a G3
     server such as `server1.dstar.es`. Changing reflector writes the TO (UR)
     over CI-V.
   - **EXT**: Terminal Mode with an external gateway over USB, provided by
-    DStar705 itself. Reflectors are linked with the *Enlazar* button.
+    QDStar itself. Reflectors are linked with the *Enlazar* button.
 
 ## Download
 
@@ -29,9 +33,9 @@ Get the latest build from the **Releases** page:
 
 | System | File |
 |---|---|
-| Windows 10/11 x64 | `DStar705-x.y.z-windows-x64-setup.exe` (installer) or `…-portable.zip` |
-| Linux x86-64 | `dstar705_x.y.z_amd64.deb`, `DStar705-x.y.z-x86_64.AppImage` or `.tar.gz` |
-| Linux ARM64 (Raspberry Pi OS bookworm, Debian 12+, Ubuntu 22.04+) | `dstar705_x.y.z_arm64.deb`, `DStar705-x.y.z-aarch64.AppImage` or `.tar.gz` |
+| Windows 10/11 x64 | `QDStar-x.y.z-windows-x64-setup.exe` (installer) or `…-portable.zip` |
+| Linux x86-64 | `qdstar_x.y.z_amd64.deb`, `QDStar-x.y.z-x86_64.AppImage` or `.tar.gz` |
+| Linux ARM64 (Raspberry Pi OS bookworm, Debian 12+, Ubuntu 22.04+) | `qdstar_x.y.z_arm64.deb`, `QDStar-x.y.z-aarch64.AppImage` or `.tar.gz` |
 
 On Linux your user needs access to the radio's USB serial ports:
 `sudo usermod -aG dialout $USER` (Debian, Ubuntu, Raspberry Pi OS) or
@@ -42,7 +46,7 @@ On Linux your user needs access to the radio's USB serial ports:
 1. **WLAN**: connect the radio to your network and give it a fixed IP.
    In *Remote Settings*, set **Network Control** to ON and create a
    **Network User** (user + password).
-2. On first run DStar705 asks for the radio's IP, user and password. It reads
+2. On first run QDStar asks for the radio's IP, user and password. It reads
    your call sign from the radio (MY call sign).
 3. **INT mode**: set *DV GW > Gateway Select* to **Internal Gateway (WLAN)**,
    the *Gateway Repeater* to your G3 server, and the *Terminal/AP Call Sign*
@@ -60,14 +64,14 @@ the radio is power cycled.
 ## Running from source
 
 ```sh
-pip install PySide6
-python -m dstar705
+pip install PySide6 certifi
+python -m qdstar
 ```
 
 ## Default reflectors
 
 On first run the app loads the reflector list shipped in
-[`dstar705/default_reflectors.json`](dstar705/default_reflectors.json).
+[`qdstar/default_reflectors.json`](qdstar/default_reflectors.json).
 After that the list lives in your data folder, and you can edit it from
 *Reflectores > Gestionar*.
 
@@ -92,6 +96,27 @@ entries to `default_reflectors.json`:
 - `server`: INT only. It is the "Gateway Repeater" server that leads to this TO.
 - `api`: optional. It is the base URL of an xlxd dashboard JSON API (`?api=users|heard`), used for nodes and last heard.
 
+## Translations
+
+The code is written in English. Every visible text goes through `tr()`, and
+each language has one plain-text file in [`qdstar/translations/`](qdstar/translations/)
+(`es.po` for Spanish):
+
+```
+msgid "Linked to {reflector}"
+msgstr "Enlazado a {reflector}"
+```
+
+By default QDStar uses the system language and falls back to English. You can
+change it in *Radio > Settings > Language*. **New languages are welcome as pull
+requests:**
+
+1. Copy `qdstar/translations/es.po` to `<code>.po` (for example `fr.po`), or
+   create it with `python tools/i18n_check.py --template > qdstar/translations/fr.po`.
+2. Set `Language-Name` in the header and translate every `msgstr`, keeping the
+   `{placeholders}` as they are.
+3. Run `python tools/i18n_check.py` to check that nothing is missing.
+
 ## Building
 
 GitHub Actions builds every push. A version tag (`x.y.z`) publishes a release
@@ -99,9 +124,9 @@ with the Windows installer and zip, plus the .deb, AppImage and tar.gz for
 Linux amd64 and arm64. To build locally:
 
 ```sh
-pip install PySide6 pyinstaller
+pip install PySide6 certifi pyinstaller
 python tests/smoke_test.py
-pyinstaller packaging/dstar705.spec
+pyinstaller packaging/qdstar.spec
 ```
 
 ## Author
@@ -116,5 +141,5 @@ GPL-3.0-or-later.
   [wfview](https://gitlab.com/eliggett/wfview) (GPLv3), itself based on kappanhang.
 - The Terminal Mode, DPlus, DCS and DExtra code is ported from G4KLX's
   DStarRepeater and ircDDBGateway (GPLv2+).
-- Bundled DejaVu fonts: see `dstar705/fonts/LICENSE-DejaVu`.
+- Bundled DejaVu fonts: see `qdstar/fonts/LICENSE-DejaVu`.
 - Reflector host lists come from Pi-Star (pistar.uk) and the XLX directory.
