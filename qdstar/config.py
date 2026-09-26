@@ -39,6 +39,8 @@ DEFAULTS = {
     "ui/geometry": None,
     "ui/debug_civ": True,
     "ui/language": "",           # empty: the system language
+    "updates/check": True,       # look for new releases on GitHub
+    "updates/skip": "",          # a version the user chose to skip
 }
 
 

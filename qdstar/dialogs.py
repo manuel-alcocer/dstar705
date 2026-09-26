@@ -83,9 +83,13 @@ class SettingsDialog(QDialog):
         self.backend.currentIndexChanged.connect(self._backend_changed)
         self._backend_changed()
 
+        self.check_updates = QCheckBox(tr("Check for new versions on start-up"))
+        self.check_updates.setChecked(config.get("updates/check"))
+
         ui_box = QGroupBox(tr("Interface"))
         form = QFormLayout(ui_box)
         form.addRow(tr("Language"), self.language)
+        form.addRow("", self.check_updates)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
@@ -113,6 +117,7 @@ class SettingsDialog(QDialog):
         if self.language.currentData() != (config.get("ui/language") or ""):
             config.put("ui/language", self.language.currentData())
             QMessageBox.information(self, tr("Language"), tr("The new language is used after restarting QDStar."))
+        config.put("updates/check", self.check_updates.isChecked())
         config.put("station/callsign", self.callsign.text().upper().strip())
         config.put("int/terminal_call", self.int_call.text().upper().strip())
         config.put("ext/terminal_call", self.ext_call.text().upper().strip())

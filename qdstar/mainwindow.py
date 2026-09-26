@@ -5,8 +5,8 @@ import shlex
 import time
 from datetime import datetime
 
-from PySide6.QtCore import QByteArray, QProcess, Qt, QTimer
-from PySide6.QtGui import QAction
+from PySide6.QtCore import QByteArray, QProcess, Qt, QTimer, QUrl
+from PySide6.QtGui import QAction, QDesktopServices
 from PySide6.QtSerialPort import QSerialPortInfo
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
                                QMainWindow, QMessageBox, QPlainTextEdit, QPushButton, QTableWidget, QTableWidgetItem,
@@ -21,6 +21,7 @@ from .lookup import NameLookup
 from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
+from .updates import UpdateChecker
 from .widgets import LedBar, ReflectorScreen, load_fonts
 from .i18n import N_, tr
 
@@ -44,6 +45,7 @@ HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Name"), N_("Reflector"),
                    N_("Location"), N_("Dist.")]
 LOG_MAX_BYTES = 2_000_000
 WINDOW_WIDTH = 480
+UPDATE_CHECK_MS = 24 * 3600 * 1000
 ALL_TIME = 100 * 365 * 86400
 EXT_UR = "CQCQCQ"
 
@@ -84,6 +86,24 @@ class MainWindow(QMainWindow):
         self.poller.status.connect(self._reflector_status)
         self.poller.internet.connect(lambda ok: self.leds["internet"].set("green" if ok else "red"))
         self.poller.start()
+
+        # New versions: once at start-up, then daily while the app stays open
+        self.updates = UpdateChecker()
+        self.updates.available.connect(self._update_available)
+        self.updates.up_to_date.connect(self._update_none)
+        self.updates.failed.connect(self._update_failed)
+        self.update_manual = False
+        self.update_notified = ""
+        self.update_timer = QTimer(self, interval=UPDATE_CHECK_MS)
+        self.update_timer.timeout.connect(lambda: self._check_updates(manual=False))
+        if config.get("updates/check"):
+            QTimer.singleShot(4000, lambda: self._check_updates(manual=False))
+            self.update_timer.start()
+        self.update_label = QLabel()
+        self.update_label.setOpenExternalLinks(True)
+        self.statusBar().addPermanentWidget(self.update_label)
+        self.statusBar().setSizeGripEnabled(False)
+        self.statusBar().hide()
         self.registry.changed.connect(self._fill_reflectors)
         self.registry.changed.connect(self.poller.refresh_now)
         self.registry.changed.connect(self._refresh_screen_reflector)
@@ -201,6 +221,7 @@ class MainWindow(QMainWindow):
         hist_menu = self.menuBar().addMenu(tr("H&istory"))
         hist_menu.addAction(QAction(tr("Clear history…"), self, triggered=self.clear_history))
         help_menu = self.menuBar().addMenu(tr("&Help"))
+        help_menu.addAction(QAction(tr("Check for updates…"), self, triggered=lambda: self._check_updates(manual=True)))
         help_menu.addAction(QAction(tr("About QDStar…"), self, triggered=self.about))
 
     # --- logging ---------------------------------------------------------
@@ -807,6 +828,48 @@ class MainWindow(QMainWindow):
         if self.rx_entry:
             self.storage.update_entry(self.rx_entry, lat=pos.lat, lon=pos.lon)
             self._load_history()
+
+    # --- updates --------------------------------------------------------------
+
+    def _check_updates(self, manual):
+        self.update_manual = manual
+        self.updates.check()
+
+    def _update_available(self, version, url, page, notes):
+        self.log(tr("New version available: {version}", version=version))
+        self.update_label.setText(tr("New version {version} available", version=version)
+                                  + f' — <a href="{url}">' + tr("Download") + "</a>")
+        self.statusBar().show()
+        skipped = config.get("updates/skip") == version
+        if self.update_manual or (not skipped and self.update_notified != version):
+            self.update_notified = version
+            self._offer_update(version, url, page, notes)
+
+    def _offer_update(self, version, url, page, notes):
+        box = QMessageBox(self)
+        box.setWindowTitle(tr("Update available"))
+        box.setIcon(QMessageBox.Information)
+        box.setText(tr("QDStar {version} is available (you have {current}).", version=version, current=__version__))
+        box.setInformativeText(tr("Release notes: {page}", page=page))
+        if notes:
+            box.setDetailedText(notes)
+        download = box.addButton(tr("Download"), QMessageBox.AcceptRole)
+        box.addButton(tr("Later"), QMessageBox.RejectRole)
+        skip = box.addButton(tr("Skip this version"), QMessageBox.DestructiveRole)
+        box.exec()
+        if box.clickedButton() is download:
+            QDesktopServices.openUrl(QUrl(url))
+        elif box.clickedButton() is skip:
+            config.put("updates/skip", version)
+
+    def _update_none(self):
+        if self.update_manual:
+            QMessageBox.information(self, tr("Check for updates"),
+                                    tr("You have the latest version ({version}).", version=__version__))
+
+    def _update_failed(self, error):
+        if self.update_manual:
+            QMessageBox.warning(self, tr("Check for updates"), tr("Could not check for updates: {error}", error=error))
 
     def about(self):
         QMessageBox.about(
