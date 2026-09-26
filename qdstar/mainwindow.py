@@ -221,6 +221,11 @@ class MainWindow(QMainWindow):
         self.weather_tab_index = self.tabs.addTab(self.weather_panel, tr("Weather"))
         self._show_dprs_tabs()
         layout.addWidget(self.tabs, 1)
+        # The screen keeps its full 4:3 size (the window width is fixed); when the window
+        # gets shorter, the tabs shrink instead, down to a few visible rows
+        margins = layout.contentsMargins()
+        self.screen.setFixedHeight(int((WINDOW_WIDTH - margins.left() - margins.right()) * 3 / 4))
+        self.tabs.setMinimumHeight(150)
 
         self.setCentralWidget(central)
         # Vertical layout: the window grows in height only, the width stays fixed
