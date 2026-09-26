@@ -1,0 +1,92 @@
+[
+  {
+    "via": "int",
+    "to": "/XLX214D",
+    "server": "server1.dstar.es",
+    "name": "D-STAR Spain",
+    "description": "XLX214/DCS214 módulo D, red D-STAR España (EA7IYR)",
+    "notes": "Servidor de Terminal Mode de dstar.es. Solo D-STAR.",
+    "dashboard": "https://dcs214.xreflector.net/dashboard/",
+    "api": "https://dcs214.xreflector.net/dashboard/index.php"
+  },
+  {
+    "via": "ext",
+    "to": "REF001 C",
+    "server": "",
+    "name": "Mundial",
+    "description": "REF001 C, MegaRepeater de D-STAR (Illinois, EE. UU.), en inglés",
+    "notes": "DPlus: requiere indicativo registrado.",
+    "dashboard": "http://ref001.dstargateway.org/",
+    "api": ""
+  },
+  {
+    "via": "ext",
+    "to": "DCS214 D",
+    "server": "",
+    "name": "D-STAR Spain",
+    "description": "Módulo nacional D-STAR de España (XLX214, EA7IYR)",
+    "notes": "Solo D-STAR, sin puente a DMR.",
+    "dashboard": "https://dcs214.xreflector.net/dashboard/",
+    "api": "https://dcs214.xreflector.net/dashboard/index.php"
+  },
+  {
+    "via": "ext",
+    "to": "XLX992 A",
+    "server": "",
+    "name": "Córdoba BM",
+    "description": "URC Córdoba: BM TG 21414, YSF #13390, Wires-X #41550",
+    "notes": "Puente a BrandMeister (vía BM214).",
+    "dashboard": "",
+    "api": ""
+  },
+  {
+    "via": "ext",
+    "to": "XLX048 A",
+    "server": "",
+    "name": "TG 914",
+    "description": "URE Valencia: interlink BM TG 914 (hispano mundial)",
+    "notes": "",
+    "dashboard": "",
+    "api": ""
+  },
+  {
+    "via": "ext",
+    "to": "XLX051 H",
+    "server": "",
+    "name": "ADN 214",
+    "description": "ADN Systems TG 214 (no es BrandMeister)",
+    "notes": "",
+    "dashboard": "",
+    "api": ""
+  },
+  {
+    "via": "ext",
+    "to": "XLX200 D",
+    "server": "",
+    "name": "BM Zaragoza",
+    "description": "DMR-BM Zaragoza",
+    "notes": "",
+    "dashboard": "",
+    "api": ""
+  },
+  {
+    "via": "ext",
+    "to": "REF075 B",
+    "server": "",
+    "name": "REF075 Nacional",
+    "description": "REF075 B, módulo nacional de la red D-STAR España",
+    "notes": "DPlus nativo, requiere registro. No admite apps ni AMBE externos.",
+    "dashboard": "",
+    "api": ""
+  },
+  {
+    "via": "ext",
+    "to": "REF075 C",
+    "server": "",
+    "name": "REF075 Latino",
+    "description": "REF075 C, módulo Latino sin puentes",
+    "notes": "DPlus nativo, requiere registro.",
+    "dashboard": "",
+    "api": ""
+  }
+]

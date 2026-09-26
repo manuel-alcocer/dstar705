@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="4" y="8" width="56" height="48" rx="8" fill="#101010" stroke="#3a3a3a" stroke-width="2"/>
+  <rect x="10" y="14" width="44" height="26" rx="3" fill="#050505" stroke="#2a2a2a"/>
+  <text x="32" y="33" font-family="DejaVu Sans Mono, monospace" font-size="13" font-weight="bold"
+        fill="#ffb347" text-anchor="middle">DV</text>
+  <circle cx="16" cy="48" r="3.5" fill="#2ee66b"/>
+  <circle cx="28" cy="48" r="3.5" fill="#2ee66b"/>
+  <circle cx="40" cy="48" r="3.5" fill="#3a3a3a"/>
+  <circle cx="52" cy="48" r="3.5" fill="#ff3b30"/>
+</svg>

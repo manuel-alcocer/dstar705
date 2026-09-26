@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DStar705
+Comment=IC-705 D-STAR Terminal Mode controller and gateway
+Exec=dstar705
+Icon=dstar705
+Terminal=false
+Categories=HamRadio;Network;
+StartupWMClass=dstar705
