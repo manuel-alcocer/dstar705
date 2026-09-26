@@ -124,7 +124,7 @@ class LedBar(QWidget):
 
 AMBER = QColor("#ffb347")
 GREEN = QColor("#5cff8d")
-DIM = QColor("#7a6a50")
+DIM = QColor("#cfc8b8")      # secondary text: light, still distinct from WHITE
 WHITE = QColor("#f2efe6")
 RED = QColor("#ff4d4d")
 CYAN = QColor("#63d8ff")
