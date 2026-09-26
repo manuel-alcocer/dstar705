@@ -16,6 +16,11 @@ from .i18n import tr  # noqa: E402
 
 def main():
     app = QApplication(sys.argv)
+    from .single import InstanceServer, ask_running_instance
+    if ask_running_instance():
+        startup.done()      # QDStar is already open: it has been brought to the front
+        return 0
+    instance = InstanceServer(app)
     app.setOrganizationName(config.ORG)
     app.setApplicationName(config.APP)
     app.setDesktopFileName("qdstar")
@@ -32,6 +37,12 @@ def main():
     window = MainWindow()
     window.show()
     startup.done()
+
+    def bring_to_front():
+        window.showNormal()
+        window.raise_()
+        window.activateWindow()
+    instance.show_requested.connect(bring_to_front)
     # Close the radio session cleanly on Ctrl+C / SIGTERM: a session that is
     # not closed stays stuck in the IC-705 until it is power cycled.
     for sig in (signal.SIGINT, signal.SIGTERM):

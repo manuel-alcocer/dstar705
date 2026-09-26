@@ -26,7 +26,7 @@ a = Analysis(
     [str(root / "packaging" / "launcher.py")],
     pathex=[str(root)],
     datas=datas,
-    hiddenimports=["PySide6.QtSerialPort", "PySide6.QtNetwork", "PySide6.QtSvg", "certifi"],
+    hiddenimports=["PySide6.QtSerialPort", "PySide6.QtNetwork", "PySide6.QtSvg", "certifi", "qdstar.single"],
     excludes=excludes,
 )
 # Drop Qt libraries/plugins pulled in indirectly that the app never loads
