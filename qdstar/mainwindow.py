@@ -5,8 +5,8 @@ import shlex
 import time
 from datetime import datetime
 
-from PySide6.QtCore import QByteArray, QProcess, QSize, Qt, QTimer, QUrl
-from PySide6.QtGui import QAction, QDesktopServices
+from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
+from PySide6.QtGui import QAction
 from PySide6.QtSerialPort import QSerialPortInfo
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
                                QMainWindow, QMessageBox, QPlainTextEdit, QPushButton, QTableWidget, QTableWidgetItem,
@@ -21,6 +21,7 @@ from .lookup import NameLookup
 from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
+from .qtutil import open_url, start_detached
 from .updates import UpdateChecker
 from .widgets import LedBar, ReflectorScreen, WeatherPanel, load_fonts, mode_led_icon
 from .i18n import N_, tr
@@ -165,7 +166,7 @@ class MainWindow(QMainWindow):
         mode_bar.addWidget(self.mode_hint, 1)
         # New version notice (a download link), right-aligned next to the mode buttons
         self.update_label = QLabel()
-        self.update_label.setOpenExternalLinks(True)
+        self.update_label.linkActivated.connect(open_url)
         self.update_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.update_label.hide()
         mode_bar.addWidget(self.update_label)
@@ -359,7 +360,7 @@ class MainWindow(QMainWindow):
         if not command or not self._external_gateway():
             return
         args = shlex.split(command)
-        if QProcess.startDetached(args[0], args[1:]):
+        if start_detached(args[0], args[1:]):
             self.log(tr("Ran: {command}", command=command))
         else:
             self.log(tr("Could not run: {command}", command=command))
@@ -968,7 +969,7 @@ class MainWindow(QMainWindow):
         skip = box.addButton(tr("Skip this version"), QMessageBox.DestructiveRole)
         box.exec()
         if box.clickedButton() is download:
-            QDesktopServices.openUrl(QUrl(url))
+            open_url(url)
         elif box.clickedButton() is skip:
             config.put("updates/skip", version)
 
