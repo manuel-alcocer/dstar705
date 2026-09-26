@@ -280,15 +280,16 @@ class ReflectorScreen(QWidget):
         p.drawLine(L, 330, R, 330)
 
         # --- last heard on the reflector (from its API, when available)
-        self._text(p, L, 354, s.get("heard_title", tr("LAST HEARD ON THE REFLECTOR")), 13, DIM, True)
+        self._text(p, L, 354, s.get("heard_title", tr("LAST HEARD ON THE REFLECTOR")), 16, DIM, True)
         heard = s.get("heard") or []
         if not heard:
-            self._text(p, L, 380, tr("(no records for this reflector)"), 14, DIM)
-        for i, h in enumerate(heard[:4]):
-            y = 378 + i * 21
-            self._text(p, L, y, h.get("callsign", ""), 16, AMBER, True, width=110)
-            self._text(p, L + 115, y, h.get("name", ""), 16, WHITE, width=260)
-            self._text(p, R, y, h.get("time", ""), 15, DIM, align=Qt.AlignRight)
+            self._text(p, L, 384, tr("(no records for this reflector)"), 18, DIM)
+        # Three rows in a readable size (the screen scales with the narrow window)
+        for i, h in enumerate(heard[:3]):
+            y = 384 + i * 27
+            self._text(p, L, y, h.get("callsign", ""), 21, AMBER, True, width=150)
+            self._text(p, L + 150, y, h.get("name", ""), 21, WHITE, width=R - L - 260)
+            self._text(p, R, y, h.get("time", ""), 19, DIM, align=Qt.AlignRight)
 
         # --- footer
         footer = f"MY {s.get('my_call', '—')}"
@@ -298,8 +299,8 @@ class ReflectorScreen(QWidget):
             footer += f" · {s['mode']}"
         if s.get("dprs_on") is not None:
             footer += " · D-PRS " + ("ON" if s["dprs_on"] else "OFF")
-        self._text(p, L, H - 14, footer, 13, DIM)
-        self._text(p, R, H - 14, time.strftime("%H:%M:%S"), 13, DIM, align=Qt.AlignRight)
+        self._text(p, L, H - 12, footer, 16, DIM, width=R - L - 110)
+        self._text(p, R, H - 12, time.strftime("%H:%M:%S"), 16, DIM, align=Qt.AlignRight)
 
     def _position_box(self, p, rx):
         """Fixed box: distance and direction to the station (D-PRS), or a placeholder."""
