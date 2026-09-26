@@ -100,11 +100,6 @@ class MainWindow(QMainWindow):
         if config.get("updates/check"):
             QTimer.singleShot(4000, lambda: self._check_updates(manual=False))
             self.update_timer.start()
-        self.update_label = QLabel()
-        self.update_label.setOpenExternalLinks(True)
-        self.statusBar().addPermanentWidget(self.update_label)
-        self.statusBar().setSizeGripEnabled(False)
-        self.statusBar().hide()
         self.registry.changed.connect(self._fill_reflectors)
         self.registry.changed.connect(self.poller.refresh_now)
         self.registry.changed.connect(self._refresh_screen_reflector)
@@ -150,6 +145,12 @@ class MainWindow(QMainWindow):
         self.mode_hint = QLabel()
         self.mode_hint.setStyleSheet("color: #c77;")
         mode_bar.addWidget(self.mode_hint, 1)
+        # New version notice (a download link), right-aligned next to the mode buttons
+        self.update_label = QLabel()
+        self.update_label.setOpenExternalLinks(True)
+        self.update_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.update_label.hide()
+        mode_bar.addWidget(self.update_label)
         layout.addLayout(mode_bar)
 
         bar = QHBoxLayout()
@@ -875,9 +876,9 @@ class MainWindow(QMainWindow):
 
     def _update_available(self, version, url, page, notes):
         self.log(tr("New version available: {version}", version=version))
-        self.update_label.setText(tr("New version {version} available", version=version)
-                                  + f' — <a href="{url}">' + tr("Download") + "</a>")
-        self.statusBar().show()
+        self.update_label.setText(f'<a href="{url}">⬆ ' + tr("New {version}", version=version) + "</a>")
+        self.update_label.setToolTip(tr("New version {version} available", version=version) + " — " + tr("Download"))
+        self.update_label.show()
         skipped = config.get("updates/skip") == version
         if self.update_manual or (not skipped and self.update_notified != version):
             self.update_notified = version
