@@ -1060,6 +1060,7 @@ class MainWindow(QMainWindow):
             f"<b>QDStar {__version__}</b><br>"
             + tr("IC-705 D-STAR Terminal Mode controller and built-in gateway.") + "<br><br>"
             + tr("Author: {author}", author=__author__) + "<br>"
+            + tr("Seville (Bellavista), Spain") + "<br>"
             f'<a href="{__url__}">{__url__}</a><br><br>'
             + tr("License GPL-3.0-or-later. Based on wfview (Icom network protocol) "
                  "and on G4KLX's DStarRepeater / ircDDBGateway."))

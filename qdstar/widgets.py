@@ -3,7 +3,7 @@
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, QSize, Qt, QTimer
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QGuiApplication, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
@@ -132,6 +132,7 @@ BG = QColor("#050505")
 
 W, H = 640, 480  # virtual canvas
 BOX_X = 466      # left edge of the distance/direction box
+SMALL_TEXT = 19  # texts up to this size use the proportional font
 
 
 def _ago(ts):
@@ -175,24 +176,38 @@ class ReflectorScreen(QWidget):
         return QSize(480, 360)
 
     # drawing helpers
-    def _font(self, size, bold=False):
-        f = QFont(self.mono)
-        f.setPixelSize(size)
+    def _font(self, size, bold=False, sans=None):
+        """Small secondary texts use the proportional DejaVu Sans, which reads better when small."""
+        if sans is None:
+            sans = size <= SMALL_TEXT
+        f = QFont("DejaVu Sans") if sans else QFont(self.mono)
+        f.setPixelSize(max(1, int(round(size))))
         f.setBold(bold)
         return f
 
+    def _advance(self, text, size, bold=False):
+        """Width of a text in canvas units."""
+        return QFontMetrics(self._font(size, bold)).horizontalAdvance(text)
+
     def _text(self, p, x, y, text, size, color, bold=False, align=Qt.AlignLeft, width=None):
-        font = self._font(size, bold)
+        # Text is drawn at its real on-screen size (not scaled with the canvas), so the
+        # font can be hinted to the pixel grid and stays sharp in a narrow window.
+        k = p.transform().m11()
+        font = self._font(size * k, bold, sans=size <= SMALL_TEXT)
+        fm = QFontMetrics(font)
+        text = fm.elidedText(str(text), Qt.ElideRight, int((width or (W - 2 * 24)) * k))
+        pt = p.transform().map(QPointF(x, y))
+        px = pt.x()
+        if align == Qt.AlignRight:
+            px -= fm.horizontalAdvance(text)
+        elif align == Qt.AlignHCenter:
+            px -= fm.horizontalAdvance(text) / 2
+        p.save()
+        p.resetTransform()
         p.setFont(font)
         p.setPen(color)
-        fm = QFontMetrics(font)
-        width = width or (W - 2 * 24)
-        text = fm.elidedText(str(text), Qt.ElideRight, width)
-        if align == Qt.AlignRight:
-            x = x - fm.horizontalAdvance(text)
-        elif align == Qt.AlignHCenter:
-            x = x - fm.horizontalAdvance(text) / 2
-        p.drawText(int(x), int(y), text)
+        p.drawText(QPointF(round(px), round(pt.y())), text)
+        p.restore()
 
     def paintEvent(self, _):
         p = QPainter(self)
@@ -244,7 +259,7 @@ class ReflectorScreen(QWidget):
         x = L
         for text, color in parts:
             self._text(p, x, 124, text, 16, color, True)
-            x += QFontMetrics(self._font(16, True)).horizontalAdvance(text) + 22
+            x += self._advance(text, 16, True) + 22
 
         p.setPen(QPen(QColor("#333"), 2))
         p.drawLine(L, 140, R, 140)
@@ -348,8 +363,8 @@ class WeatherCard(QWidget):
         self.update()
 
     def _font(self, size, bold=False):
-        f = QFont("DejaVu Sans Mono")
-        f.setStyleHint(QFont.Monospace)
+        # Same rule as the screen: proportional font for small texts
+        f = QFont("DejaVu Sans") if size <= SMALL_TEXT - 3 else QFont("DejaVu Sans Mono")
         f.setPixelSize(size)
         f.setBold(bold)
         return f

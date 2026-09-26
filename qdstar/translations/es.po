@@ -10,71 +10,71 @@ msgstr ""
 msgid "Loading modules…"
 msgstr "Cargando módulos…"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "N"
 msgstr "N"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "NNE"
 msgstr "NNE"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "NE"
 msgstr "NE"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "ENE"
 msgstr "ENE"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "E"
 msgstr "E"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "ESE"
 msgstr "ESE"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "SE"
 msgstr "SE"
 
-#: qdstar/civ.py:382
+#: qdstar/civ.py:390
 msgid "SSE"
 msgstr "SSE"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "S"
 msgstr "S"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "SSW"
 msgstr "SSO"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "SW"
 msgstr "SO"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "WSW"
 msgstr "OSO"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "W"
 msgstr "O"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "WNW"
 msgstr "ONO"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "NW"
 msgstr "NO"
 
-#: qdstar/civ.py:383
+#: qdstar/civ.py:391
 msgid "NNW"
 msgstr "NNO"
 
-#: qdstar/civ.py:354
+#: qdstar/civ.py:362
 msgid "Invalid locator (e.g. IN80DK)"
 msgstr "Localizador no válido (ej. IN80DK)"
 
@@ -1026,11 +1026,11 @@ msgstr "No se pudo comprobar si hay actualizaciones: {error}"
 msgid "rain {mm} mm/24h"
 msgstr "lluvia {mm} mm/24h"
 
-#: qdstar/mainwindow.py:1064
+#: qdstar/mainwindow.py:1065
 msgid "License GPL-3.0-or-later. Based on wfview (Icom network protocol) and on G4KLX's DStarRepeater / ircDDBGateway."
 msgstr "Licencia GPL-3.0-or-later. Basado en wfview (protocolo de red de Icom) y en DStarRepeater / ircDDBGateway de G4KLX."
 
-#: qdstar/mainwindow.py:1068
+#: qdstar/mainwindow.py:1069
 msgid "Delete the whole history?"
 msgstr "¿Borrar todo el histórico?"
 
@@ -1126,9 +1126,9 @@ msgstr "Esperando al gateway…"
 msgid "via {station}"
 msgstr "vía {station}"
 
-#: qdstar/mainwindow.py:1062
-msgid "Author: {author}"
-msgstr "Autor: {author}"
+#: qdstar/mainwindow.py:1063
+msgid "Seville (Bellavista), Spain"
+msgstr "Sevilla (Bellavista), España"
 
 #: qdstar/mainwindow.py:290
 msgid "<call sign> B"
@@ -1141,6 +1141,10 @@ msgstr "<indicativo> Z"
 #: qdstar/mainwindow.py:443
 msgid "empty"
 msgstr "vacío"
+
+#: qdstar/mainwindow.py:1062
+msgid "Author: {author}"
+msgstr "Autor: {author}"
 
 #: qdstar/mainwindow.py:1061
 msgid "IC-705 D-STAR Terminal Mode controller and built-in gateway."
@@ -1158,66 +1162,66 @@ msgstr "Aún no se han leído R1/R2 de la radio"
 msgid "Invalid TO format (e.g. /XLX214D)"
 msgstr "Formato de TO no válido (ej. /XLX214D)"
 
-#: qdstar/widgets.py:145
+#: qdstar/widgets.py:146
 msgid "{n} d ago"
 msgstr "hace {n} d"
 
-#: qdstar/widgets.py:140
+#: qdstar/widgets.py:141
 msgid "{n}s ago"
 msgstr "hace {n}s"
 
-#: qdstar/widgets.py:223
+#: qdstar/widgets.py:238
 msgid "REFLECTOR"
 msgstr "REFLECTOR"
 
-#: qdstar/widgets.py:224
+#: qdstar/widgets.py:239
 msgid "server ?"
 msgstr "servidor ?"
 
-#: qdstar/widgets.py:256
+#: qdstar/widgets.py:271
 msgid "transmitting"
 msgstr "transmitiendo"
 
-#: qdstar/widgets.py:286
+#: qdstar/widgets.py:301
 msgid "(no records for this reflector)"
 msgstr "(sin registros de este reflector)"
 
-#: qdstar/widgets.py:237
+#: qdstar/widgets.py:252
 msgid "{n} nodes"
 msgstr "{n} nodos"
 
-#: qdstar/widgets.py:239
+#: qdstar/widgets.py:254
 msgid "linked"
 msgstr "enlazado"
 
-#: qdstar/widgets.py:243
+#: qdstar/widgets.py:258
 msgid "different server!"
 msgstr "¡otro servidor!"
 
-#: qdstar/widgets.py:277
+#: qdstar/widgets.py:292
 msgid "no activity"
 msgstr "sin actividad"
 
-#: qdstar/widgets.py:324
+#: qdstar/widgets.py:339
 msgid "no position"
 msgstr "sin posición"
 
-#: qdstar/widgets.py:234
+#: qdstar/widgets.py:249
 msgid "ONLINE"
 msgstr "EN LÍNEA"
 
-#: qdstar/widgets.py:241
+#: qdstar/widgets.py:256
 msgid "not linked"
 msgstr "no enlazado"
 
-#: qdstar/widgets.py:262
+#: qdstar/widgets.py:277
 msgid "LAST"
 msgstr "ÚLTIMO"
 
-#: qdstar/widgets.py:234
+#: qdstar/widgets.py:249
 msgid "NO DATA"
 msgstr "SIN DATOS"
 
-#: qdstar/widgets.py:235
+#: qdstar/widgets.py:250
 msgid "DOWN"
 msgstr "CAÍDO"
