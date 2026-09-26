@@ -1,5 +1,6 @@
 """SQLite storage: conversation history and callsign name cache."""
 
+import json
 import sqlite3
 import threading
 import time
@@ -22,6 +23,19 @@ CREATE TABLE IF NOT EXISTS history (
     rpt2 TEXT
 );
 CREATE INDEX IF NOT EXISTS history_started ON history(started);
+CREATE TABLE IF NOT EXISTS dprs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    received REAL NOT NULL,
+    name TEXT NOT NULL,               -- station, object or item name (e.g. EB2EMZ-W)
+    kind TEXT NOT NULL,               -- position, object, item, weather
+    symbol TEXT,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    via TEXT,                         -- station whose over carried it (e.g. ED2YAV)
+    reflector TEXT,
+    weather TEXT                      -- JSON with the weather fields
+);
+CREATE INDEX IF NOT EXISTS dprs_received ON dprs(received);
 CREATE TABLE IF NOT EXISTS names (
     callsign TEXT PRIMARY KEY,
     name TEXT,
@@ -95,6 +109,36 @@ class Storage:
                 "SELECT lat, lon FROM history WHERE callsign = ? AND lat IS NOT NULL AND started >= ?"
                 " ORDER BY started DESC LIMIT 1", (callsign, time.time() - max_age)).fetchone()
         return (row["lat"], row["lon"]) if row else None
+
+    def add_dprs(self, pos, via, reflector):
+        """Store a received D-PRS report, unless the same one arrived in the last 10 minutes."""
+        with self.lock, self.db:
+            dup = self.db.execute(
+                "SELECT id FROM dprs WHERE name = ? AND kind = ? AND lat = ? AND lon = ? AND received >= ?",
+                (pos.callsign, pos.kind, pos.lat, pos.lon, time.time() - 600)).fetchone()
+            if dup:
+                return False
+            self.db.execute(
+                "INSERT INTO dprs (received, name, kind, symbol, lat, lon, via, reflector, weather)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (time.time(), pos.callsign, pos.kind, pos.symbol, pos.lat, pos.lon, via, reflector,
+                 json.dumps(pos.weather) if pos.weather else None))
+            return True
+
+    def latest_weather(self, max_age=24 * 3600):
+        """Latest weather report of each station received in the last max_age seconds."""
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT d.* FROM dprs d JOIN (SELECT name, MAX(received) AS latest FROM dprs"
+                " WHERE kind = 'weather' AND received >= ? GROUP BY name) l"
+                " ON d.name = l.name AND d.received = l.latest WHERE d.kind = 'weather'",
+                (time.time() - max_age,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def recent_dprs(self, limit=300):
+        with self.lock:
+            rows = self.db.execute("SELECT * FROM dprs ORDER BY received DESC LIMIT ?", (limit,)).fetchall()
+        return [dict(r) for r in rows]
 
     def clear_history(self):
         with self.lock, self.db:

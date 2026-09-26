@@ -41,6 +41,7 @@ DEFAULTS = {
     "ui/debug_civ": True,
     "ui/language": "",           # empty: the system language
     "updates/check": True,       # look for new releases on GitHub
+    "dprs/show_all": True,       # D-PRS tab with every received report, including relayed ones
     "updates/skip": "",          # a version the user chose to skip
 }
 

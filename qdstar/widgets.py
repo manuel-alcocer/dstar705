@@ -327,3 +327,129 @@ class ReflectorScreen(QWidget):
         if since:
             secs = int(time.time() - since)
             self._text(p, W - 24, 176, f"{secs // 60:02d}:{secs % 60:02d}", 22, color, True, align=Qt.AlignRight)
+
+
+# --- weather cards ------------------------------------------------------------
+
+class WeatherCard(QWidget):
+    """One weather station: temperature, humidity, pressure, wind and rain, in the screen's style."""
+
+    HEIGHT = 112
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumHeight(self.HEIGHT)
+        self.setMaximumHeight(self.HEIGHT)
+        self.data = {}
+        load_fonts()
+
+    def set_data(self, **data):
+        self.data = data
+        self.update()
+
+    def _font(self, size, bold=False):
+        f = QFont("DejaVu Sans Mono")
+        f.setStyleHint(QFont.Monospace)
+        f.setPixelSize(size)
+        f.setBold(bold)
+        return f
+
+    def _text(self, p, x, y, text, size, color, bold=False, align=Qt.AlignLeft):
+        font = self._font(size, bold)
+        p.setFont(font)
+        p.setPen(color)
+        fm = QFontMetrics(font)
+        if align == Qt.AlignRight:
+            x -= fm.horizontalAdvance(text)
+        elif align == Qt.AlignHCenter:
+            x -= fm.horizontalAdvance(text) / 2
+        p.drawText(int(x), int(y), text)
+
+    def paintEvent(self, _):
+        from math import cos, radians, sin
+        d, w = self.data, self.data.get("weather") or {}
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setRenderHint(QPainter.TextAntialiasing)
+        rect = QRectF(1, 1, self.width() - 2, self.height() - 2)
+        p.setBrush(BG)
+        p.setPen(QPen(QColor("#2a2a2a"), 2))
+        p.drawRoundedRect(rect, 10, 10)
+        L, R = 12, self.width() - 12
+        self._text(p, L, 22, d.get("name", ""), 15, AMBER, True)
+        self._text(p, R, 22, d.get("where", ""), 13, CYAN, True, align=Qt.AlignRight)
+
+        temperature = w.get("temperature")
+        self._text(p, L, 70, "—" if temperature is None else f"{temperature:.1f}°", 36, WHITE, True)
+        if temperature is not None:
+            self._text(p, L + QFontMetrics(self._font(36, True)).horizontalAdvance(f"{temperature:.1f}°") + 2,
+                       58, "C", 16, WHITE, True)
+
+        col = max(L + 150, self.width() // 2 - 10)
+        rows = []
+        if w.get("humidity") is not None:
+            rows.append(("💧", f"{w['humidity']:.0f} %"))
+        if w.get("pressure"):
+            rows.append(("⏲", f"{w['pressure']:.1f} hPa"))
+        rain = w.get("rain_24h")
+        if rain is not None:
+            rows.append(("☔", f"{rain:.1f} mm/24h"))
+        for i, (icon, value) in enumerate(rows[:3]):
+            self._text(p, col, 46 + i * 20, f"{icon} {value}", 13, WHITE)
+
+        # Wind: arrow pointing where the wind blows to (it comes from wind_dir)
+        wind = w.get("wind")
+        wx, wy = R - 26, 64
+        if wind:
+            angle = radians((w.get("wind_dir") or 0) + 180)
+            dx, dy = sin(angle), -cos(angle)
+            p.setPen(QPen(CYAN, 3))
+            p.drawLine(int(wx - dx * 14), int(wy - dy * 14), int(wx + dx * 14), int(wy + dy * 14))
+            tip_left = radians((w.get("wind_dir") or 0) + 180 - 150)
+            tip_right = radians((w.get("wind_dir") or 0) + 180 + 150)
+            for a in (tip_left, tip_right):
+                p.drawLine(int(wx + dx * 14), int(wy + dy * 14),
+                           int(wx + dx * 14 + sin(a) * 8), int(wy + dy * 14 - cos(a) * 8))
+            self._text(p, wx, wy + 32, f"{wind:.1f} m/s", 12, CYAN, True, align=Qt.AlignHCenter)
+        elif wind is not None:
+            self._text(p, R, wy + 6, d.get("calm", ""), 13, CYAN, True, align=Qt.AlignRight)
+
+        self._text(p, L, self.height() - 10, d.get("footer", ""), 12, DIM)
+
+
+class WeatherPanel(QWidget):
+    """Scrollable list of WeatherCard, nearest station first."""
+
+    def __init__(self, parent=None):
+        from PySide6.QtWidgets import QScrollArea
+        super().__init__(parent)
+        self.inner = QWidget()
+        self.cards_layout = QVBoxLayout(self.inner)
+        self.cards_layout.setContentsMargins(4, 4, 4, 4)
+        self.cards_layout.setSpacing(6)
+        self.cards_layout.addStretch(1)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(self.inner)
+        self.empty = QLabel()
+        self.empty.setAlignment(Qt.AlignCenter)
+        self.empty.setWordWrap(True)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.empty)
+        layout.addWidget(scroll, 1)
+        self.cards = []
+
+    def set_stations(self, stations, empty_text):
+        """stations: list of dicts for WeatherCard.set_data."""
+        while len(self.cards) < len(stations):
+            card = WeatherCard()
+            self.cards_layout.insertWidget(self.cards_layout.count() - 1, card)
+            self.cards.append(card)
+        for card, data in zip(self.cards, stations):
+            card.set_data(**data)
+            card.show()
+        for card in self.cards[len(stations):]:
+            card.hide()
+        self.empty.setText(empty_text if not stations else "")
+        self.empty.setVisible(not stations)

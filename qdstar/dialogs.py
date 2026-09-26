@@ -85,11 +85,15 @@ class SettingsDialog(QDialog):
 
         self.check_updates = QCheckBox(tr("Check for new versions on start-up"))
         self.check_updates.setChecked(config.get("updates/check"))
+        self.dprs_all = QCheckBox(tr("D-PRS tab with every report received, including relayed ones"))
+        self.dprs_all.setToolTip(tr("Stations such as ED2YAV relay APRS positions and weather stations"))
+        self.dprs_all.setChecked(config.get("dprs/show_all"))
 
         ui_box = QGroupBox(tr("Interface"))
         form = QFormLayout(ui_box)
         form.addRow(tr("Language"), self.language)
         form.addRow("", self.check_updates)
+        form.addRow("", self.dprs_all)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
@@ -118,6 +122,7 @@ class SettingsDialog(QDialog):
             config.put("ui/language", self.language.currentData())
             QMessageBox.information(self, tr("Language"), tr("The new language is used after restarting QDStar."))
         config.put("updates/check", self.check_updates.isChecked())
+        config.put("dprs/show_all", self.dprs_all.isChecked())
         config.put("station/callsign", self.callsign.text().upper().strip())
         config.put("int/terminal_call", self.int_call.text().upper().strip())
         config.put("ext/terminal_call", self.ext_call.text().upper().strip())

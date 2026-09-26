@@ -16,6 +16,11 @@ Desktop controller and built-in D-STAR gateway for the Icom **IC-705** in
   the station on air or the last one heard (name and location from
   radioid.net), and the reflector's last heard list.
 - Conversation history (SQLite) and application log.
+- **D-PRS tab** with every position, object, item and weather report received,
+  including the ones relayed by stations such as ED2YAV, with distance,
+  direction and the relaying station; and a **Weather tab** with a card per
+  weather station (temperature, humidity, pressure, wind, rain). Both can be
+  turned off in the settings.
 - Update notice: on start-up (and daily) QDStar checks GitHub for a new release
   and offers the right download for your system. You can turn it off in the settings.
 - **D-PRS positions**: shows the position and distance of the station on air,

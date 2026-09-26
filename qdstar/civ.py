@@ -167,6 +167,10 @@ def parse(body):
             return ("tx_message", decode_text(data[:20]))
     if cmd == 0x1A and len(rest) >= 3 and rest[0] == 0x05:
         return ("setting", (rest[1:3].hex(), bytes(rest[3:])))
+    if cmd == 0x23 and len(rest) >= 12 and rest[0] == 0x00:
+        lat, lon = decode_latitude(bytes(rest[1:6])), decode_longitude(bytes(rest[6:12]))
+        valid = lat is not None and lon is not None and not (abs(lat) < 1e-6 and abs(lon) < 1e-6)
+        return ("my_position", (lat, lon) if valid else None)
     if cmd == 0x20 and len(rest) >= 2 and rest[0] == 0x03:
         if rest[1] in (0x01, 0x02):
             return ("dprs", parse_dprs_position(bytes(rest[2:])))
@@ -284,6 +288,48 @@ class DprsPosition:
     lon: float
     altitude: float = None
     kind: str = "position"
+    weather: dict = None   # weather reports: temperature, humidity, pressure, wind, rain
+
+
+def _bcd_number(data):
+    """BCD digits -> int, or None when the field is not present (FF)."""
+    if not data or all(b == 0xFF for b in data):
+        return None
+    value = 0
+    for b in data:
+        hi, lo = b >> 4, b & 0x0F
+        if hi > 9 or lo > 9:
+            return None
+        value = value * 100 + hi * 10 + lo
+    return value
+
+
+def parse_weather(body):
+    """Weather fields after name/symbol/position (IC-705 CI-V reference, 'Weather')."""
+    w = body[22:]            # 7 bytes date, then the measurements
+    if len(w) < 7 + 20:
+        return None
+
+    def num(offset, length, scale=1.0):
+        value = _bcd_number(w[offset:offset + length])
+        return None if value is None else value * scale
+
+    temperature = num(13, 2, 0.1)
+    if temperature is not None and w[15] == 0x01:
+        temperature = -temperature
+    report = {
+        "wind_dir": num(7, 2), "wind": num(9, 2, 0.1), "gust": num(11, 2, 0.1),
+        "temperature": temperature, "rain": num(16, 2, 0.1), "rain_24h": num(18, 2, 0.1),
+        "rain_midnight": num(20, 2, 0.1), "humidity": num(22, 2), "pressure": num(24, 3, 0.1),
+    }
+    # Drop physically impossible values (a corrupted report must not show a 500 m/s wind)
+    limits = {"wind_dir": (0, 360), "wind": (0, 100), "gust": (0, 150), "temperature": (-90, 60),
+              "rain": (0, 500), "rain_24h": (0, 2000), "rain_midnight": (0, 2000),
+              "humidity": (0, 100), "pressure": (850, 1100)}
+    for key, (low, high) in limits.items():
+        if report[key] is not None and not low <= report[key] <= high:
+            report[key] = None
+    return report
 
 
 def parse_dprs_position(data):
@@ -297,9 +343,16 @@ def parse_dprs_position(data):
     lon = decode_longitude(body[16:22])
     if lat is None or lon is None or (abs(lat) < 1e-6 and abs(lon) < 1e-6):
         return None   # no position; 0°,0° is what radios without a GPS fix send
+    kind = DPRS_KINDS[data[0]]
+    weather = parse_weather(body) if kind == "weather" else None
+    altitude = decode_altitude(body[22:26]) if len(body) >= 26 and kind != "weather" else None
     return DprsPosition(body[0:9].decode("ascii", "replace").strip(),
-                        body[9:11].decode("ascii", "replace"), lat, lon,
-                        decode_altitude(body[22:26]) if len(body) >= 26 else None, DPRS_KINDS[data[0]])
+                        body[9:11].decode("ascii", "replace"), lat, lon, altitude, kind, weather)
+
+
+def read_my_position():
+    """Own position from the radio's GPS (MY position data)."""
+    return frame(0x23, b"\x00")
 
 
 def locator_to_latlon(locator):

@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBox
 
 from . import __author__, __url__, __version__, config, startup
 from . import civ
-from .dialogs import DprsDialog, ReflectorsDialog, SettingsDialog, format_position
+from .dialogs import SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
 from .gateway import GatewayClient
 from .lookup import NameLookup
@@ -22,7 +22,7 @@ from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
 from .updates import UpdateChecker
-from .widgets import LedBar, ReflectorScreen, load_fonts
+from .widgets import LedBar, ReflectorScreen, WeatherPanel, load_fonts
 from .i18n import N_, tr
 
 # (key, caption, tooltip); translated when the window is built
@@ -43,6 +43,9 @@ ICOM_USB_VENDOR = 0x0C26
 MODE_NAMES = {"int": "INT · WiFi", "ext": "EXT · USB/PC"}
 HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Dist."), N_("Name"), N_("Reflector"), N_("Dur."),
                    N_("Message"), N_("Location")]
+DPRS_COLUMNS = [N_("Time"), N_("Station"), N_("Type"), N_("Dist."), N_("Details"), N_("Via"), N_("Reflector")]
+DPRS_KIND_NAMES = {"position": N_("position"), "object": N_("object"), "item": N_("item"), "weather": N_("weather")}
+GPS_POLL_MS = 60_000
 LOG_MAX_BYTES = 2_000_000
 WINDOW_WIDTH = 420
 UPDATE_CHECK_MS = 24 * 3600 * 1000
@@ -76,6 +79,8 @@ class MainWindow(QMainWindow):
         self.usb_present = None
         self.radio_connected = False
         self.own_gps = {}          # radio settings 0281 (GPS select), 0286 (manual position), 0287 (TX mode)
+        self.gps_fix = None        # (lat, lon) from the radio's GPS when GPS Select = ON
+        self._geo_origin = None    # position the displayed distances were computed from
         self.rx_entry = None
         self.rx_info = None
         self.tx_entry = None
@@ -107,12 +112,18 @@ class MainWindow(QMainWindow):
         self.registry.changed.connect(self.poller.refresh_now)
         self.registry.changed.connect(self._refresh_screen_reflector)
 
+        self.weather_timer = QTimer(self, interval=60_000)
+        self.weather_timer.timeout.connect(self._load_weather)
+        self.weather_timer.start()
+        self.gps_timer = QTimer(self, interval=GPS_POLL_MS)
+        self.gps_timer.timeout.connect(lambda: self.radio and self.radio.read_my_position())
         self.usb_timer = QTimer(self, interval=2000)
         self.usb_timer.timeout.connect(self._check_usb)
 
         startup.progress(6, tr("Starting the gateway…"))
         self._apply_mode(self.mode, startup=True)
         self._load_history()
+        self._load_dprs()
         self._update_last_heard()
         self._backfill_names()
         if config.get("radio/auto_connect") and config.get("radio/username"):
@@ -194,6 +205,21 @@ class MainWindow(QMainWindow):
         font.setFamily("monospace")
         self.log_view.setFont(font)
         self.tabs.addTab(self.log_view, tr("Log"))
+
+        self.dprs_table = QTableWidget(0, len(DPRS_COLUMNS))
+        self.dprs_table.setHorizontalHeaderLabels([tr(c) for c in DPRS_COLUMNS])
+        self.dprs_table.verticalHeader().setVisible(False)
+        self.dprs_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.dprs_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.dprs_table.setAlternatingRowColors(True)
+        self.dprs_table.setWordWrap(False)
+        dprs_header = self.dprs_table.horizontalHeader()
+        dprs_header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        dprs_header.setStretchLastSection(True)
+        self.dprs_tab_index = self.tabs.addTab(self.dprs_table, "D-PRS")
+        self.weather_panel = WeatherPanel()
+        self.weather_tab_index = self.tabs.addTab(self.weather_panel, tr("Weather"))
+        self._show_dprs_tabs()
         layout.addWidget(self.tabs, 1)
 
         self.setCentralWidget(central)
@@ -449,6 +475,7 @@ class MainWindow(QMainWindow):
         r.raw.connect(lambda line: self.debug_action.isChecked() and self.log(f"CI-V {line}"))
         r.setting_received.connect(self._setting_received)
         r.dprs_received.connect(self._dprs_received)
+        r.my_position.connect(self._my_position)
         r.start()
 
     def disconnect_radio(self, quiet=False):
@@ -475,6 +502,10 @@ class MainWindow(QMainWindow):
         if self.radio_connected:
             for number in ("0281", "0286", "0287"):
                 self.radio.read_setting(number)
+            self.radio.read_my_position()
+            self.gps_timer.start()
+        else:
+            self.gps_timer.stop()
 
     def _my_call(self, call, note):
         self.my_call = call
@@ -626,6 +657,7 @@ class MainWindow(QMainWindow):
                 self._start_gateway()
             self._update_mode_hint()
             self._refresh_screen_reflector()
+            self._show_dprs_tabs()
             if self.radio or config.get("radio/auto_connect"):
                 self.connect_radio()
 
@@ -820,12 +852,22 @@ class MainWindow(QMainWindow):
             self.radio.read_setting(number)
 
     def own_position(self):
-        """Our position when it is entered manually in the radio (used for distances)."""
-        data = self.own_gps.get("0286", b"")
-        if self.own_gps.get("0281", b"")[:1] != b"\x02" or len(data) < 11:
-            return None
-        lat, lon = civ.decode_latitude(data[:5]), civ.decode_longitude(data[5:11])
-        return (lat, lon) if lat is not None and lon is not None else None
+        """Our position for distances: the radio's manual position, or its GPS fix."""
+        source = self.own_gps.get("0281", b"")[:1]
+        if source == b"\x02":
+            data = self.own_gps.get("0286", b"")
+            if len(data) < 11:
+                return None
+            lat, lon = civ.decode_latitude(data[:5]), civ.decode_longitude(data[5:11])
+            return (lat, lon) if lat is not None and lon is not None else None
+        if source == b"\x01":
+            return self.gps_fix
+        return None
+
+    def _my_position(self, position):
+        if position != self.gps_fix:
+            self.gps_fix = position
+            self._setting_received("0281", self.own_gps.get("0281", b""))   # refresh locator/footer
 
     def _geo(self, pos):
         """(distance km, bearing degrees) from our position to pos, or (None, None)."""
@@ -846,9 +888,16 @@ class MainWindow(QMainWindow):
             sending = self.own_gps.get("0287", b"")[:1] == b"\x01"
             own = self.own_position()
             self.screen.update_state(dprs_on=sending, locator=civ.latlon_to_locator(*own) if own else "")
+            if own != self._geo_origin:
+                # Distances depend on our position: redraw them once it is known or changes
+                self._geo_origin = own
+                self._load_history()
+                self._load_dprs()
+                self._update_last_heard()
 
     def _dprs_received(self, pos):
         base = pos.callsign.split("-")[0].strip()
+        self._record_dprs(pos, base)
         if not self.rx_info or not self.rx_entry:
             return
         # A position report without a name is the position of the station transmitting it
@@ -913,6 +962,97 @@ class MainWindow(QMainWindow):
     def _update_failed(self, error):
         if self.update_manual:
             QMessageBox.warning(self, tr("Check for updates"), tr("Could not check for updates: {error}", error=error))
+
+    def _record_dprs(self, pos, base):
+        """D-PRS tab: every report, with the station whose over carried it when it is someone else."""
+        if not config.get("dprs/show_all"):
+            return
+        via = ""
+        if self.rx_info:
+            caller = self.rx_info["callsign"].split()[0]
+            recent = self.rx_info.get("live") or time.time() - self.rx_info.get("ended", 0) < 10
+            if recent and base and base != caller:
+                via = caller
+        name = pos.callsign or (self.rx_info["callsign"].split()[0] if self.rx_info else "?")
+        pos = civ.DprsPosition(name, pos.symbol, pos.lat, pos.lon, pos.altitude, pos.kind, pos.weather)
+        if self.storage.add_dprs(pos, via, self.current_reflector()):
+            self._load_dprs()
+
+    @staticmethod
+    def _weather_text(w):
+        parts = []
+        if w.get("temperature") is not None:
+            parts.append(f"{w['temperature']:.1f} °C")
+        if w.get("humidity") is not None:
+            parts.append(f"{w['humidity']:.0f} %")
+        if w.get("pressure"):
+            parts.append(f"{w['pressure']:.1f} hPa")
+        if w.get("wind") is not None:
+            if w["wind"] == 0:
+                parts.append(tr("calm"))
+            else:
+                wind = f"{w['wind']:.1f} m/s"
+                if w.get("wind_dir") is not None:
+                    wind += " " + tr(civ.compass_point(w["wind_dir"]))
+                parts.append(wind)
+        if w.get("rain_24h"):
+            parts.append(tr("rain {mm} mm/24h", mm=f"{w['rain_24h']:.1f}"))
+        return " · ".join(parts)
+
+    def _show_dprs_tabs(self):
+        shown = config.get("dprs/show_all")
+        self.tabs.setTabVisible(self.dprs_tab_index, shown)
+        self.tabs.setTabVisible(self.weather_tab_index, shown)
+
+    @staticmethod
+    def _ago(ts):
+        minutes = int((time.time() - ts) // 60)
+        if minutes < 1:
+            return tr("just now")
+        if minutes < 60:
+            return tr("{n} min ago", n=minutes)
+        return tr("{n} h ago", n=minutes // 60)
+
+    def _load_weather(self):
+        """Weather tab: the latest report of each station, nearest first."""
+        import json
+        stations = []
+        for r in self.storage.latest_weather():
+            distance, bearing = self._geo((r["lat"], r["lon"]))
+            where = (f"{distance:.0f} km {tr(civ.compass_point(bearing))}" if distance is not None
+                     else format_position(r["lat"], r["lon"]))
+            footer = self._ago(r["received"])
+            if r["via"]:
+                footer = tr("via {station}", station=r["via"]) + " · " + footer
+            stations.append({"name": r["name"], "where": where, "weather": json.loads(r["weather"] or "{}"),
+                             "footer": footer, "calm": tr("calm"),
+                             "_sort": distance if distance is not None else float("inf")})
+        stations.sort(key=lambda st: st["_sort"])
+        self.weather_panel.set_stations(stations, tr("No weather reports yet.\n"
+                                                     "Stations such as ED2YAV relay nearby weather stations."))
+
+    def _load_dprs(self):
+        import json
+        rows = self.storage.recent_dprs()
+        self.dprs_table.setRowCount(len(rows))
+        for i, r in enumerate(rows):
+            received = time.localtime(r["received"])
+            when = time.strftime("%H:%M:%S" if time.strftime("%Y%m%d", received) == time.strftime("%Y%m%d")
+                                 else "%d/%m %H:%M", received)
+            distance, bearing = self._geo((r["lat"], r["lon"]))
+            dist = (f"{distance:.0f} km {tr(civ.compass_point(bearing))}" if distance is not None
+                    else format_position(r["lat"], r["lon"]))
+            if r["weather"]:
+                details = self._weather_text(json.loads(r["weather"]))
+            else:
+                details = tr(SYMBOL_NAMES.get(r["symbol"] or "", "")) if SYMBOL_NAMES.get(r["symbol"] or "") else (r["symbol"] or "")
+            values = [when, r["name"], tr(DPRS_KIND_NAMES.get(r["kind"], r["kind"])), dist, details,
+                      r["via"] or "", r["reflector"] or ""]
+            for c, v in enumerate(values):
+                cell = QTableWidgetItem(v)
+                cell.setToolTip(format_position(r["lat"], r["lon"]) if c == 3 else v)
+                self.dprs_table.setItem(i, c, cell)
+        self._load_weather()
 
     def about(self):
         QMessageBox.about(

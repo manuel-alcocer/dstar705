@@ -34,6 +34,7 @@ class Radio(QObject):
     raw = Signal(str)                   # changed RX/TX related frames, for the debug log
     setting_received = Signal(str, bytes)   # '0287', data
     dprs_received = Signal(object)          # civ.DprsPosition
+    my_position = Signal(object)            # (lat, lon) from the radio's GPS, or None
 
     def __init__(self, host, username, password, control_port=50001):
         super().__init__()
@@ -87,6 +88,9 @@ class Radio(QObject):
         self._send(civ.set_tx_calls(to, r1, r2))
         QTimer.singleShot(400, lambda: self._send(civ.read_tx_calls()))
         QTimer.singleShot(3000, self._check_to_written)
+
+    def read_my_position(self):
+        self._send(civ.read_my_position())
 
     def read_setting(self, number):
         self._send(civ.read_setting(number))
@@ -226,6 +230,8 @@ class Radio(QObject):
                         self._start_rx(self.last_header)
             elif kind == "setting":
                 self.setting_received.emit(*value)
+            elif kind == "my_position":
+                self.my_position.emit(value)
             elif kind == "dprs" and value is not None:
                 # The radio keeps the last position it heard: only pass on new data, or data
                 # from the station on air (a read may return an earlier station's position)
