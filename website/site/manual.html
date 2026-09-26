@@ -175,12 +175,45 @@
 
     <h2 id="settings">Settings</h2>
     <figure><img src="/img/en-settings.png" width="502" height="592" alt="Settings dialog" loading="lazy"><figcaption>Radio › Settings…</figcaption></figure>
-    <ul>
-      <li><strong>Interface</strong>: the language (the system one by default), the update check and the D-PRS and Weather tabs.</li>
-      <li><strong>Radio (WiFi)</strong>: call sign (leave it empty to read it from the radio), IP or host name, control port (50001), network user and password, and whether to connect on start-up.</li>
-      <li><strong>INT mode</strong>: the Terminal Mode server set in the radio and the Terminal/AP call sign (<em>call sign + Z</em> if left empty).</li>
-      <li><strong>EXT mode</strong>: the Terminal/AP call sign (<em>call sign + B</em> if left empty), the gateway (QDStar's built-in one or an external ircDDBGateway) and the USB data port (detected automatically if left empty).</li>
-    </ul>
+    <p>Open them from <em>Radio › Settings…</em>. Changes apply when you press <em>Save</em>. If you change the language, QDStar uses it from the next start.</p>
+    <h3>Interface</h3>
+    <table>
+      <tr><th>Field</th><th>What it does</th></tr>
+      <tr><td>Language</td><td>The language of the interface. <em>System language</em> follows your computer, and falls back to English when the system language has no translation.</td></tr>
+      <tr><td>Check for new versions on start-up</td><td>On start-up, and once a day while QDStar is open, it asks GitHub whether there is a new version (see <a href="#updates">Updates</a>). Nothing else is sent.</td></tr>
+      <tr><td>D-PRS tab with every report received</td><td>Shows the <strong>D-PRS</strong> and <strong>Weather</strong> tabs. Turn it off if you only care about the position of the station on the air, which the screen shows either way.</td></tr>
+    </table>
+    <h3>Radio (WiFi)</h3>
+    <table>
+      <tr><th>Field</th><th>What it does</th></tr>
+      <tr><td>Call sign</td><td>Your call sign, without a suffix (<code>EA7KLX</code>). If you leave it empty, QDStar fills it in with the radio's MY call sign the first time it connects. The EXT gateway uses it to log in to reflectors, and to build the Terminal/AP call signs when those are left empty.</td></tr>
+      <tr><td>Radio IP / host</td><td>The radio's address on your network (<em>SET › WLAN Set</em> on the radio). A fixed address is best.</td></tr>
+      <tr><td>Control port (UDP)</td><td>The radio's <em>Network Control</em> port. It is 50001 unless you changed it in <em>Remote Settings</em>. The CI-V port is the next one (50002).</td></tr>
+      <tr><td>Network user / Password</td><td>The <em>Network User</em> created on the radio in <em>Remote Settings</em>. They are only used to log in to the radio.</td></tr>
+      <tr><td>Connect on start-up</td><td>Connects to the radio as soon as QDStar opens. Otherwise, connect from <em>Radio › Connect</em>.</td></tr>
+    </table>
+    <h3>INT mode (internal gateway, WiFi)</h3>
+    <table>
+      <tr><th>Field</th><th>What it does</th></tr>
+      <tr><td>Terminal Mode server</td><td>The same server as the radio's <em>DV GW › Gateway Repeater (Server/IP/Domain)</em>, for example <code>server1.dstar.es</code>. The radio does not report it over CI-V, so you type it here. QDStar compares it with the server of each INT reflector and warns you when the chosen reflector needs a different one.</td></tr>
+      <tr><td>Terminal/AP Call Sign</td><td>The Terminal/AP call sign set on the radio for INT. Empty means <em>call sign + Z</em> (<code>EA7KLX&nbsp;Z</code>). QDStar uses it to tell whether the radio is really in INT (the ⚠ next to the mode buttons).</td></tr>
+    </table>
+    <h3>EXT mode (external gateway, USB + PC)</h3>
+    <table>
+      <tr><th>Field</th><th>What it does</th></tr>
+      <tr><td>Terminal/AP Call Sign</td><td>The Terminal/AP call sign set on the radio for EXT. Empty means <em>call sign + B</em> (<code>EA7KLX&nbsp;B</code>). The gateway only accepts the radio's traffic with this call sign.</td></tr>
+      <tr><td>Gateway</td><td><strong>Built-in (QDStar)</strong> is the usual choice: QDStar itself talks to the radio over USB and links the reflectors. <strong>External ircDDBGateway</strong> is for those who already run DStarRepeater and ircDDBGateway (G4KLX) on the computer. QDStar then only drives them, and the extra fields below appear.</td></tr>
+      <tr><td>USB data port</td><td>The serial port the radio uses for Terminal Mode data (for example <code>/dev/ttyACM1</code> or <code>COM5</code>). If you leave it empty, QDStar finds the IC-705's port by itself. Fill it in only if detection fails.</td></tr>
+    </table>
+    <p>These fields only appear with <strong>External ircDDBGateway</strong>:</p>
+    <table>
+      <tr><th>Field</th><th>What it does</th></tr>
+      <tr><td>ircDDBGateway host</td><td>The machine where ircDDBGateway runs (<code>127.0.0.1</code> if it is this computer).</td></tr>
+      <tr><td>Remote control port / Remote password</td><td>ircDDBGateway's <em>Remote</em> settings, which QDStar uses to link and unlink reflectors. On Linux you can leave the password empty, and QDStar reads it from <code>~/.config/dstar/ircddbgateway</code>.</td></tr>
+      <tr><td>Command when entering EXT</td><td>A command run when you switch to EXT, to start the G4KLX services (for example <code>systemctl --user start dstar.target</code>).</td></tr>
+      <tr><td>Command when leaving EXT</td><td>A command run when you leave EXT, to stop them.</td></tr>
+      <tr><td>Command when the USB is plugged in</td><td>A command run when the radio's USB appears. DStarRepeater cannot open a port that was missing when it started, so it has to be restarted (for example <code>systemctl --user restart dstarrepeater</code>).</td></tr>
+    </table>
 
     <h2 id="updates">Updates</h2>
     <p>QDStar checks GitHub for a new version on start-up and once a day. When one is out, a <em>⬆ New x.y.z</em> link appears next to the mode buttons, pointing at the right file for your system. You can also check by hand in <em>Help › Check for updates…</em>, and turn the automatic check off in the settings.</p>

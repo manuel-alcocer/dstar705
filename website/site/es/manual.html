@@ -175,12 +175,45 @@
 
     <h2 id="ajustes">Ajustes</h2>
     <figure><img src="/img/es-settings.png" width="550" height="592" alt="Ajustes" loading="lazy"><figcaption>Radio › Ajustes…</figcaption></figure>
-    <ul>
-      <li><strong>Interfaz</strong>: el idioma (el del sistema por defecto), la búsqueda de versiones nuevas y las pestañas D-PRS y Meteo.</li>
-      <li><strong>Radio (WiFi)</strong>: indicativo (déjalo vacío para leerlo de la radio), IP o nombre, puerto de control (50001), usuario y contraseña de red, y si se conecta al arrancar.</li>
-      <li><strong>Modo INT</strong>: el servidor de Terminal Mode configurado en la radio y el Terminal/AP Call Sign (<em>indicativo + Z</em> si lo dejas vacío).</li>
-      <li><strong>Modo EXT</strong>: el Terminal/AP Call Sign (<em>indicativo + B</em> si lo dejas vacío), el gateway (el integrado de QDStar o un ircDDBGateway externo) y el puerto USB de datos (se detecta solo si lo dejas vacío).</li>
-    </ul>
+    <p>Se abren desde <em>Radio › Ajustes…</em>. Los cambios se aplican al pulsar <em>Guardar</em>. Si cambias el idioma, QDStar lo usa a partir del siguiente arranque.</p>
+    <h3>Interfaz</h3>
+    <table>
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td>Idioma</td><td>El idioma de la interfaz. <em>Idioma del sistema</em> sigue el de tu ordenador, y usa el inglés si no hay traducción para ese idioma.</td></tr>
+      <tr><td>Buscar versiones nuevas al arrancar</td><td>Al arrancar, y una vez al día mientras QDStar está abierto, pregunta a GitHub si hay versión nueva (mira <a href="#actualizaciones">Actualizaciones</a>). No se envía nada más.</td></tr>
+      <tr><td>Pestaña D-PRS con todos los informes recibidos</td><td>Muestra las pestañas <strong>D-PRS</strong> y <strong>Meteo</strong>. Desactívala si solo te interesa la posición de la estación en el aire, que la pantalla muestra de todas formas.</td></tr>
+    </table>
+    <h3>Radio (WiFi)</h3>
+    <table>
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td>Indicativo</td><td>Tu indicativo, sin sufijo (<code>EA7KLX</code>). Si lo dejas vacío, QDStar lo rellena con el MY call sign de la radio la primera vez que conecta. El gateway EXT lo usa para identificarse en los reflectores, y también para formar los Terminal/AP Call Sign cuando los dejas vacíos.</td></tr>
+      <tr><td>IP / host de la radio</td><td>La dirección de la radio en tu red (<em>SET › WLAN Set</em> en la radio). Lo mejor es que sea fija.</td></tr>
+      <tr><td>Puerto de control (UDP)</td><td>El puerto de <em>Network Control</em> de la radio. Es el 50001, salvo que lo hayas cambiado en <em>Remote Settings</em>. El de CI-V es el siguiente (50002).</td></tr>
+      <tr><td>Usuario de red / Contraseña</td><td>El <em>Network User</em> creado en la radio en <em>Remote Settings</em>. Solo se usan para iniciar sesión en la radio.</td></tr>
+      <tr><td>Conectar al arrancar</td><td>Conecta con la radio en cuanto se abre QDStar. Si no está marcado, conecta desde <em>Radio › Conectar</em>.</td></tr>
+    </table>
+    <h3>Modo INT (gateway interno, WiFi)</h3>
+    <table>
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td>Servidor Terminal Mode</td><td>El mismo servidor que tienes en la radio en <em>DV GW › Gateway Repeater (Server/IP/Domain)</em>, por ejemplo <code>server1.dstar.es</code>. La radio no lo da por CI-V, así que hay que escribirlo aquí. QDStar lo compara con el servidor de cada reflector INT y te avisa si el reflector elegido necesita otro.</td></tr>
+      <tr><td>Terminal/AP Call Sign</td><td>El Terminal/AP Call Sign configurado en la radio para INT. Si lo dejas vacío, es <em>indicativo + Z</em> (<code>EA7KLX&nbsp;Z</code>). QDStar lo usa para saber si la radio está de verdad en INT (el ⚠ junto a los botones de modo).</td></tr>
+    </table>
+    <h3>Modo EXT (gateway externo, USB + PC)</h3>
+    <table>
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td>Terminal/AP Call Sign</td><td>El Terminal/AP Call Sign configurado en la radio para EXT. Si lo dejas vacío, es <em>indicativo + B</em> (<code>EA7KLX&nbsp;B</code>). El gateway solo acepta el tráfico de la radio con este indicativo.</td></tr>
+      <tr><td>Gateway</td><td><strong>Integrado (QDStar)</strong> es lo normal: el propio QDStar habla con la radio por USB y enlaza los reflectores. <strong>ircDDBGateway externo</strong> es para quien ya tiene DStarRepeater e ircDDBGateway (G4KLX) en el ordenador. En ese caso QDStar solo los maneja, y aparecen los campos de más abajo.</td></tr>
+      <tr><td>Puerto USB de datos</td><td>El puerto serie por el que la radio manda los datos del Terminal Mode (por ejemplo <code>/dev/ttyACM1</code> o <code>COM5</code>). Si lo dejas vacío, QDStar encuentra solo el puerto del IC-705. Rellénalo solo si no lo detecta.</td></tr>
+    </table>
+    <p>Estos campos solo aparecen con <strong>ircDDBGateway externo</strong>:</p>
+    <table>
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td>ircDDBGateway host</td><td>La máquina donde corre ircDDBGateway (<code>127.0.0.1</code> si es este mismo ordenador).</td></tr>
+      <tr><td>Puerto de control remoto / Contraseña remota</td><td>Los ajustes <em>Remote</em> de ircDDBGateway, que QDStar usa para enlazar y desenlazar reflectores. En Linux puedes dejar la contraseña vacía y QDStar la lee de <code>~/.config/dstar/ircddbgateway</code>.</td></tr>
+      <tr><td>Comando al entrar en EXT</td><td>Un comando que se ejecuta al pasar a EXT, para arrancar los servicios de G4KLX (por ejemplo <code>systemctl --user start dstar.target</code>).</td></tr>
+      <tr><td>Comando al salir de EXT</td><td>Un comando que se ejecuta al salir de EXT, para pararlos.</td></tr>
+      <tr><td>Comando al conectar el USB</td><td>Un comando que se ejecuta cuando aparece el USB de la radio. DStarRepeater no puede abrir un puerto que no existía cuando arrancó, así que hay que reiniciarlo (por ejemplo <code>systemctl --user restart dstarrepeater</code>).</td></tr>
+    </table>
 
     <h2 id="actualizaciones">Actualizaciones</h2>
     <p>QDStar busca en GitHub si hay versión nueva al arrancar y una vez al día. Cuando la hay, aparece un enlace <em>⬆ Nueva x.y.z</em> junto a los botones de modo, que lleva al archivo adecuado para tu sistema. También puedes buscarla a mano en <em>Ayuda › Buscar actualizaciones…</em>, y desactivar la búsqueda automática en los ajustes.</p>
