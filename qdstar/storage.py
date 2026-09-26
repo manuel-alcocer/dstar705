@@ -86,6 +86,14 @@ class Storage:
                 (reflector, limit)).fetchall()
         return [dict(r) for r in rows]
 
+    def last_position(self, callsign, max_age=6 * 3600):
+        """Most recent D-PRS position stored for a station, or None."""
+        with self.lock:
+            row = self.db.execute(
+                "SELECT lat, lon FROM history WHERE callsign = ? AND lat IS NOT NULL AND started >= ?"
+                " ORDER BY started DESC LIMIT 1", (callsign, time.time() - max_age)).fetchone()
+        return (row["lat"], row["lon"]) if row else None
+
     def clear_history(self):
         with self.lock, self.db:
             self.db.execute("DELETE FROM history")

@@ -28,7 +28,8 @@ DEFAULTS = {
     "ext/terminal_call": "",
     # builtin = QDStar's own gateway (USB Terminal Mode + DPlus); ircddbgateway = external G4KLX stack
     "ext/backend": "builtin",
-    "ext/usb_port": "",          # empty: auto-detect the IC-705 data port
+    "ext/usb_port": "",
+    "ext/last_link": "",         # reflector linked when the app was closed ('' = not linked)          # empty: auto-detect the IC-705 data port
     "ext/gateway_host": "127.0.0.1",
     "ext/gateway_port": 54321,
     "ext/gateway_password": "",  # empty: read from the Linux ircDDBGateway config

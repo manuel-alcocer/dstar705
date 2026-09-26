@@ -41,8 +41,8 @@ EXT_ONLY_LEDS = ("usb", "gateway")
 ICOM_USB_VENDOR = 0x0C26
 
 MODE_NAMES = {"int": "INT · WiFi", "ext": "EXT · USB/PC"}
-HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Name"), N_("Reflector"), N_("Dur."), N_("Message"),
-                   N_("Location"), N_("Dist.")]
+HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Dist."), N_("Name"), N_("Reflector"), N_("Dur."),
+                   N_("Message"), N_("Location")]
 LOG_MAX_BYTES = 2_000_000
 WINDOW_WIDTH = 480
 UPDATE_CHECK_MS = 24 * 3600 * 1000
@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         self.status = {}
         self.gw_ok = None
         self.gw_links = []
+        self.pending_restore = None
         self.usb_present = None
         self.radio_connected = False
         self.own_gps = {}          # radio settings 0281 (GPS select), 0286 (manual position), 0287 (TX mode)
@@ -333,6 +334,8 @@ class MainWindow(QMainWindow):
         else:
             self.gateway = LocalGateway(config.callsign(), terminal_call, config.gateway_call(),
                                         config.get("ext/usb_port"))
+        # Built-in gateway: relink the reflector of the last session once the radio answers over USB
+        self.pending_restore = None if self._external_gateway() else (config.get("ext/last_link") or None)
         self.gateway.log.connect(self.log)
         self.gateway.status.connect(self._gateway_status)
         self.gateway.result.connect(self._gateway_result)
@@ -362,6 +365,10 @@ class MainWindow(QMainWindow):
         self.gw_ok = ok
         self.gw_links = links
         self.leds["gateway"].set("green" if ok else "amber", blink=not ok)
+        if ok and self.pending_restore and not self.ext_reflector() and self.gateway:
+            reflector, self.pending_restore = self.pending_restore, None
+            self.log(tr("Restoring the last link: {reflector}", reflector=reflector))
+            self.gateway.link(reflector)
         if changed:
             linked = self.ext_reflector()
             self.log(tr("Gateway linked to {reflector}", reflector=linked) if linked else tr("Gateway not linked"))
@@ -565,6 +572,8 @@ class MainWindow(QMainWindow):
                 self.log(tr("The gateway is already linked to {reflector}", reflector=to))
                 return
             self.log(tr("Asking the gateway to link {reflector}…", reflector=to))
+            self.pending_restore = None      # the user's choice wins over the saved state
+            config.put("ext/last_link", to)
             self.gateway.link(to)
             return
         if not self.radio:
@@ -586,8 +595,10 @@ class MainWindow(QMainWindow):
         self.radio.set_to(to)
 
     def unlink_reflector(self):
+        self.pending_restore = None
+        config.put("ext/last_link", "")
         if self.gateway and self.ext_reflector():
-            self.log(f"Desenlazando {self.ext_reflector()}…")
+            self.log(tr("Unlinking {reflector}…", reflector=self.ext_reflector()))
             self.gateway.unlink()
 
     def _to_written(self, ok, detail):
@@ -637,6 +648,9 @@ class MainWindow(QMainWindow):
         self.rx_info = {"callsign": calls.caller, "suffix": calls.note, "started": time.time(), "live": True,
                         "name": "", "location": "", "message": ""}
         self.leds["rx"].set("green")
+        known = self.storage.last_position(base)
+        if known:
+            self._with_position(self.rx_info, known)
         self.screen.update_state(rx=self.rx_info)
         self.lookup.request(base)
         self._load_history()
@@ -720,12 +734,12 @@ class MainWindow(QMainWindow):
             if item and item.get("name"):
                 reflector = f"{item['name']} ({reflector})"
             dist = ""
-            own = self.own_position()
             if r.get("lat") is not None and r.get("lon") is not None:
-                dist = (f"{civ.distance_km(own[0], own[1], r['lat'], r['lon']):.0f} km" if own
+                distance, bearing = self._geo((r["lat"], r["lon"]))
+                dist = (f"{distance:.0f} km {tr(civ.compass_point(bearing))}" if distance is not None
                         else format_position(r["lat"], r["lon"]))
-            values = [when, r["direction"], call, r["name"] or "", reflector, dur, r["message"] or "",
-                      r["location"] or "", dist]
+            values = [when, r["direction"], call, dist, r["name"] or "", reflector, dur, r["message"] or "",
+                      r["location"] or ""]
             for c, v in enumerate(values):
                 cell = QTableWidgetItem(v)
                 if c == 1:
@@ -758,13 +772,20 @@ class MainWindow(QMainWindow):
         for r in self.storage.last_heard(ref, 8) if ref else []:
             local.append({"callsign": r["callsign"], "suffix": r["suffix"] or "", "name": r["name"] or "",
                           "location": r["location"] or "", "message": r["message"] or "",
-                          "ts": r["ended"] or r["started"], "via": ""})
+                          "ts": r["ended"] or r["started"], "via": "",
+                          "pos": (r["lat"], r["lon"]) if r.get("lat") is not None else None})
         merged = sorted(remote + local, key=lambda e: e["ts"], reverse=True)
-        # the same over can appear in both sources: keep one per call sign within a minute
+        # the same over can appear in both sources: keep one per call sign within a minute,
+        # completing it with whatever the other source knows
         unique = []
         for e in merged:
-            if not any(u["callsign"] == e["callsign"] and abs(u["ts"] - e["ts"]) < 60 for u in unique):
-                unique.append(e)
+            twin = next((u for u in unique if u["callsign"] == e["callsign"] and abs(u["ts"] - e["ts"]) < 60), None)
+            if twin is None:
+                unique.append(dict(e))
+            else:
+                for key, value in e.items():
+                    if value and not twin.get(key):
+                        twin[key] = value
         heard = [{"callsign": e["callsign"], "name": e["name"],
                   "time": time.strftime("%H:%M:%S", time.localtime(e["ts"]))} for e in unique[:4]]
         title = tr("LAST HEARD ON THE REFLECTOR") if remote else tr("LAST HEARD HERE ON THIS REFLECTOR")
@@ -779,6 +800,7 @@ class MainWindow(QMainWindow):
         self.rx_info = {"callsign": last["callsign"], "suffix": last["suffix"], "name": last["name"],
                         "location": last["location"], "message": last["message"], "live": False,
                         "started": last["ts"], "ended": last["ts"]}
+        self._with_position(self.rx_info, last.get("pos") or self.storage.last_position(last["callsign"]))
         self.screen.update_state(rx=self.rx_info)
         if not last["location"]:
             self.lookup.request(last["callsign"])
@@ -801,6 +823,19 @@ class MainWindow(QMainWindow):
         lat, lon = civ.decode_latitude(data[:5]), civ.decode_longitude(data[5:11])
         return (lat, lon) if lat is not None and lon is not None else None
 
+    def _geo(self, pos):
+        """(distance km, bearing degrees) from our position to pos, or (None, None)."""
+        own = self.own_position()
+        if not own or not pos:
+            return None, None
+        return (civ.distance_km(own[0], own[1], pos[0], pos[1]),
+                civ.bearing_deg(own[0], own[1], pos[0], pos[1]))
+
+    def _with_position(self, info, pos):
+        distance, bearing = self._geo(pos)
+        info.update(pos=pos, distance=distance, bearing=bearing)
+        return info
+
     def _setting_received(self, number, data):
         if number in ("0281", "0286", "0287"):
             self.own_gps[number] = data
@@ -817,14 +852,16 @@ class MainWindow(QMainWindow):
         recent = self.rx_info.get("live") or time.time() - self.rx_info.get("ended", 0) < 10
         if not same_station and not (pos.kind in ("object", "item") and recent):
             return
-        if self.rx_info.get("pos") == (pos.lat, pos.lon):
-            return
-        own = self.own_position()
-        distance = civ.distance_km(own[0], own[1], pos.lat, pos.lon) if own else None
-        self.rx_info.update(pos=(pos.lat, pos.lon), distance=distance)
+        # (the box may already show this position from an earlier over; the entry still needs it)
+        already_shown = self.rx_info.get("pos") == (pos.lat, pos.lon)
+        self._with_position(self.rx_info, (pos.lat, pos.lon))
         self.screen.update_state(rx=self.rx_info)
-        text = format_position(pos.lat, pos.lon) + (f" · {distance:.0f} km" if distance is not None else "")
-        self.log(tr("D-PRS from {caller}: {position}", caller=pos.callsign, position=text))
+        distance, bearing = self.rx_info["distance"], self.rx_info["bearing"]
+        text = format_position(pos.lat, pos.lon)
+        if distance is not None:
+            text += f" · {distance:.0f} km {tr(civ.compass_point(bearing))} ({bearing:.0f}°)"
+        if not already_shown:
+            self.log(tr("D-PRS from {caller}: {position}", caller=pos.callsign, position=text))
         if self.rx_entry:
             self.storage.update_entry(self.rx_entry, lat=pos.lat, lon=pos.lon)
             self._load_history()

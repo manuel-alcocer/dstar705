@@ -7,6 +7,7 @@ from PySide6.QtCore import QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QGuiApplication, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
+from .civ import compass_point
 from .i18n import tr
 
 FONTS_DIR = Path(__file__).with_name("fonts")
@@ -130,6 +131,7 @@ CYAN = QColor("#63d8ff")
 BG = QColor("#050505")
 
 W, H = 640, 480  # virtual canvas
+BOX_X = 466      # left edge of the distance/direction box
 
 
 def _ago(ts):
@@ -264,14 +266,9 @@ class ReflectorScreen(QWidget):
             if rx.get("suffix"):
                 call += f" /{rx['suffix']}"
             self._text(p, L, 232, call, 52, GREEN if live else AMBER, True)
-            self._text(p, L, 264, rx.get("name") or "", 22, WHITE, width=R - L)
-            self._text(p, L, 290, rx.get("location") or "", 16, DIM, width=280)
-            if rx.get("pos"):
-                lat, lon = rx["pos"]
-                where = f"{abs(lat):.2f}°{'N' if lat >= 0 else 'S'} {abs(lon):.2f}°{'E' if lon >= 0 else 'W'}"
-                if rx.get("distance") is not None:
-                    where = f"📍 {rx['distance']:.0f} km · " + where
-                self._text(p, R, 290, where, 16, CYAN, True, align=Qt.AlignRight, width=320)
+            self._text(p, L, 264, rx.get("name") or "", 22, WHITE, width=BOX_X - L - 10)
+            self._text(p, L, 290, rx.get("location") or "", 16, DIM, width=BOX_X - L - 10)
+            self._position_box(p, rx)
             if rx.get("message"):
                 self._text(p, L, 314, f"« {rx['message']} »", 17, CYAN)
             if live:
@@ -299,6 +296,27 @@ class ReflectorScreen(QWidget):
             footer += "   D-PRS " + ("ON" if s["dprs_on"] else "OFF")
         self._text(p, L, H - 14, footer, 13, DIM)
         self._text(p, R, H - 14, time.strftime("%H:%M:%S"), 13, DIM, align=Qt.AlignRight)
+
+    def _position_box(self, p, rx):
+        """Fixed box: distance and direction to the station (D-PRS), or a placeholder."""
+        box = QRectF(BOX_X, 244, W - 24 - BOX_X, 64)
+        has_distance = rx.get("distance") is not None
+        p.setPen(QPen(CYAN if has_distance else QColor("#333"), 2))
+        p.setBrush(Qt.NoBrush)
+        p.drawRoundedRect(box, 8, 8)
+        cx = box.center().x()
+        if has_distance:
+            self._text(p, cx, 272, f"{rx['distance']:.0f} km", 24, CYAN, True, align=Qt.AlignHCenter, width=box.width())
+            bearing = rx.get("bearing") or 0
+            self._text(p, cx, 297, f"{tr(compass_point(bearing))} · {bearing:.0f}°", 16, WHITE, True,
+                       align=Qt.AlignHCenter, width=box.width())
+        elif rx.get("pos"):
+            lat, lon = rx["pos"]
+            self._text(p, cx, 272, f"{abs(lat):.2f}°{'N' if lat >= 0 else 'S'}", 16, CYAN, True, align=Qt.AlignHCenter)
+            self._text(p, cx, 294, f"{abs(lon):.2f}°{'E' if lon >= 0 else 'W'}", 16, CYAN, True, align=Qt.AlignHCenter)
+        else:
+            self._text(p, cx, 272, "— km", 22, DIM, True, align=Qt.AlignHCenter, width=box.width())
+            self._text(p, cx, 296, tr("no position"), 13, DIM, align=Qt.AlignHCenter, width=box.width())
 
     def _elapsed(self, p, since, color):
         if since:

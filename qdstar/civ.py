@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from .i18n import tr
+from .i18n import N_, tr
 
 RADIO_ADDR = 0xA4
 CONTROLLER_ADDR = 0xE0
@@ -323,3 +323,21 @@ def distance_km(lat1, lon1, lat2, lon2):
     dlat, dlon = radians(lat2 - lat1), radians(lon2 - lon1)
     a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
     return 2 * 6371.0 * asin(sqrt(a))
+
+
+def bearing_deg(lat1, lon1, lat2, lon2):
+    """Initial great-circle bearing from point 1 to point 2, 0-360 degrees (0 = north)."""
+    from math import atan2, cos, degrees, radians, sin
+    phi1, phi2, dlon = radians(lat1), radians(lat2), radians(lon2 - lon1)
+    x = sin(dlon) * cos(phi2)
+    y = cos(phi1) * sin(phi2) - sin(phi1) * cos(phi2) * cos(dlon)
+    return (degrees(atan2(x, y)) + 360) % 360
+
+
+COMPASS_POINTS = (N_("N"), N_("NNE"), N_("NE"), N_("ENE"), N_("E"), N_("ESE"), N_("SE"), N_("SSE"),
+                  N_("S"), N_("SSW"), N_("SW"), N_("WSW"), N_("W"), N_("WNW"), N_("NW"), N_("NNW"))
+
+
+def compass_point(bearing):
+    """16-point compass name (English letters; translated for display)."""
+    return COMPASS_POINTS[int((bearing + 11.25) // 22.5) % 16]
