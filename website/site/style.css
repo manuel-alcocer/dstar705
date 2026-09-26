@@ -202,3 +202,54 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: s
   .toc { position: static; }
   header.top nav a:not(.lang):not(.keep) { display: none; }
 }
+
+/* --- enlarged images ---------------------------------------------------- */
+
+img.zoomable { cursor: zoom-in; }
+
+.zoom {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, .9);
+  cursor: zoom-out;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+.zoom.open { display: flex; }
+.zoom img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, .7);
+}
+body.zoomed { overflow: hidden; }
+
+/* --- downloads ---------------------------------------------------------- */
+
+.systems { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 20px 0; }
+.system .sub { color: var(--dim); font-size: 14px; margin: 0 0 12px; }
+.system .file { border-top: 1px solid var(--line); padding: 10px 0 4px; }
+.system .file > code { color: var(--cyan); }
+.system .file p { margin: 6px 0 0; font-size: 15px; color: var(--text); }
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #06260f;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+
+/* long commands and file names wrap instead of widening the page */
+code { overflow-wrap: anywhere; }
+.doc { min-width: 0; }
+@media (max-width: 820px) { .doc table { display: block; overflow-x: auto; } }

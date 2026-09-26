@@ -34,11 +34,11 @@
         <a class="btn primary" href="#download">Download</a>
         <a class="btn" href="/manual.html">Read the manual</a>
       </div>
-      <p class="version" data-version="Latest version: {v}">Free software · GPL-3.0</p>
+      <p class="version">Free software · GPL-3.0</p>
     </div>
     <div class="photos">
-      <img src="/img/photo-history.jpg" width="673" height="1398" alt="QDStar linked to DCS214 D, receiving a station from California, with the history tab open">
-      <img src="/img/photo-weather.jpg" width="746" height="1382" alt="QDStar linked to DCS214 D with the weather tab showing a D-PRS weather station">
+      <img src="/img/photo-history.jpg" width="634" height="1312" alt="QDStar linked to DCS214 D, receiving a station from California, with the history tab open">
+      <img src="/img/photo-weather.jpg" width="634" height="1312" alt="QDStar linked to DCS214 D with the weather tab showing a D-PRS weather station">
     </div>
   </div>
 
@@ -71,21 +71,26 @@
 
   <section id="download">
     <h2>Download</h2>
-    <table class="dl">
-      <tr><th>System</th><th>Files</th></tr>
-      <tr><td>Windows 10/11 x64</td><td>
-        <a data-asset="-windows-x64-setup.exe" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Installer (.exe)</a> ·
-        <a data-asset="-windows-x64-portable.zip" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Portable (.zip)</a></td></tr>
-      <tr><td>Linux x86-64</td><td>
-        <a data-asset="_amd64.deb" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.deb</a> ·
-        <a data-asset="-x86_64.AppImage" href="https://github.com/manuel-alcocer/qdstar/releases/latest">AppImage</a> ·
-        <a data-asset="-linux-amd64.tar.gz" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.tar.gz</a></td></tr>
-      <tr><td>Linux ARM64<br><small style="color:var(--dim)">Raspberry Pi OS bookworm, Debian 12+, Ubuntu 22.04+</small></td><td>
-        <a data-asset="_arm64.deb" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.deb</a> ·
-        <a data-asset="-aarch64.AppImage" href="https://github.com/manuel-alcocer/qdstar/releases/latest">AppImage</a> ·
-        <a data-asset="-linux-arm64.tar.gz" href="https://github.com/manuel-alcocer/qdstar/releases/latest">.tar.gz</a></td></tr>
-    </table>
-    <p>All versions and release notes are on the <a href="https://github.com/manuel-alcocer/qdstar/releases">releases page</a>. See the <a href="/manual.html#install">manual</a> for installation and radio setup.</p>
+    <p>Every version is published on GitHub. Pick the file for your system from the list below.</p>
+    <p class="buttons"><a class="btn primary" href="https://github.com/manuel-alcocer/qdstar/releases/latest">Download from GitHub</a></p>
+    <p class="version" data-version="Latest version: {v}"></p>
+    <div class="systems">
+      <div class="card system"><h3>Windows 10/11</h3><p class="sub">64-bit</p>
+        <div class="file"><code>QDStar-x.y.z-windows-x64-setup.exe</code> <span class="tag">Recommended</span><p>An installer that adds QDStar to the Start menu. To update, run the new version's installer: your settings are kept.</p></div>
+        <div class="file"><code>QDStar-x.y.z-windows-x64-portable.zip</code><p>No installation: unzip it in any folder, or on a USB stick, and run <code>qdstar.exe</code>.</p></div>
+      </div>
+      <div class="card system"><h3>Linux on a PC</h3><p class="sub">x86-64 / amd64</p>
+        <div class="file"><code>qdstar_x.y.z_amd64.deb</code> <span class="tag">Recommended</span><p>For Debian, Ubuntu, Linux Mint and their derivatives. Install it with <code>sudo apt install ./qdstar_x.y.z_amd64.deb</code>.</p></div>
+        <div class="file"><code>QDStar-x.y.z-x86_64.AppImage</code><p>Works on almost any distribution (Fedora, Arch, openSUSE…). Make it executable and run it.</p></div>
+        <div class="file"><code>QDStar-x.y.z-linux-amd64.tar.gz</code><p>The program as plain files, to unpack wherever you like.</p></div>
+      </div>
+      <div class="card system"><h3>Linux on ARM</h3><p class="sub">arm64 / aarch64: Raspberry Pi 4/5 and other mini PCs with a 64-bit system</p>
+        <div class="file"><code>qdstar_x.y.z_arm64.deb</code> <span class="tag">Recommended</span><p>For Raspberry Pi OS (64-bit, bookworm or later), Debian and Ubuntu.</p></div>
+        <div class="file"><code>QDStar-x.y.z-aarch64.AppImage</code><p>For other ARM64 distributions.</p></div>
+        <div class="file"><code>QDStar-x.y.z-linux-arm64.tar.gz</code><p>The program as plain files.</p></div>
+      </div>
+    </div>
+    <p><code>x.y.z</code> is the version number. Not sure which Linux you have? Run <code>uname -m</code>: <code>x86_64</code> means PC (amd64), <code>aarch64</code> means ARM64. See the <a href="/manual.html#install">manual</a> for installation and radio setup.</p>
   </section>
 </main>
 
@@ -96,5 +101,6 @@
   </div>
 </footer>
 <script src="/latest.js" defer></script>
+<script src="/zoom.js" defer></script>
 </body>
 </html>
