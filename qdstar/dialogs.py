@@ -77,6 +77,11 @@ class SettingsDialog(QDialog):
         form.addRow(tr("Command when entering EXT"), self.start_cmd)
         form.addRow(tr("Command when leaving EXT"), self.stop_cmd)
         form.addRow(tr("Command when the USB is plugged in"), self.usb_cmd)
+        # Only the external ircDDBGateway uses these fields
+        self.ext_form = form
+        self.external_only = [self.gw_host, self.gw_port, self.gw_password, self.start_cmd, self.stop_cmd, self.usb_cmd]
+        self.backend.currentIndexChanged.connect(self._backend_changed)
+        self._backend_changed()
 
         ui_box = QGroupBox(tr("Interface"))
         form = QFormLayout(ui_box)
@@ -91,6 +96,12 @@ class SettingsDialog(QDialog):
         layout.addWidget(int_box)
         layout.addWidget(ext_box)
         layout.addWidget(buttons)
+
+    def _backend_changed(self):
+        external = self.backend.currentData() == "ircddbgateway"
+        for field in self.external_only:
+            self.ext_form.setRowVisible(field, external)
+        self.adjustSize()
 
     def save(self):
         config.put("radio/host", self.host.text().strip())

@@ -43,7 +43,7 @@ MODE_NAMES = {"int": "INT · WiFi", "ext": "EXT · USB/PC"}
 HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Name"), N_("Reflector"), N_("Dur."), N_("Message"),
                    N_("Location"), N_("Dist.")]
 LOG_MAX_BYTES = 2_000_000
-WINDOW_WIDTH = 560
+WINDOW_WIDTH = 480
 ALL_TIME = 100 * 365 * 86400
 EXT_UR = "CQCQCQ"
 
