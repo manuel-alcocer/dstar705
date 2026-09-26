@@ -253,3 +253,6 @@ body.zoomed { overflow: hidden; }
 code { overflow-wrap: anywhere; }
 .doc { min-width: 0; }
 @media (max-width: 820px) { .doc table { display: block; overflow-x: auto; } }
+
+.author { color: var(--text); font-size: 15px; margin: 6px 0 0; }
+.note.new { margin: 0 0 32px; }
