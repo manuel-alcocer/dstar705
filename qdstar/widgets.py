@@ -291,9 +291,13 @@ class ReflectorScreen(QWidget):
             self._text(p, R, y, h.get("time", ""), 15, DIM, align=Qt.AlignRight)
 
         # --- footer
-        footer = f"MY {s.get('my_call', '—')}   {s.get('mode', '')}"
+        footer = f"MY {s.get('my_call', '—')}"
+        if s.get("locator"):
+            footer += f" · {s['locator']}"
+        if s.get("mode"):
+            footer += f" · {s['mode']}"
         if s.get("dprs_on") is not None:
-            footer += "   D-PRS " + ("ON" if s["dprs_on"] else "OFF")
+            footer += " · D-PRS " + ("ON" if s["dprs_on"] else "OFF")
         self._text(p, L, H - 14, footer, 13, DIM)
         self._text(p, R, H - 14, time.strftime("%H:%M:%S"), 13, DIM, align=Qt.AlignRight)
 

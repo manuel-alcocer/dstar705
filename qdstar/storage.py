@@ -42,6 +42,8 @@ class Storage:
         for column in ("lat", "lon"):          # added in 0.3.0 (D-PRS positions)
             if column not in columns:
                 self.db.execute(f"ALTER TABLE history ADD COLUMN {column} REAL")
+        # 0.3.2-0.3.4 could store 0°,0° (a radio without GPS fix): that is no position
+        self.db.execute("UPDATE history SET lat = NULL, lon = NULL WHERE lat = 0 AND lon = 0")
         self.db.commit()
 
     # --- history -------------------------------------------------------

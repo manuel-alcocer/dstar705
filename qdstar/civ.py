@@ -295,8 +295,8 @@ def parse_dprs_position(data):
     body = data[1:]
     lat = decode_latitude(body[11:16])
     lon = decode_longitude(body[16:22])
-    if lat is None or lon is None:
-        return None
+    if lat is None or lon is None or (abs(lat) < 1e-6 and abs(lon) < 1e-6):
+        return None   # no position; 0°,0° is what radios without a GPS fix send
     return DprsPosition(body[0:9].decode("ascii", "replace").strip(),
                         body[9:11].decode("ascii", "replace"), lat, lon,
                         decode_altitude(body[22:26]) if len(body) >= 26 else None, DPRS_KINDS[data[0]])
@@ -341,3 +341,12 @@ COMPASS_POINTS = (N_("N"), N_("NNE"), N_("NE"), N_("ENE"), N_("E"), N_("ESE"), N
 def compass_point(bearing):
     """16-point compass name (English letters; translated for display)."""
     return COMPASS_POINTS[int((bearing + 11.25) // 22.5) % 16]
+
+
+def latlon_to_locator(lat, lon):
+    """Maidenhead locator (6 characters) of a position, e.g. 'IN80DK'."""
+    lon += 180
+    lat += 90
+    return (chr(65 + int(lon // 20)) + chr(65 + int(lat // 10))
+            + str(int(lon % 20 // 2)) + str(int(lat % 10))
+            + chr(65 + int(lon % 2 * 12)) + chr(65 + int(lat % 1 * 24)))

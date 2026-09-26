@@ -44,7 +44,7 @@ MODE_NAMES = {"int": "INT · WiFi", "ext": "EXT · USB/PC"}
 HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Dist."), N_("Name"), N_("Reflector"), N_("Dur."),
                    N_("Message"), N_("Location")]
 LOG_MAX_BYTES = 2_000_000
-WINDOW_WIDTH = 480
+WINDOW_WIDTH = 420
 UPDATE_CHECK_MS = 24 * 3600 * 1000
 ALL_TIME = 100 * 365 * 86400
 EXT_UR = "CQCQCQ"
@@ -153,7 +153,6 @@ class MainWindow(QMainWindow):
         layout.addLayout(mode_bar)
 
         bar = QHBoxLayout()
-        bar.addWidget(QLabel(tr("Reflector:")))
         self.reflector_combo = QComboBox()
         self.reflector_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.reflector_combo.setMinimumContentsLength(12)
@@ -840,13 +839,15 @@ class MainWindow(QMainWindow):
         if number in ("0281", "0286", "0287"):
             self.own_gps[number] = data
             sending = self.own_gps.get("0287", b"")[:1] == b"\x01"
-            self.screen.update_state(dprs_on=sending)
+            own = self.own_position()
+            self.screen.update_state(dprs_on=sending, locator=civ.latlon_to_locator(*own) if own else "")
 
     def _dprs_received(self, pos):
         base = pos.callsign.split("-")[0].strip()
         if not self.rx_info or not self.rx_entry:
             return
-        same_station = self.rx_info["callsign"].split()[0] == base
+        # A position report without a name is the position of the station transmitting it
+        same_station = self.rx_info["callsign"].split()[0] == base or (pos.kind == "position" and not base)
         # Objects and items carry their own name, not the sender's call sign: take them
         # when they arrive during (or right after) the over
         recent = self.rx_info.get("live") or time.time() - self.rx_info.get("ended", 0) < 10
