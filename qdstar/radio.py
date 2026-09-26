@@ -56,6 +56,7 @@ class Radio(QObject):
         self.last_header = None         # last RX header read from the radio (baseline)
         self.last_message = None
         self.rx_message_sent = False
+        self.last_dprs = None
         self.last_raw = {}
         self.pending_to = None
 
@@ -226,6 +227,12 @@ class Radio(QObject):
             elif kind == "setting":
                 self.setting_received.emit(*value)
             elif kind == "dprs" and value is not None:
-                self.dprs_received.emit(value)
+                # The radio keeps the last position it heard: only pass on new data, or data
+                # from the station on air (a read may return an earlier station's position)
+                raw = bytes(body[3:])
+                caller = self.rx_caller.split()[:1]
+                if raw != self.last_dprs or value.callsign.split("-")[0].split()[:1] == caller:
+                    self.last_dprs = raw
+                    self.dprs_received.emit(value)
             elif kind == "ack" and not value:
                 pass  # e.g. frequency reads are refused in Terminal Mode

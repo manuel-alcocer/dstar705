@@ -788,7 +788,13 @@ class MainWindow(QMainWindow):
 
     def _dprs_received(self, pos):
         base = pos.callsign.split("-")[0].strip()
-        if not self.rx_info or self.rx_info["callsign"].split()[0] != base:
+        if not self.rx_info or not self.rx_entry:
+            return
+        same_station = self.rx_info["callsign"].split()[0] == base
+        # Objects and items carry their own name, not the sender's call sign: take them
+        # when they arrive during (or right after) the over
+        recent = self.rx_info.get("live") or time.time() - self.rx_info.get("ended", 0) < 10
+        if not same_station and not (pos.kind in ("object", "item") and recent):
             return
         if self.rx_info.get("pos") == (pos.lat, pos.lon):
             return

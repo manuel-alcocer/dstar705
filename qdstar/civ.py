@@ -167,9 +167,9 @@ def parse(body):
             return ("tx_message", decode_text(data[:20]))
     if cmd == 0x1A and len(rest) >= 3 and rest[0] == 0x05:
         return ("setting", (rest[1:3].hex(), bytes(rest[3:])))
-    if cmd == 0x20 and len(rest) >= 3 and rest[0] == 0x03:
-        if rest[1:3] in (b"\x01\x00", b"\x02\x00"):
-            return ("dprs", parse_dprs_position(bytes(rest[3:])))
+    if cmd == 0x20 and len(rest) >= 2 and rest[0] == 0x03:
+        if rest[1] in (0x01, 0x02):
+            return ("dprs", parse_dprs_position(bytes(rest[2:])))
         return None
     if cmd == 0x20 and len(rest) >= 2:
         group, sub, data = rest[0], rest[1], rest[2:]
@@ -208,7 +208,8 @@ def auto_dprs_output(enabled=True):
 
 
 def read_rx_dprs_position():
-    return frame(0x20, b"\x03\x02\x00")
+    """Last received GPS/D-PRS data. The reply carries the data type (position/object/item/weather)."""
+    return frame(0x20, b"\x03\x02")
 
 
 # --- positions (IC-705 CI-V reference, "Manually entered position data" and "GPS/D-PRS data") ---
@@ -272,18 +273,24 @@ def encode_position(lat, lon, alt=None):
     return lat_bytes + lon_bytes + alt_bytes
 
 
+DPRS_KINDS = {0x00: "position", 0x01: "object", 0x02: "item", 0x03: "weather"}
+
+
 @dataclass
 class DprsPosition:
-    callsign: str      # 'EA7JTR-7'
+    callsign: str      # 'EA7JTR-7' (for objects and items: their name)
     symbol: str        # '/['
     lat: float
     lon: float
     altitude: float = None
+    kind: str = "position"
 
 
 def parse_dprs_position(data):
-    """Data after '20 03 01 00' / '20 03 02 00': number 00 + position fields."""
-    if len(data) < 1 + 9 + 2 + 5 + 6 or data[0] != 0x00 or data[1:10] == b"\xFF" * 9:
+    """GPS/D-PRS data after '20 03 01' (transceive) or '20 03 02' (read):
+    data type (00 position, 01 object, 02 item, 03 weather), then the name (9),
+    symbol (2), latitude (5) and longitude (6), as in the IC-705 CI-V reference."""
+    if len(data) < 1 + 9 + 2 + 5 + 6 or data[0] not in DPRS_KINDS or data[1:10] == b"\xFF" * 9:
         return None
     body = data[1:]
     lat = decode_latitude(body[11:16])
@@ -292,7 +299,7 @@ def parse_dprs_position(data):
         return None
     return DprsPosition(body[0:9].decode("ascii", "replace").strip(),
                         body[9:11].decode("ascii", "replace"), lat, lon,
-                        decode_altitude(body[22:26]) if len(body) >= 26 else None)
+                        decode_altitude(body[22:26]) if len(body) >= 26 else None, DPRS_KINDS[data[0]])
 
 
 def locator_to_latlon(locator):
