@@ -1305,3 +1305,35 @@ msgstr "Desinstalar QDStar…"
 #: qdstar/mainwindow.py
 msgid "Install for this user…"
 msgstr "Instalar para este usuario…"
+
+#: qdstar
+msgid "Shown after your call sign on the air, e.g. N0CALL /705.\nIt is written to the radio's selected MY call sign memory."
+msgstr "Aparece detrás de tu indicativo en el aire, p. ej. N0CALL /705.\nSe escribe en la memoria MY seleccionada en la radio."
+
+#: qdstar
+msgid "Note (/…)"
+msgstr "Nota (/…)"
+
+#: qdstar
+msgid "connect the radio to change it"
+msgstr "conecta la radio para cambiarla"
+
+#: qdstar
+msgid "Error changing the MY call sign note: {error}"
+msgstr "Error al cambiar la nota del indicativo MY: {error}"
+
+#: qdstar
+msgid "MY call sign note changed to /{note}"
+msgstr "Nota del indicativo MY cambiada a /{note}"
+
+#: qdstar
+msgid "MY call sign note removed"
+msgstr "Nota del indicativo MY eliminada"
+
+#: qdstar
+msgid "The radio did not confirm the note /{note}"
+msgstr "La radio no ha confirmado la nota /{note}"
+
+#: qdstar
+msgid "The MY call sign has not been read from the radio yet"
+msgstr "Todavía no se ha leído el indicativo MY de la radio"

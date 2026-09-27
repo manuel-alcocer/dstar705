@@ -11,7 +11,8 @@ from .reflectors import normalize_to
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, my_note=None):
+        """my_note: the note of the radio's MY call sign, None while it has not been read."""
         super().__init__(parent)
         self.setWindowTitle(tr("Settings"))
         self.host = QLineEdit(config.get("radio/host"))
@@ -33,6 +34,14 @@ class SettingsDialog(QDialog):
 
         self.callsign = QLineEdit(config.callsign())
         self.callsign.setPlaceholderText(tr("read from the radio (MY)"))
+        self.radio_note = my_note
+        self.note = QLineEdit(my_note or "")
+        self.note.setMaxLength(4)
+        self.note.setToolTip(tr("Shown after your call sign on the air, e.g. N0CALL /705.\n"
+                                "It is written to the radio's selected MY call sign memory."))
+        if my_note is None:
+            self.note.setEnabled(False)
+            self.note.setPlaceholderText(tr("connect the radio to change it"))
         self.int_call = QLineEdit(config.get("int/terminal_call"))
         self.int_call.setPlaceholderText(config.terminal_call("int") or tr("call sign + Z"))
         self.ext_call = QLineEdit(config.get("ext/terminal_call"))
@@ -55,6 +64,7 @@ class SettingsDialog(QDialog):
         radio_box = QGroupBox(tr("Radio (WiFi)"))
         form = QFormLayout(radio_box)
         form.addRow(tr("Call sign"), self.callsign)
+        form.addRow(tr("Note (/…)"), self.note)
         form.addRow(tr("Radio IP / host"), self.host)
         form.addRow(tr("Control port (UDP)"), self.port)
         form.addRow(tr("Network user"), self.user)
@@ -110,6 +120,13 @@ class SettingsDialog(QDialog):
         for field in self.external_only:
             self.ext_form.setRowVisible(field, external)
         self.adjustSize()
+
+    def new_note(self):
+        """The MY note to write to the radio, or None when unchanged."""
+        if self.radio_note is None:
+            return None
+        note = self.note.text().strip()
+        return note if note != self.radio_note else None
 
     def save(self):
         config.put("radio/host", self.host.text().strip())

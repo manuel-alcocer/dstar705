@@ -31,6 +31,7 @@ class Radio(QObject):
     rx_message = Signal(str, str)       # message, caller
     rx_ended = Signal()
     to_write_result = Signal(bool, str)
+    my_write_result = Signal(bool, str)    # ok, note or error
     raw = Signal(str)                   # changed RX/TX related frames, for the debug log
     setting_received = Signal(str, bytes)   # '0287', data
     dprs_received = Signal(object)          # civ.DprsPosition
@@ -61,6 +62,7 @@ class Radio(QObject):
         self.last_dprs_time = 0.0
         self.last_raw = {}
         self.pending_to = None
+        self.pending_note = None
 
         self.fast = QTimer(self, interval=FAST_POLL)
         self.fast.timeout.connect(self._poll_fast)
@@ -89,6 +91,23 @@ class Radio(QObject):
         self._send(civ.set_tx_calls(to, r1, r2))
         QTimer.singleShot(400, lambda: self._send(civ.read_tx_calls()))
         QTimer.singleShot(3000, self._check_to_written)
+
+    def set_my_note(self, note):
+        """Write the note (/xxxx) of the radio's MY call sign, keeping the call sign itself."""
+        call = self.cur_my[0] if self.cur_my else ""
+        if not call:
+            self.my_write_result.emit(False, tr("The MY call sign has not been read from the radio yet"))
+            return
+        self.pending_note = note
+        self._send(civ.set_my_call(call, note))
+        QTimer.singleShot(400, lambda: self._send(civ.read_my_call()))
+        QTimer.singleShot(3000, self._check_note_written)
+
+    def _check_note_written(self):
+        if self.pending_note is None:
+            return
+        note, self.pending_note = self.pending_note, None
+        self.my_write_result.emit(False, tr("The radio did not confirm the note /{note}", note=note))
 
     def read_my_position(self):
         self._send(civ.read_my_position())
@@ -192,9 +211,13 @@ class Radio(QObject):
             self.last_civ = time.monotonic()
             self._set_civ(True)
             kind, value = parsed
-            if kind == "my_call" and value != self.cur_my:
-                self.cur_my = value
-                self.my_call.emit(*value)
+            if kind == "my_call":
+                if value != self.cur_my:
+                    self.cur_my = value
+                    self.my_call.emit(*value)
+                if self.pending_note is not None and value[1] == self.pending_note.rstrip():
+                    self.my_write_result.emit(True, self.pending_note)
+                    self.pending_note = None
             elif kind == "tx_calls":
                 if value != self.cur_tx_calls:
                     self.cur_tx_calls = value

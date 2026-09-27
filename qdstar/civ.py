@@ -61,6 +61,11 @@ def read_my_call():
     return frame(0x1F, b"\x00")
 
 
+def set_my_call(call, note):
+    """MY call sign of the selected memory: 8-character call sign + 4-character note (/xxxx)."""
+    return frame(0x1F, b"\x00", text8(call) + note[:4].ljust(4).encode("ascii", "replace"))
+
+
 def read_tx_calls():
     return frame(0x1F, b"\x01")
 

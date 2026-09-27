@@ -77,6 +77,8 @@ class MainWindow(QMainWindow):
         self.r1 = ""
         self.r2 = ""
         self.my_call = ""
+        self.my_note = None        # note (/xxxx) of the radio's MY call sign; None until read
+        self.note_to_write = None  # new note from the settings, written once the radio's MY is read
         self.status = {}
         self.gw_ok = None
         self.gw_links = []
@@ -502,6 +504,7 @@ class MainWindow(QMainWindow):
         r.rx_message.connect(self._rx_message)
         r.rx_ended.connect(self._rx_ended)
         r.to_write_result.connect(self._to_written)
+        r.my_write_result.connect(self._note_written)
         r.raw.connect(lambda line: self.debug_action.isChecked() and self.log(f"CI-V {line}"))
         r.setting_received.connect(self._setting_received)
         r.dprs_received.connect(self._dprs_received)
@@ -539,6 +542,11 @@ class MainWindow(QMainWindow):
 
     def _my_call(self, call, note):
         self.my_call = call
+        self.my_note = note
+        if self.note_to_write is not None and self.radio and call:
+            new, self.note_to_write = self.note_to_write, None
+            if new != note:
+                self.radio.set_my_note(new)
         if call.split():
             self.storage.clear_via(call.split()[0])   # we never relay reports to ourselves
             self._load_dprs()
@@ -669,6 +677,14 @@ class MainWindow(QMainWindow):
             self.log(tr("Unlinking {reflector}…", reflector=self.ext_reflector()))
             self.gateway.unlink()
 
+    def _note_written(self, ok, detail):
+        if ok:
+            self.log(tr("MY call sign note changed to /{note}", note=detail) if detail
+                     else tr("MY call sign note removed"))
+        else:
+            self.log(tr("Error changing the MY call sign note: {error}", error=detail))
+            QMessageBox.warning(self, tr("Settings"), detail)
+
     def _to_written(self, ok, detail):
         if ok and detail == EXT_UR:
             self.log(tr("Radio TO = {to}", to=EXT_UR))
@@ -682,9 +698,11 @@ class MainWindow(QMainWindow):
         ReflectorsDialog(self.registry, self.mode, self).exec()
 
     def open_settings(self):
-        dialog = SettingsDialog(self)
+        dialog = SettingsDialog(self, self.my_note if self.radio and self.radio.civ_ok else None)
         if dialog.exec():
             dialog.save()
+            # Saving reconnects the radio: the note is written once the new session reads MY
+            self.note_to_write = dialog.new_note()
             self.log(tr("Settings saved"))
             if self.mode == "ext":
                 self._start_gateway()
