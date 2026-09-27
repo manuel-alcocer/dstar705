@@ -52,6 +52,9 @@ WINDOW_WIDTH = 420
 UPDATE_CHECK_MS = 24 * 3600 * 1000
 ALL_TIME = 100 * 365 * 86400
 EXT_UR = "CQCQCQ"
+# s: a long over reaches us in bursts (reflector/WiFi gaps); the same header coming back
+# within this time continues the previous over instead of starting a new one
+RX_RESUME = 8.0
 
 
 class MainWindow(QMainWindow):
@@ -85,6 +88,10 @@ class MainWindow(QMainWindow):
         self.rx_entry = None
         self.rx_info = None
         self.current_over = {}     # the received over on air or last ended: caller, live, ended
+        self.last_rx = None        # the ended over that may still resume: header, entry, info
+        self.rx_end_pending = None # rx_info of the ended over whose end is not logged yet
+        self.rx_end_log = QTimer(self, singleShot=True, interval=int(RX_RESUME * 1000))
+        self.rx_end_log.timeout.connect(self._log_rx_end)
         self.tx_entry = None
         self.tx_since = None
 
@@ -692,6 +699,14 @@ class MainWindow(QMainWindow):
         if self._is_system_call(calls.caller):
             self.log(tr("System reply: {caller} → {called}", caller=calls.caller, called=calls.called))
             return
+        header = (calls.caller, calls.called, calls.rpt1, calls.rpt2)
+        last = self.last_rx
+        self.last_rx = None
+        if last and last["header"] == header and time.time() - last["info"]["ended"] < RX_RESUME \
+                and (self.tx_since or 0) < last["info"]["ended"]:
+            self._rx_resumed(last)
+            return
+        self._log_rx_end()
         base = calls.caller.split()[0]
         self.log(f"RX {calls.caller}" + (f" /{calls.note}" if calls.note else "") +
                  f"  UR={calls.called} R1={calls.rpt1} R2={calls.rpt2}")
@@ -699,6 +714,7 @@ class MainWindow(QMainWindow):
                                                  calls.rpt1, calls.rpt2)
         self.current_over = {"caller": base, "live": True, "ended": 0.0}
         self.rx_info = {"callsign": calls.caller, "suffix": calls.note, "started": time.time(), "live": True,
+                        "header": header,
                         "name": "", "location": "", "message": ""}
         self.leds["rx"].set("green")
         known = self.storage.last_position(base)
@@ -708,10 +724,34 @@ class MainWindow(QMainWindow):
         self.lookup.request(base)
         self._load_history()
 
+    def _rx_resumed(self, last):
+        """The same over again after a gap: keep its history entry and start time."""
+        self.rx_end_log.stop()
+        self.rx_end_pending = None
+        self.rx_entry, self.rx_info = last["entry"], last["info"]
+        self.rx_info["live"] = True
+        self.rx_info.pop("ended", None)
+        self.current_over.update(live=True)
+        self.storage.update_entry(self.rx_entry, ended=None)
+        self.leds["rx"].set("green")
+        self.screen.update_state(rx=self.rx_info)
+        self._load_history()
+
+    def _log_rx_end(self):
+        """Log the end of the last over once it can no longer resume."""
+        info, self.rx_end_pending = self.rx_end_pending, None
+        self.rx_end_log.stop()
+        if info:
+            secs = int(info["ended"] - info["started"])
+            self.log(tr("End of RX {caller} ({seconds}s)", caller=info["callsign"], seconds=secs))
+
     def _rx_message(self, message, caller):
         base = caller.split()[0] if caller.split() else ""
         if not base or not message:
             return
+        if self.rx_info and self.rx_info["callsign"].split()[:1] == [base] and \
+                self.rx_info.get("message") == message:
+            return  # repeated in every burst of a long over
         # Messages can arrive after the over ended: fill the station's latest entry
         if self.storage.fill_recent(base, "message", message, window=120):
             self._load_history()
@@ -728,8 +768,10 @@ class MainWindow(QMainWindow):
             self.rx_info["live"] = False
             self.rx_info["ended"] = time.time()
             self.storage.update_entry(self.rx_entry, ended=self.rx_info["ended"])
-            secs = int(self.rx_info["ended"] - self.rx_info["started"])
-            self.log(tr("End of RX {caller} ({seconds}s)", caller=self.rx_info["callsign"], seconds=secs))
+            # Logged once the over can no longer resume
+            self.last_rx = {"header": self.rx_info["header"], "entry": self.rx_entry, "info": self.rx_info}
+            self.rx_end_pending = self.rx_info
+            self.rx_end_log.start()
             self.screen.update_state(rx=self.rx_info)
             self._load_history()
             self._update_last_heard()
