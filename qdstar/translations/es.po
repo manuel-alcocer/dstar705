@@ -1337,3 +1337,7 @@ msgstr "La radio no ha confirmado la nota /{note}"
 #: qdstar
 msgid "The MY call sign has not been read from the radio yet"
 msgstr "Todavía no se ha leído el indicativo MY de la radio"
+
+#: qdstar/mainwindow.py
+msgid "User manual"
+msgstr "Manual de usuario"

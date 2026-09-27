@@ -6,14 +6,14 @@ import time
 from datetime import datetime
 
 from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtSerialPort import QSerialPortInfo
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
                                QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
                                QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
 
-from . import __author__, __url__, __version__, config, startup
+from . import __author__, __url__, __version__, __website__, config, i18n, startup
 from . import appimage, civ
 from .dialogs import SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
@@ -279,6 +279,9 @@ class MainWindow(QMainWindow):
         hist_menu = self.menuBar().addMenu(tr("H&istory"))
         hist_menu.addAction(QAction(tr("Clear history…"), self, triggered=self.clear_history))
         help_menu = self.menuBar().addMenu(tr("&Help"))
+        help_menu.addAction(QAction(tr("User manual"), self, shortcut=QKeySequence.HelpContents,
+                                    triggered=self.open_manual))
+        help_menu.addSeparator()
         help_menu.addAction(QAction(tr("Check for updates…"), self, triggered=lambda: self._check_updates(manual=True)))
         if appimage.current():
             self.install_action = QAction(self, triggered=self._toggle_appimage_install)
@@ -286,6 +289,12 @@ class MainWindow(QMainWindow):
             help_menu.aboutToShow.connect(lambda: self.install_action.setText(
                 tr("Uninstall QDStar…") if appimage.installed() else tr("Install for this user…")))
         help_menu.addAction(QAction(tr("About QDStar…"), self, triggered=self.about))
+
+    @staticmethod
+    def open_manual():
+        """The online manual, in Spanish when the interface is (the site has English and Spanish)."""
+        prefix = "/es" if i18n.language() == "es" else ""
+        open_url(f"{__website__}{prefix}/manual.html")
 
     # --- logging ---------------------------------------------------------
 
@@ -1235,15 +1244,23 @@ class MainWindow(QMainWindow):
         self._load_weather()
 
     def about(self):
-        QMessageBox.about(
-            self, tr("About QDStar"),
+        box = QMessageBox(self)
+        box.setWindowTitle(tr("About QDStar"))
+        box.setIconPixmap(self.windowIcon().pixmap(64, 64))
+        box.setText(
             f"<b>QDStar {__version__}</b><br>"
             + tr("IC-705 D-STAR Terminal Mode controller and built-in gateway.") + "<br><br>"
             + tr("Author: {author}", author=__author__) + "<br>"
             + tr("Seville (Bellavista), Spain") + "<br>"
+            f'<a href="{__website__}">{__website__}</a><br>'
             f'<a href="{__url__}">{__url__}</a><br><br>'
             + tr("License GPL-3.0-or-later. Based on wfview (Icom network protocol) "
                  "and on G4KLX's DStarRepeater / ircDDBGateway."))
+        # Links go through open_url, which runs the browser with the system libraries
+        for label in box.findChildren(QLabel):
+            label.setOpenExternalLinks(False)
+            label.linkActivated.connect(open_url)
+        box.exec()
 
     def clear_history(self):
         if QMessageBox.question(self, tr("History"), tr("Delete the whole history?")) == QMessageBox.Yes:
