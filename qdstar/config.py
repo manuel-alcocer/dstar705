@@ -43,6 +43,7 @@ DEFAULTS = {
     "updates/check": True,       # look for new releases on GitHub
     "dprs/show_all": True,       # D-PRS tab with every received report, including relayed ones
     "updates/skip": "",          # a version the user chose to skip
+    "appimage/offer_install": True,  # offer to install the AppImage for the user when run from elsewhere
 }
 
 

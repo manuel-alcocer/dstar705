@@ -9,11 +9,12 @@ from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtSerialPort import QSerialPortInfo
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
-                               QMainWindow, QMessageBox, QPlainTextEdit, QPushButton, QTableWidget, QTableWidgetItem,
+                               QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
+                               QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
 
 from . import __author__, __url__, __version__, config, startup
-from . import civ
+from . import appimage, civ
 from .dialogs import SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
 from .gateway import GatewayClient
@@ -22,7 +23,7 @@ from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
 from .qtutil import open_url, start_detached
-from .updates import UpdateChecker
+from .updates import AppImageUpdate, UpdateChecker
 from .widgets import LedBar, ReflectorScreen, WeatherPanel, load_fonts, mode_led_icon
 from .i18n import N_, tr
 
@@ -112,6 +113,10 @@ class MainWindow(QMainWindow):
         self.updates.failed.connect(self._update_failed)
         self.update_manual = False
         self.update_notified = ""
+        self.update_offer = None   # (version, url, page, notes) of the latest release found
+        self.relaunch_path = None  # AppImage to start once this window has closed (after an update)
+        if appimage.current() and not appimage.running_installed() and config.get("appimage/offer_install"):
+            QTimer.singleShot(1500, self._offer_appimage_install)
         self.update_timer = QTimer(self, interval=UPDATE_CHECK_MS)
         self.update_timer.timeout.connect(lambda: self._check_updates(manual=False))
         if config.get("updates/check"):
@@ -173,7 +178,7 @@ class MainWindow(QMainWindow):
         mode_bar.addWidget(self.mode_hint, 1)
         # New version notice (a download link), right-aligned next to the mode buttons
         self.update_label = QLabel()
-        self.update_label.linkActivated.connect(open_url)
+        self.update_label.linkActivated.connect(self._update_link)
         self.update_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.update_label.hide()
         mode_bar.addWidget(self.update_label)
@@ -273,6 +278,11 @@ class MainWindow(QMainWindow):
         hist_menu.addAction(QAction(tr("Clear history…"), self, triggered=self.clear_history))
         help_menu = self.menuBar().addMenu(tr("&Help"))
         help_menu.addAction(QAction(tr("Check for updates…"), self, triggered=lambda: self._check_updates(manual=True)))
+        if appimage.current():
+            self.install_action = QAction(self, triggered=self._toggle_appimage_install)
+            help_menu.addAction(self.install_action)
+            help_menu.aboutToShow.connect(lambda: self.install_action.setText(
+                tr("Uninstall QDStar…") if appimage.installed() else tr("Install for this user…")))
         help_menu.addAction(QAction(tr("About QDStar…"), self, triggered=self.about))
 
     # --- logging ---------------------------------------------------------
@@ -993,6 +1003,7 @@ class MainWindow(QMainWindow):
         self.update_label.setText(f'<a href="{url}">⬆ ' + tr("New {version}", version=version) + "</a>")
         self.update_label.setToolTip(tr("New version {version} available", version=version) + " — " + tr("Download"))
         self.update_label.show()
+        self.update_offer = (version, url, page, notes)
         skipped = config.get("updates/skip") == version
         if self.update_manual or (not skipped and self.update_notified != version):
             self.update_notified = version
@@ -1006,14 +1017,103 @@ class MainWindow(QMainWindow):
         box.setInformativeText(tr("Release notes: {page}", page=page))
         if notes:
             box.setDetailedText(notes)
-        download = box.addButton(tr("Download"), QMessageBox.AcceptRole)
+        in_place = self._can_update_in_place(url)
+        download = box.addButton(tr("Update now") if in_place else tr("Download"), QMessageBox.AcceptRole)
         box.addButton(tr("Later"), QMessageBox.RejectRole)
         skip = box.addButton(tr("Skip this version"), QMessageBox.DestructiveRole)
         box.exec()
         if box.clickedButton() is download:
-            open_url(url)
+            if in_place:
+                self._update_appimage(version, url)
+            else:
+                open_url(url)
         elif box.clickedButton() is skip:
             config.put("updates/skip", version)
+
+    @staticmethod
+    def _can_update_in_place(url):
+        return bool(appimage.current()) and url.endswith(".AppImage")
+
+    def _update_link(self, url):
+        if self.update_offer and self._can_update_in_place(url):
+            self._offer_update(*self.update_offer)
+        else:
+            open_url(url)
+
+    def _update_appimage(self, version, url):
+        dialog = QProgressDialog(tr("Downloading QDStar {version}…", version=version), "", 0, 0, self)
+        dialog.setWindowTitle(tr("Update"))
+        dialog.setCancelButton(None)   # the download runs to the end or fails
+        dialog.setMinimumDuration(0)
+        dialog.setAutoClose(False)
+        dialog.setAutoReset(False)
+        job = AppImageUpdate(self)
+
+        def progress(done, total):
+            if total:
+                dialog.setMaximum(total // 1024)
+                dialog.setValue(done // 1024)
+
+        def finished(path):
+            dialog.close()
+            job.deleteLater()
+            self.log(tr("QDStar {version} installed in {path}", version=version, path=path))
+            answer = QMessageBox.question(
+                self, tr("Update"), tr("QDStar {version} is ready. Restart now?", version=version))
+            if answer == QMessageBox.Yes:
+                self.relaunch_path = path
+                self.close()
+
+        def failed(error):
+            dialog.close()
+            job.deleteLater()
+            QMessageBox.warning(self, tr("Update"), tr("Could not update QDStar: {error}", error=error))
+
+        job.progress.connect(progress)
+        job.finished.connect(finished)
+        job.failed.connect(failed)
+        dialog.show()
+        job.start(url, version, self.updates.digests.get(url, ""))
+
+    def _offer_appimage_install(self):
+        box = QMessageBox(self)
+        box.setWindowTitle(tr("Install QDStar"))
+        box.setIcon(QMessageBox.Question)
+        box.setText(tr("Install QDStar for this user?"))
+        box.setInformativeText(tr("The AppImage is moved to {path} and QDStar is added to the applications menu. "
+                                  "New versions are then installed from QDStar itself.",
+                                  path=str(appimage.INSTALL_PATH).replace(str(appimage.HOME), "~")))
+        install = box.addButton(tr("Install"), QMessageBox.AcceptRole)
+        box.addButton(tr("Not now"), QMessageBox.RejectRole)
+        never = box.addButton(tr("Don't ask again"), QMessageBox.DestructiveRole)
+        box.exec()
+        if box.clickedButton() is install:
+            self._install_appimage()
+        elif box.clickedButton() is never:
+            config.put("appimage/offer_install", False)
+
+    def _install_appimage(self):
+        try:
+            appimage.install()
+        except OSError as exc:
+            QMessageBox.warning(self, tr("Install QDStar"), tr("Could not install QDStar: {error}", error=exc))
+            return
+        self.log(tr("QDStar installed in {path}", path=appimage.INSTALL_PATH))
+        QMessageBox.information(self, tr("Install QDStar"),
+                                tr("QDStar is now in the applications menu. Start it from there from now on."))
+
+    def _toggle_appimage_install(self):
+        if not appimage.installed():
+            self._install_appimage()
+            return
+        if QMessageBox.question(self, tr("Uninstall QDStar"),
+                                tr("Remove QDStar from the applications menu and delete {path}? "
+                                   "Settings and history are kept.", path=appimage.INSTALL_PATH)) != QMessageBox.Yes:
+            return
+        appimage.uninstall()
+        self.log(tr("QDStar uninstalled"))
+        QMessageBox.information(self, tr("Uninstall QDStar"),
+                                tr("QDStar has been uninstalled. It keeps running until you close it."))
 
     def _update_none(self):
         if self.update_manual:

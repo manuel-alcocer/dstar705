@@ -50,7 +50,13 @@ def main():
     wake = QTimer(interval=300)
     wake.timeout.connect(lambda: None)  # lets Python run signal handlers
     wake.start()
-    return app.exec()
+    code = app.exec()
+    if window.relaunch_path:
+        # Updated AppImage: start it once this instance no longer holds the single-instance socket
+        instance.server.close()
+        from . import appimage
+        appimage.relaunch(window.relaunch_path)
+    return code
 
 
 if __name__ == "__main__":

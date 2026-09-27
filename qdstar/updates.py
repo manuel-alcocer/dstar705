@@ -64,6 +64,10 @@ class UpdateChecker(QObject):
     up_to_date = Signal()
     failed = Signal(str)
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.digests = {}    # download URL -> 'sha256:<hex>' published by GitHub
+
     def check(self):
         threading.Thread(target=self._run, daemon=True, name="update-check").start()
 
@@ -78,5 +82,27 @@ class UpdateChecker(QObject):
         if not version or not is_newer(version):
             safe_emit(self.up_to_date)
             return
-        url = pick_asset(release.get("assets", [])) or page
+        assets = release.get("assets", [])
+        self.digests = {x.get("browser_download_url", ""): x.get("digest") or "" for x in assets}
+        url = pick_asset(assets) or page
         safe_emit(self.available, version, url, page, release.get("body") or "")
+
+
+class AppImageUpdate(QObject):
+    """Downloads a new AppImage in the background and puts it in place of the running one."""
+    progress = Signal(int, int)      # bytes done, total (0 = unknown)
+    finished = Signal(str)           # path of the new AppImage
+    failed = Signal(str)
+
+    def start(self, url, version, digest=""):
+        threading.Thread(target=self._run, args=(url, version, digest), daemon=True,
+                         name="appimage-update").start()
+
+    def _run(self, url, version, digest):
+        from . import appimage
+        try:
+            path = appimage.update(url, version, digest, progress=lambda d, t: safe_emit(self.progress, d, t))
+        except OSError as exc:
+            safe_emit(self.failed, str(exc))
+            return
+        safe_emit(self.finished, str(path))

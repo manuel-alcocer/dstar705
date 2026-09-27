@@ -1221,3 +1221,87 @@ msgstr "SIN DATOS"
 #: qdstar/widgets.py:250
 msgid "DOWN"
 msgstr "CAÍDO"
+
+#: qdstar/mainwindow.py
+msgid "Downloading QDStar {version}…"
+msgstr "Descargando QDStar {version}…"
+
+#: qdstar/mainwindow.py
+msgid "Update"
+msgstr "Actualización"
+
+#: qdstar/mainwindow.py
+msgid "Install QDStar"
+msgstr "Instalar QDStar"
+
+#: qdstar/mainwindow.py
+msgid "Install QDStar for this user?"
+msgstr "¿Instalar QDStar para este usuario?"
+
+#: qdstar/mainwindow.py
+msgid "The AppImage is moved to {path} and QDStar is added to the applications menu. New versions are then installed from QDStar itself."
+msgstr "El AppImage se mueve a {path} y QDStar se añade al menú de aplicaciones. Las versiones nuevas se instalarán desde el propio QDStar."
+
+#: qdstar/mainwindow.py
+msgid "Install"
+msgstr "Instalar"
+
+#: qdstar/mainwindow.py
+msgid "Not now"
+msgstr "Ahora no"
+
+#: qdstar/mainwindow.py
+msgid "Don't ask again"
+msgstr "No volver a preguntar"
+
+#: qdstar/mainwindow.py
+msgid "QDStar installed in {path}"
+msgstr "QDStar instalado en {path}"
+
+#: qdstar/mainwindow.py
+msgid "QDStar is now in the applications menu. Start it from there from now on."
+msgstr "QDStar ya está en el menú de aplicaciones. A partir de ahora, ábrelo desde ahí."
+
+#: qdstar/mainwindow.py
+msgid "QDStar uninstalled"
+msgstr "QDStar desinstalado"
+
+#: qdstar/mainwindow.py
+msgid "Uninstall QDStar"
+msgstr "Desinstalar QDStar"
+
+#: qdstar/mainwindow.py
+msgid "QDStar has been uninstalled. It keeps running until you close it."
+msgstr "QDStar se ha desinstalado. Sigue abierto hasta que lo cierres."
+
+#: qdstar/mainwindow.py
+msgid "Update now"
+msgstr "Actualizar ahora"
+
+#: qdstar/mainwindow.py
+msgid "QDStar {version} installed in {path}"
+msgstr "QDStar {version} instalado en {path}"
+
+#: qdstar/mainwindow.py
+msgid "QDStar {version} is ready. Restart now?"
+msgstr "QDStar {version} está listo. ¿Reiniciar ahora?"
+
+#: qdstar/mainwindow.py
+msgid "Could not update QDStar: {error}"
+msgstr "No se pudo actualizar QDStar: {error}"
+
+#: qdstar/mainwindow.py
+msgid "Remove QDStar from the applications menu and delete {path}? Settings and history are kept."
+msgstr "¿Quitar QDStar del menú de aplicaciones y borrar {path}? Los ajustes y el histórico se conservan."
+
+#: qdstar/mainwindow.py
+msgid "Could not install QDStar: {error}"
+msgstr "No se pudo instalar QDStar: {error}"
+
+#: qdstar/mainwindow.py
+msgid "Uninstall QDStar…"
+msgstr "Desinstalar QDStar…"
+
+#: qdstar/mainwindow.py
+msgid "Install for this user…"
+msgstr "Instalar para este usuario…"
