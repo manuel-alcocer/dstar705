@@ -1,5 +1,6 @@
 """Custom widgets: status LEDs and the 4:3 reflector screen."""
 
+import math
 import time
 from pathlib import Path
 
@@ -283,7 +284,7 @@ class ReflectorScreen(QWidget):
             self._text(p, L, 232, call, 52, GREEN if live else AMBER, True)
             self._text(p, L, 264, rx.get("name") or "", 22, WHITE, width=BOX_X - L - 10)
             self._text(p, L, 290, rx.get("location") or "", 16, DIM, width=BOX_X - L - 10)
-            self._position_box(p, rx)
+            self._position_box(p, rx, s)
             if rx.get("message"):
                 self._text(p, L, 314, f"« {rx['message']} »", 17, CYAN)
             if live:
@@ -317,19 +318,32 @@ class ReflectorScreen(QWidget):
         self._text(p, L, H - 12, footer, 16, DIM, width=R - L - 110)
         self._text(p, R, H - 12, time.strftime("%H:%M:%S"), 16, DIM, align=Qt.AlignRight)
 
-    def _position_box(self, p, rx):
-        """Fixed box: distance and direction to the station (D-PRS), or a placeholder."""
+    def _position_box(self, p, rx, s):
+        """Fixed box: distance and direction to the station (D-PRS), or a placeholder.
+        Our own over shows a circle with a cross (here) instead of a direction."""
         box = QRectF(BOX_X, 244, W - 24 - BOX_X, 64)
-        has_distance = rx.get("distance") is not None
-        p.setPen(QPen(CYAN if has_distance else QColor("#333"), 2))
+        mine = (s.get("my_call") or "").split()[:1]
+        own = bool(mine) and (rx.get("callsign") or "").split()[:1] == mine
+        has_distance = rx.get("distance") is not None and not own
+        p.setPen(QPen(CYAN if has_distance or own else QColor("#333"), 2))
         p.setBrush(Qt.NoBrush)
         p.drawRoundedRect(box, 8, 8)
         cx = box.center().x()
-        if has_distance:
-            self._text(p, cx, 272, f"{rx['distance']:.0f} km", 24, CYAN, True, align=Qt.AlignHCenter, width=box.width())
+        icon = QPointF(box.left() + 30, box.center().y())
+        text_x = box.left() + 58 + (box.width() - 58) / 2   # centre of the part right of the icon
+        text_w = box.width() - 58
+        if own:
+            self._here_icon(p, icon, 20)
+            self._text(p, text_x, 272, "MY", 22, CYAN, True, align=Qt.AlignHCenter, width=text_w)
+            if s.get("locator"):
+                self._text(p, text_x, 296, s["locator"], 14, WHITE, True, align=Qt.AlignHCenter, width=text_w)
+        elif has_distance:
             bearing = rx.get("bearing") or 0
-            self._text(p, cx, 297, f"{tr(compass_point(bearing))} · {bearing:.0f}°", 16, WHITE, True,
-                       align=Qt.AlignHCenter, width=box.width())
+            self._direction_icon(p, icon, 20, bearing)
+            self._text(p, text_x, 272, f"{rx['distance']:.0f} km", 22, CYAN, True, align=Qt.AlignHCenter,
+                       width=text_w)
+            self._text(p, text_x, 297, f"{tr(compass_point(bearing))} · {bearing:.0f}°", 14, WHITE, True,
+                       align=Qt.AlignHCenter, width=text_w)
         elif rx.get("pos"):
             lat, lon = rx["pos"]
             self._text(p, cx, 272, f"{abs(lat):.2f}°{'N' if lat >= 0 else 'S'}", 16, CYAN, True, align=Qt.AlignHCenter)
@@ -337,6 +351,34 @@ class ReflectorScreen(QWidget):
         else:
             self._text(p, cx, 272, "— km", 22, DIM, True, align=Qt.AlignHCenter, width=box.width())
             self._text(p, cx, 296, tr("no position"), 13, DIM, align=Qt.AlignHCenter, width=box.width())
+
+    @staticmethod
+    def _here_icon(p, c, r):
+        """Circle with a cross in the centre: the station on air is us."""
+        p.setPen(QPen(CYAN, 2))
+        p.setBrush(Qt.NoBrush)
+        p.drawEllipse(c, r, r)
+        arm = r * 0.55
+        p.drawLine(QPointF(c.x() - arm, c.y()), QPointF(c.x() + arm, c.y()))
+        p.drawLine(QPointF(c.x(), c.y() - arm), QPointF(c.x(), c.y() + arm))
+
+    @staticmethod
+    def _direction_icon(p, c, r, bearing):
+        """Unit vector from our position towards the station: north up, bearing clockwise."""
+        p.setPen(QPen(QColor("#555"), 1.5))
+        p.setBrush(Qt.NoBrush)
+        p.drawEllipse(c, r, r)
+        p.drawLine(QPointF(c.x(), c.y() - r), QPointF(c.x(), c.y() - r + 5))   # north tick
+        a = math.radians(bearing)
+        dx, dy = math.sin(a), -math.cos(a)
+        tip = QPointF(c.x() + dx * (r - 3), c.y() + dy * (r - 3))
+        tail = QPointF(c.x() - dx * (r - 8), c.y() - dy * (r - 8))
+        p.setPen(QPen(CYAN, 2.5, Qt.SolidLine, Qt.RoundCap))
+        p.drawLine(tail, tip)
+        # Arrow head: two short strokes back from the tip
+        for side in (-1, 1):
+            h = a + math.pi + side * math.radians(28)
+            p.drawLine(tip, QPointF(tip.x() + math.sin(h) * 8, tip.y() - math.cos(h) * 8))
 
     def _elapsed(self, p, since, color):
         if since:

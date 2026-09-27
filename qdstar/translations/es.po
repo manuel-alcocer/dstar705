@@ -602,9 +602,6 @@ msgstr "Dist."
 msgid "Reflector"
 msgstr "Reflector"
 
-#: qdstar/mainwindow.py:44
-msgid "Dur."
-msgstr "Dur."
 
 #: qdstar/mainwindow.py:45
 msgid "Message"

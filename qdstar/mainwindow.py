@@ -43,8 +43,8 @@ EXT_ONLY_LEDS = ("usb", "gateway")
 ICOM_USB_VENDOR = 0x0C26
 
 MODE_NAMES = {"int": "INT · WiFi", "ext": "EXT · USB/PC"}
-HISTORY_COLUMNS = [N_("Time"), "", N_("Call sign"), N_("Dist."), N_("Name"), N_("Reflector"), N_("Dur."),
-                   N_("Message"), N_("Location")]
+HISTORY_COLUMNS = [N_("Time"), N_("Call sign"), N_("Name"), N_("Dist."), N_("Reflector"), N_("Location"),
+                   N_("Message")]
 DPRS_COLUMNS = [N_("Time"), N_("Station"), N_("Type"), N_("Dist."), N_("Details"), N_("Via"), N_("Reflector")]
 DPRS_KIND_NAMES = {"position": N_("position"), "object": N_("object"), "item": N_("item"), "weather": N_("weather")}
 GPS_POLL_MS = 60_000
@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
 
         self.tabs = QTabWidget()
         self.history = QTableWidget(0, len(HISTORY_COLUMNS))
-        self.history.setHorizontalHeaderLabels([tr(c) if c else c for c in HISTORY_COLUMNS])
+        self.history.setHorizontalHeaderLabels([tr(c) for c in HISTORY_COLUMNS])
         self.history.verticalHeader().setVisible(False)
         self.history.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.history.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -861,7 +861,7 @@ class MainWindow(QMainWindow):
             started = time.localtime(r["started"])
             when = time.strftime("%H:%M:%S" if time.strftime("%Y%m%d", started) == time.strftime("%Y%m%d")
                                  else "%d/%m %H:%M", started)
-            dur = f"{int(r['ended'] - r['started'])}s" if r["ended"] else "…"
+            when += f" ({self._duration(r['ended'] - r['started'])})" if r["ended"] else " (…)"
             call = r["callsign"] + (f" /{r['suffix']}" if r["suffix"] else "")
             item = self.registry.get(r["reflector"]) if r["reflector"] else None
             reflector = r["reflector"] or ""
@@ -872,14 +872,18 @@ class MainWindow(QMainWindow):
                 distance, bearing = self._geo((r["lat"], r["lon"]))
                 dist = (f"{distance:.0f} km {tr(civ.compass_point(bearing))}" if distance is not None
                         else format_position(r["lat"], r["lon"]))
-            values = [when, r["direction"], call, dist, r["name"] or "", reflector, dur, r["message"] or "",
-                      r["location"] or ""]
+            values = [when, call, r["name"] or "", dist, reflector, r["location"] or "", r["message"] or ""]
             for c, v in enumerate(values):
                 cell = QTableWidgetItem(v)
-                if c == 1:
-                    cell.setForeground(Qt.red if v == "TX" else Qt.darkGreen)
+                if c == 1 and r["direction"] == "TX":
+                    cell.setForeground(Qt.red)   # our own overs
                 cell.setToolTip(time.strftime("%Y-%m-%d %H:%M:%S", started) if c == 0 else v)
                 self.history.setItem(i, c, cell)
+
+    @staticmethod
+    def _duration(seconds):
+        seconds = max(0, int(seconds))
+        return f"{seconds}s" if seconds < 60 else f"{seconds // 60}m{seconds % 60:02d}s"
 
     @staticmethod
     def _heard_time(text):
