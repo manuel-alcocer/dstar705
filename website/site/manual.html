@@ -210,6 +210,7 @@
     <table>
       <tr><th>Field</th><th>What it does</th></tr>
       <tr><td>Call sign</td><td>Your call sign, without a suffix (<code>EA7KLX</code>). If you leave it empty, QDStar fills it in with the radio's MY call sign the first time it connects. The EXT gateway uses it to log in to reflectors, and to build the Terminal/AP call signs when those are left empty.</td></tr>
+      <tr><td>Note (/…)</td><td>The note of up to 4 characters that goes after your call sign on the air, for example <code>705</code> to be heard as <code>EA7KLX /705</code>. It is read from the radio and, when you change it, written to the radio's selected MY call sign memory, keeping the call sign itself. The log confirms the change. The field is only available with the radio connected; leave it empty to remove the note.</td></tr>
       <tr><td>Radio IP / host</td><td>The radio's address on your network (<em>SET › WLAN Set</em> on the radio). A fixed address is best.</td></tr>
       <tr><td>Control port (UDP)</td><td>The radio's <em>Network Control</em> port. It is 50001 unless you changed it in <em>Remote Settings</em>. The CI-V port is the next one (50002).</td></tr>
       <tr><td>Network user / Password</td><td>The <em>Network User</em> created on the radio in <em>Remote Settings</em>. They are only used to log in to the radio.</td></tr>
