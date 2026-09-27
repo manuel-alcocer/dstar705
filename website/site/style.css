@@ -256,3 +256,14 @@ code { overflow-wrap: anywhere; }
 
 .author { color: var(--text); font-size: 15px; margin: 6px 0 0; }
 .note.new { margin: 0 0 32px; }
+
+/* --- changelog ---------------------------------------------------------- */
+
+.changes { padding: 40px 16px; }
+.changes h1 { font: 700 36px var(--mono); color: var(--amber); margin: 0 0 8px; }
+.changes > p.lead { color: var(--dim); margin: 0 0 12px; }
+.release { padding: 22px 0; }
+.release h2 { font-size: 22px; margin: 0 0 8px; }
+.release time { font: 400 14px var(--mono); color: var(--dim); margin-left: 10px; }
+.release ul { margin: 0; padding-left: 22px; }
+.release li { margin-bottom: 4px; }
