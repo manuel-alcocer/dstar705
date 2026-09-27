@@ -66,13 +66,35 @@
     </ul>
     <p>Windows SmartScreen may warn you the first time, because the program is not signed. Choose <em>More info → Run anyway</em>.</p>
     <h3>Linux (x86-64 and ARM64)</h3>
-    <ul>
-      <li><strong>.deb</strong> (Debian, Ubuntu, Raspberry Pi OS): <code>sudo apt install ./qdstar_x.y.z_amd64.deb</code>. QDStar then appears in the applications menu.</li>
-      <li><strong>AppImage</strong>: make it executable (<code>chmod +x QDStar-*.AppImage</code>) and run it.</li>
-      <li><strong>tar.gz</strong>: unpack it and run <code>qdstar/qdstar</code>.</li>
-    </ul>
-    <p>For EXT mode your user needs access to the radio's USB serial ports:</p>
-    <p><code>sudo usermod -aG dialout $USER</code> on Debian, Ubuntu and Raspberry Pi OS, or the <code>uucp</code> group on Arch. Log out and back in afterwards.</p>
+    <p>There are three formats. Pick one and stick to it: they are separate installations.</p>
+    <table>
+      <tr><th>Format</th><th>Best for</th><th>Updates</th></tr>
+      <tr><td><strong>AppImage</strong></td><td>Any distribution, no administrator rights</td><td>From QDStar itself</td></tr>
+      <tr><td><strong>.deb</strong></td><td>Debian, Ubuntu, Linux Mint, Raspberry Pi OS</td><td>Install the new .deb</td></tr>
+      <tr><td><strong>tar.gz</strong></td><td>Running it from a folder of your choice</td><td>Unpack the new version</td></tr>
+    </table>
+    <p>Not sure which architecture you have? Run <code>uname -m</code>: <code>x86_64</code> is a PC (<code>amd64</code> / <code>x86_64</code> files), <code>aarch64</code> is ARM64 such as a Raspberry Pi 4/5 with a 64-bit system (<code>arm64</code> / <code>aarch64</code> files).</p>
+
+    <h4>AppImage</h4>
+    <ol>
+      <li>Download <code>QDStar-x.y.z-x86_64.AppImage</code> (or <code>-aarch64</code> on ARM64).</li>
+      <li>Make it executable: <code>chmod +x QDStar-*.AppImage</code>, or tick <em>Allow executing file as program</em> in the file's properties.</li>
+      <li>Open it with a double click or from a terminal: <code>./QDStar-x.y.z-x86_64.AppImage</code>.</li>
+      <li>QDStar asks <em>Install QDStar for this user?</em>. Choose <em>Install</em>: the AppImage is moved to <code>~/.local/bin/QDStar.AppImage</code> and QDStar appears in the applications menu with its icon. No administrator rights are needed, and the downloaded file is gone from your downloads folder.</li>
+      <li>From then on, start QDStar from the applications menu.</li>
+    </ol>
+    <p>When a new version is out, choose <em>Update now</em> in the notice (see <a href="#updates">Updates</a>): QDStar downloads it, puts it in place of the installed one and restarts. If you chose <em>Not now</em>, <em>Help › Install for this user…</em> installs it later; <em>Don't ask again</em> leaves the AppImage where it is, and updates then replace that file.</p>
+    <p>To remove it, use <em>Help › Uninstall QDStar…</em>: it deletes the AppImage, the menu entry and the icon. Your settings, history and reflectors are kept.</p>
+    <p>If the AppImage does not start, your system may lack FUSE. Install it (<code>sudo apt install fuse3</code> on Debian and Ubuntu), or run it with <code>./QDStar-*.AppImage --appimage-extract-and-run</code>.</p>
+
+    <h4>.deb</h4>
+    <p>Install it with <code>sudo apt install ./qdstar_x.y.z_amd64.deb</code> (or <code>_arm64.deb</code>). apt pulls in the libraries it needs, and QDStar appears in the applications menu and as the <code>qdstar</code> command. To update, install the new .deb the same way; to remove it, <code>sudo apt remove qdstar</code>.</p>
+
+    <h4>tar.gz</h4>
+    <p>Unpack it wherever you like (<code>tar xzf QDStar-x.y.z-linux-amd64.tar.gz</code>) and run <code>qdstar/qdstar</code>. It adds nothing to the applications menu. To update, unpack the new version over the old folder.</p>
+
+    <h4>USB access for EXT mode</h4>
+    <p>For EXT mode your user needs access to the radio's USB serial ports: <code>sudo usermod -aG dialout $USER</code> on Debian, Ubuntu and Raspberry Pi OS, or the <code>uucp</code> group on Arch. Log out and back in afterwards.</p>
     <p>The ARM64 builds run on Raspberry Pi OS bookworm, Debian 12 or later and Ubuntu 22.04 or later.</p>
 
     <h2 id="radio">Radio setup</h2>
@@ -218,6 +240,7 @@
 
     <h2 id="updates">Updates</h2>
     <p>QDStar checks GitHub for a new version on start-up and once a day. When one is out, a <em>⬆ New x.y.z</em> link appears next to the mode buttons, pointing at the right file for your system. You can also check by hand in <em>Help › Check for updates…</em>, and turn the automatic check off in the settings.</p>
+    <p>With the Linux AppImage, <em>Update now</em> downloads the new version, checks it against the SHA-256 published on GitHub, puts it in place of the one you run and restarts QDStar. There is no file to replace by hand.</p>
 
     <h2 id="trouble">Troubleshooting</h2>
     <h3>The Icom LED never turns green</h3>

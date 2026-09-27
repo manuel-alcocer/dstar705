@@ -267,3 +267,4 @@ code { overflow-wrap: anywhere; }
 .release time { font: 400 14px var(--mono); color: var(--dim); margin-left: 10px; }
 .release ul { margin: 0; padding-left: 22px; }
 .release li { margin-bottom: 4px; }
+.doc h4 { font-size: 17px; color: var(--amber); margin: 22px 0 6px; }
