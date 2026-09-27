@@ -567,7 +567,7 @@ class MainWindow(QMainWindow):
             if self.mode == "ext" and not self.gateway:
                 self._start_gateway()
         self.log(f"MY: {call}" + (f" /{note}" if note else ""))
-        self.screen.update_state(my_call=call)
+        self.screen.update_state(my_call=call + (f" /{note}" if note else ""))
 
     def _mode(self, mode):
         self.screen.update_state(mode=mode)
@@ -819,7 +819,7 @@ class MainWindow(QMainWindow):
         base = self.my_call.split()[0] if self.my_call.split() else "?"
         if tx:
             self.tx_since = time.time()
-            self.tx_entry = self.storage.start_entry("TX", base, "", ref, self.r1, self.r2)
+            self.tx_entry = self.storage.start_entry("TX", base, self.my_note or "", ref, self.r1, self.r2)
             self.lookup.request(base)  # our own name, for the last heard list
             self.log(f"TX → {ref or self.to}")
         elif self.tx_entry:

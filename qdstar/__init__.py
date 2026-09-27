@@ -1,6 +1,6 @@
 """QDStar: Icom IC-705 D-STAR Terminal Mode controller and built-in gateway."""
 
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __author__ = "Manuel Alcocer Jiménez, EA7KLX"
 __url__ = "https://github.com/manuel-alcocer/qdstar"
 __website__ = "https://qdstar.alcocer.net"
