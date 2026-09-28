@@ -9,4 +9,4 @@ resources:
 # ([skip ci]). ArgoCD watches main and redeploys when it changes.
 images:
   - name: ghcr.io/manuel-alcocer/qdstar-web
-    newTag: main-e0362217cc22b589a37759d07ff5ed33ba863245
+    newTag: main-108c8dd9189f2ad093a0c697191b266950050dd6
