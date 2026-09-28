@@ -80,11 +80,12 @@ class Radio(QObject):
         self.slow.stop()
         self.conn.disconnect_radio()
 
-    def set_to(self, to):
+    def set_to(self, to, blank_repeaters=False):
         """Write UR (TO), keeping R1/R2 as the radio has them in Terminal Mode.
-        In EXT mode the TO is CQCQCQ and the gateway does the linking."""
+        In EXT mode the TO is CQCQCQ and the gateway does the linking; there the radio
+        reports no R1/R2 (blank_repeaters: write them blank, the radio uses its own)."""
         ur, r1, r2 = self.cur_tx_calls
-        if not r1:
+        if not r1 and not blank_repeaters:
             self.to_write_result.emit(False, tr("R1/R2 have not been read from the radio yet"))
             return
         self.pending_to = to

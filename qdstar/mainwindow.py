@@ -17,6 +17,7 @@ from . import __author__, __url__, __version__, __website__, config, i18n, start
 from . import appimage, aprs, civ, tray
 from .dialogs import SSID_CHOICES, SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
+from .dstar.protocol import ur_command
 from .gateway import GatewayClient
 from .lookup import NameLookup
 from .radio import Radio
@@ -75,6 +76,9 @@ class MainWindow(QMainWindow):
         self.log_file = self._open_log()
         self.aprs = aprs.AprsIs(self)
         self.aprs.log.connect(self.log)
+        self.auto_to = False       # the TO write in progress is the automatic CQCQCQ of EXT
+        self.command_over_at = 0.0  # when the gateway last saw an over carrying a UR command
+        self.command_over_ur = ""
         self.quitting = False      # closing for real (not just hiding in the tray)
         self.tray = None
         # The window may live hidden in the tray: quitting is always explicit (see closeEvent)
@@ -420,6 +424,9 @@ class MainWindow(QMainWindow):
         self.gateway.log.connect(self.log)
         self.gateway.status.connect(self._gateway_status)
         self.gateway.result.connect(self._gateway_result)
+        if isinstance(self.gateway, LocalGateway):
+            self.gateway.radio_command.connect(self._radio_command)
+            self.gateway.command_over.connect(self._command_over)
         self.gateway.start()
         self.gateway.refresh()
 
@@ -463,7 +470,24 @@ class MainWindow(QMainWindow):
             self._ensure_ext_ur()
         else:
             self.log(tr("Gateway error: {error}", error=detail))
-            QMessageBox.warning(self, tr("Link reflector"), detail)
+            # Deferred, out of the network handler that reported it (see _to_written)
+            QTimer.singleShot(0, lambda: QMessageBox.warning(self, tr("Link reflector"), detail))
+
+    def _command_over(self, ur):
+        self.command_over_at = time.monotonic()
+        self.command_over_ur = ur
+
+    def _radio_command(self, command, reflector):
+        """A UR command typed on the radio (e.g. XLX214DL, U): remember it like a link from the window."""
+        if command == "link":
+            self.pending_restore = None
+            config.put("ext/last_link", reflector)
+        elif command == "unlink":
+            self.pending_restore = None
+            config.put("ext/last_link", "")
+        if command != "echo":
+            # Back to CQCQCQ once the command has run, or every over would repeat it
+            QTimer.singleShot(1500, lambda: self._ensure_ext_ur(force=True))
 
     def ext_reflector(self):
         """Reflector the PC gateway is linked to, e.g. 'REF001 C'."""
@@ -498,11 +522,15 @@ class MainWindow(QMainWindow):
         self.mode_hint.setToolTip("; ".join(hints))
         self.screen.update_state(mode_warning="; ".join(hints))
 
-    def _ensure_ext_ur(self):
-        """In EXT the radio must transmit to CQCQCQ so the gateway sends it to the linked reflector."""
+    def _ensure_ext_ur(self, force=False):
+        """In EXT the radio must transmit to CQCQCQ so the gateway sends it to the linked reflector.
+        A UR command (XLX214DL, U, I, E) is left alone until the gateway has run it (force)."""
+        if ur_command(self.to or "") and not force:
+            return
         if self.mode == "ext" and self.radio and self.radio_mode() == "ext" and self.to and self.to != EXT_UR:
             self.log(tr("Radio TO {old} → {new} for the linked reflector", old=self.to, new=EXT_UR))
-            self.radio.set_to(EXT_UR)
+            self.auto_to = True
+            self.radio.set_to(EXT_UR, blank_repeaters=True)
 
     # --- radio -----------------------------------------------------------
 
@@ -706,13 +734,17 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, tr("Settings"), detail)
 
     def _to_written(self, ok, detail):
+        auto, self.auto_to = self.auto_to, False     # the automatic CQCQCQ of EXT only goes to the log
         if ok and detail == EXT_UR:
             self.log(tr("Radio TO = {to}", to=EXT_UR))
         elif ok:
             self.log(tr("TO changed to {to}. Press PTT briefly to register on the reflector.", to=detail))
         else:
             self.log(tr("Error changing the TO: {error}", error=detail))
-            QMessageBox.warning(self, tr("Change reflector"), detail)
+            if not auto:
+                # Deferred: this runs inside the radio socket's handler, and a modal dialog there
+                # keeps the socket on the stack while a reconnect may delete it
+                QTimer.singleShot(0, lambda: QMessageBox.warning(self, tr("Change reflector"), detail))
 
     def manage_reflectors(self):
         ReflectorsDialog(self.registry, self.mode, self).exec()
@@ -803,6 +835,10 @@ class MainWindow(QMainWindow):
         base = caller.split()[0] if caller.split() else ""
         if not base or not message:
             return
+        if self._is_system_call(caller):
+            # Gateway acknowledgements ("Linked to …"): not a message of our own last over
+            self.log(tr("Message from {caller}: {message}", caller=caller, message=message))
+            return
         if self.rx_info and self.rx_info["callsign"].split()[:1] == [base] and \
                 self.rx_info.get("message") == message:
             return  # repeated in every burst of a long over
@@ -835,7 +871,16 @@ class MainWindow(QMainWindow):
         self.leds["tx"].set("red" if tx else "off")
         ref = self.current_reflector()
         base = self.my_call.split()[0] if self.my_call.split() else "?"
-        if tx:
+        # The gateway reads the over's header over USB before CI-V reports the TX; the TO polled
+        # over CI-V is the fallback (it can be a few seconds old)
+        recent = time.monotonic() - self.command_over_at < 3
+        command_over = recent or ur_command(self.to or "")
+        if tx and self.mode == "ext" and command_over:
+            # A command for the gateway (XLX214DL, U, I, E): it never reaches a reflector
+            self.tx_since = time.time()
+            self.tx_entry = None
+            self.log(tr("TX → gateway command {ur}", ur=self.command_over_ur if recent else (self.to or "").strip()))
+        elif tx:
             self.tx_since = time.time()
             self.tx_entry = self.storage.start_entry("TX", base, self.my_note or "", ref, self.r1, self.r2)
             self.lookup.request(base)  # our own name, for the last heard list

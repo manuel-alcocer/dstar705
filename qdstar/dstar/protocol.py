@@ -81,3 +81,61 @@ class Header:
 
 def is_end_frame(frame):
     return frame[:6] == END_PATTERN_BYTES[:6]
+
+
+# --- slow data --------------------------------------------------------------------
+
+SLOW_DATA_SCRAMBLER = bytes([0x70, 0x4F, 0x93])
+MESSAGE_LENGTH = 20
+
+
+def scramble(data3):
+    return bytes(b ^ s for b, s in zip(data3, SLOW_DATA_SCRAMBLER))
+
+
+def message_slow_data(text):
+    """Slow data of a 20-character text message: 8 scrambled 3-byte pieces (frames 1-8 of a superframe)."""
+    text = text.encode("ascii", "replace")[:MESSAGE_LENGTH].ljust(MESSAGE_LENGTH)
+    pieces = []
+    for block in range(4):
+        data = bytes([0x40 | block]) + text[block * 5:block * 5 + 5]
+        pieces += [scramble(data[:3]), scramble(data[3:])]
+    return pieces
+
+
+def message_frames(text, superframes=2):
+    """Silent DV frames that carry a text message, starting with a sync frame."""
+    pieces = message_slow_data(text)
+    frames = []
+    for n in range(superframes * FRAMES_PER_SUPERFRAME):
+        seq = n % FRAMES_PER_SUPERFRAME
+        if seq == 0:
+            frames.append(SYNC_FRAME)
+        elif seq <= len(pieces):
+            frames.append(NULL_AMBE_DATA_BYTES + pieces[seq - 1])
+        else:
+            frames.append(NULL_FRAME)
+    return frames
+
+
+# --- UR commands (ircDDBGateway syntax) -----------------------------------------------
+
+REFLECTOR_PREFIXES = ("REF", "XRF", "DCS", "XLX")
+LOCAL_COMMANDS = {"U": "unlink", "I": "info", "E": "echo"}
+
+
+def ur_command(your):
+    """('link', 'XLX214 D') for 'XLX214DL' or 'XLX214 D', ('unlink'|'info'|'echo', '') for '       U/I/E', else None.
+    A lone letter typed at the start ('U       ') counts too: no call sign is a single letter."""
+    if len(your.strip()) == 1:
+        your = your.strip().rjust(8)
+    your = pad(your)
+    if not your[:7].strip():
+        command = LOCAL_COMMANDS.get(your[7])
+        return (command, "") if command else None
+    if your[:3] in REFLECTOR_PREFIXES and your[3:6].strip():
+        if your[7] == "L" and your[6].isalpha():            # 'XLX214DL' (ircDDBGateway)
+            return ("link", your[:6].strip().ljust(7) + your[6])
+        if your[6] == " " and your[7].isalpha():            # 'XLX214 D', the reflector as written
+            return ("link", your[:7] + your[7])
+    return None

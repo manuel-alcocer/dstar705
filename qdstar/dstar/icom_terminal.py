@@ -28,6 +28,8 @@ PING = b"\x02\x02\xFF"
 POLL_FAST_MS = 100      # first 18 polls
 PING_MS = 1000
 RETRY_MS = 50
+GIVE_UP_MS = 2000       # a frame the radio does not confirm in this time is dropped
+NAK_GIVE_UP_MS = 300    # a stream whose frames the radio refuses for this long is abandoned
 LOST_S = 5.0
 REOPEN_MS = 2000
 
@@ -62,6 +64,8 @@ class IcomTerminal(QObject):
         self.rx = bytearray()
         self.tx_queue = collections.deque()
         self.in_flight = None               # (frame bytes, kind, seq)
+        self.in_flight_since = 0.0
+        self.last_nak = None
         self.tx_counter = 0
         self.pkt_counter = 0
         self.is_connected = False
@@ -178,15 +182,36 @@ class IcomTerminal(QObject):
     def _pump(self):
         if self.in_flight is None and self.tx_queue and self.serial.isOpen():
             self.in_flight = self.tx_queue.popleft()
+            self.in_flight_since = time.monotonic()
             self.serial.write(self.in_flight[0])
             self.retry_timer.start()
 
     def _retry(self):
-        if self.in_flight and self.serial.isOpen():
-            self.serial.write(self.in_flight[0])
+        if not (self.in_flight and self.serial.isOpen()):
+            return
+        waited = (time.monotonic() - self.in_flight_since) * 1000
+        if self.last_nak and self.in_flight[1] == "data" and waited > NAK_GIVE_UP_MS:
+            # The radio refuses the stream: drop it all (up to the next header), not frame by frame
+            dropped = 1
+            while self.tx_queue and self.tx_queue[0][1] == "data":
+                self.tx_queue.popleft()
+                dropped += 1
+            self.log.emit(tr("USB: the radio refuses the stream (answer {answer}), {count} frames dropped",
+                             answer=self.last_nak, count=dropped))
+            self._acked()
+            return
+        if waited > GIVE_UP_MS:
+            # Retrying for ever would keep the radio busy with a stream it refuses
+            frame, kind, seq = self.in_flight
+            self.log.emit(tr("USB: the radio does not confirm the {kind} frame {seq} (answer {answer}), dropping it",
+                             kind=kind, seq=seq, answer=self.last_nak or "-"))
+            self._acked()
+            return
+        self.serial.write(self.in_flight[0])
 
     def _acked(self):
         self.in_flight = None
+        self.last_nak = None
         self.retry_timer.stop()
         self._pump()
 
@@ -231,6 +256,10 @@ class IcomTerminal(QObject):
         elif kind == 0x21:
             if frame[2] == 0x00 and self.in_flight and self.in_flight[1] == "header":
                 self._acked()
+            elif frame[2] != 0x00:
+                self.last_nak = frame.hex(" ")
         elif kind == 0x23 and len(frame) >= 4:
             if frame[3] == 0x00 and self.in_flight and self.in_flight[1] == "data" and self.in_flight[2] == frame[2]:
                 self._acked()
+            elif frame[3] != 0x00:
+                self.last_nak = frame.hex(" ")

@@ -1406,3 +1406,27 @@ msgstr "Mostrar QDStar"
 #: qdstar/tray.py
 msgid "Hide QDStar"
 msgstr "Ocultar QDStar"
+
+#: qdstar/dstar/core.py
+msgid "Radio command: link {reflector}"
+msgstr "Comando de la radio: enlazar {reflector}"
+
+#: qdstar/dstar/core.py
+msgid "Radio command: unlink"
+msgstr "Comando de la radio: desenlazar"
+
+#: qdstar/dstar/core.py
+msgid "Radio command: echo test ({seconds:.1f} s)"
+msgstr "Comando de la radio: prueba de eco ({seconds:.1f} s)"
+
+#: qdstar/dstar/icom_terminal.py
+msgid "USB: the radio does not confirm the {kind} frame {seq} (answer {answer}), dropping it"
+msgstr "USB: la radio no confirma la trama {kind} {seq} (respuesta {answer}), se descarta"
+
+#: qdstar/dstar/icom_terminal.py
+msgid "USB: the radio refuses the stream (answer {answer}), {count} frames dropped"
+msgstr "USB: la radio rechaza la transmisión (respuesta {answer}), {count} tramas descartadas"
+
+#: qdstar/mainwindow.py
+msgid "TX → gateway command {ur}"
+msgstr "TX → comando para el gateway {ur}"

@@ -1,5 +1,6 @@
 """Built-in gateway: routes voice between the radio (USB Terminal Mode) and one reflector link."""
 
+import collections
 import random
 import socket
 import threading
@@ -13,10 +14,15 @@ from .dcs import DCSLink, DExtraLink
 from .dplus import DPlusAuthenticator, DPlusLink
 from .hosts import HostDirectory, protocol_for
 from .icom_terminal import IcomTerminal
-from .protocol import FRAMES_PER_SUPERFRAME, Header, pad
+from .protocol import FRAMES_PER_SUPERFRAME, Header, is_end_frame, message_frames, pad, ur_command
 from ..i18n import tr
 
 NET_STREAM_TIMEOUT_MS = 1000
+FRAME_MS = 20                  # DV frame period, for the streams the gateway plays itself
+ECHO_MAX_FRAMES = 60 * 50      # one minute
+ECHO_DELAY_MS = 1000
+ANNOUNCE_DELAY_MS = 500        # the radio must be back on receive
+LINK_ANSWER_MS = 10_000
 
 
 def split_reflector(reflector):
@@ -31,6 +37,8 @@ class LocalGateway(QObject):
     link_changed = Signal(str, str)      # reflector ('' if none), state
     result = Signal(bool, str)           # outcome of a link/unlink request
     status = Signal(bool, list)          # same shape as the ircDDBGateway client: ok, links
+    radio_command = Signal(str, str)     # UR command from the radio: link/unlink/info/echo, reflector
+    command_over = Signal(str)           # the radio started an over that carries a UR command (its UR)
     _resolved = Signal(str, str, str)    # reflector, protocol, address ('' if unknown); from a worker thread
 
     def __init__(self, login, terminal_call, gateway_call, port_name=""):
@@ -65,6 +73,15 @@ class LocalGateway(QObject):
         self.rx_id = None
         self.rx_watchdog = QTimer(self, singleShot=True, interval=NET_STREAM_TIMEOUT_MS)
         self.rx_watchdog.timeout.connect(self._net_stream_lost)
+        # UR commands and the streams the gateway plays to the radio (acknowledgements, echo)
+        self.command = None
+        self.echo_frames = []
+        self.announce_link = ""          # reflector whose link outcome the radio is waiting for
+        self.announce_timer = QTimer(self, singleShot=True, interval=LINK_ANSWER_MS)
+        self.announce_timer.timeout.connect(self._link_unanswered)
+        self.play_queue = collections.deque()
+        self.play_timer = QTimer(self, interval=FRAME_MS)
+        self.play_timer.timeout.connect(self._play_next)
 
     # --- public ---------------------------------------------------------------------
 
@@ -76,6 +93,8 @@ class LocalGateway(QObject):
 
     def stop(self):
         self.status_timer.stop()
+        self.play_timer.stop()
+        self.announce_timer.stop()
         if self.conn:
             self.conn.close()
             self.conn = None
@@ -143,6 +162,7 @@ class LocalGateway(QObject):
     def _on_resolved(self, reflector, protocol, address):
         if not address:
             self.result.emit(False, tr("{reflector}: address not found", reflector=reflector.strip()))
+            self._announce_outcome(reflector, "Not found")
             return
         self._start_link(reflector, protocol, address)
 
@@ -165,21 +185,40 @@ class LocalGateway(QObject):
         self.refresh()
         if state == "linked":
             self.result.emit(True, tr("linked to {reflector}", reflector=self.reflector.strip()))
+            self._announce_outcome(self.reflector, "Linked to")
         elif state == "refused":
             self.result.emit(False, tr("{reflector} refuses the link", reflector=self.reflector.strip()))
+            self._announce_outcome(self.reflector, "Refused")
 
     # --- radio -> network --------------------------------------------------------------
 
     def _radio_header(self, header):
         self.radio_tx = True
         self._end_net_stream()          # half duplex: the radio has priority
+        self._stop_playing()
         self.log.emit(f"TX radio: {header.describe()}")
+        self.command = ur_command(header.your)
+        if self.command:
+            # A command for the gateway, not a transmission for the reflector
+            self.command_over.emit(header.your.strip())
+            self.echo_frames = []
+            self.tx_id = 0
+            return
         if self.conn and self.conn.state == "linked":
             self.tx_id = random.randint(1, 0xFFFF)
             self.tx_seq = 0
             self.conn.send_header(self.tx_id, header.with_(your=pad("CQCQCQ")))
 
     def _radio_data(self, frame, end):
+        if self.command:
+            if self.command[0] == "echo" and not end and len(self.echo_frames) < ECHO_MAX_FRAMES \
+                    and not is_end_frame(frame):
+                self.echo_frames.append(bytes(frame))
+            if end:
+                self.radio_tx = False
+                command, self.command = self.command, None
+                self._run_command(*command)
+            return
         if self.conn and self.conn.state == "linked" and self.tx_id:
             if end:
                 self.conn.send_data(self.tx_id, self.tx_seq, b"", end=True)
@@ -193,6 +232,8 @@ class LocalGateway(QObject):
     # --- network -> radio --------------------------------------------------------------
 
     def _net_header(self, stream_id, header):
+        if self.play_timer.isActive():
+            return          # the gateway is talking to the radio (acknowledgement or echo)
         if self.radio_tx or (self.rx_id is not None and self.rx_id != stream_id):
             return
         if self.rx_id == stream_id:
@@ -224,3 +265,70 @@ class LocalGateway(QObject):
             self.terminal.write_data(b"", end=True)
             self.rx_id = None
             self.rx_watchdog.stop()
+
+    # --- UR commands ----------------------------------------------------------------------
+
+    def _run_command(self, command, reflector):
+        self.radio_command.emit(command, reflector)
+        if command == "link":
+            self.log.emit(tr("Radio command: link {reflector}", reflector=reflector.strip()))
+            if pad(reflector) == self.linked_reflector():
+                self._announce(f"Linked to {reflector.strip()}")
+                self.result.emit(True, tr("linked to {reflector}", reflector=reflector.strip()))
+                return
+            self.announce_link = pad(reflector)
+            self.announce_timer.start()
+            self.link(reflector)
+        elif command == "unlink":
+            self.log.emit(tr("Radio command: unlink"))
+            linked = bool(self.linked_reflector())
+            self.unlink()
+            self._announce("Unlinked" if linked else "Not linked")
+        elif command == "info":
+            linked = self.linked_reflector()
+            self._announce(f"Linked to {linked.strip()}" if linked else "Not linked")
+        elif command == "echo":
+            frames, self.echo_frames = self.echo_frames, []
+            self.log.emit(tr("Radio command: echo test ({seconds:.1f} s)", seconds=len(frames) * FRAME_MS / 1000))
+            if frames:
+                QTimer.singleShot(ECHO_DELAY_MS, lambda: self._play(frames, "ECHO"))
+
+    def _announce_outcome(self, reflector, text):
+        """Tell the radio how the link it asked for ended (links from the window are not announced)."""
+        if self.announce_link and pad(reflector) == self.announce_link:
+            self.announce_link = ""
+            self.announce_timer.stop()
+            self._announce(f"{text} {reflector.strip()}")
+
+    def _link_unanswered(self):
+        if self.announce_link:
+            self._announce_outcome(self.announce_link, "No answer")
+
+    def _announce(self, text):
+        QTimer.singleShot(ANNOUNCE_DELAY_MS, lambda: self._play(message_frames(text), "INFO"))
+
+    def _play(self, frames, suffix):
+        """Play a stream of our own to the radio, from the gateway call sign, paced like live audio."""
+        if self.radio_tx or not self.terminal.is_connected:
+            return
+        self._end_net_stream()
+        self._stop_playing()
+        # UR CQCQCQ like the reflector streams: with UR = its own call sign the IC-705 buffers
+        # the stream without playing it, then refuses every frame (and stays busy)
+        your = pad("CQCQCQ")
+        self.terminal.write_header(Header(0, 0, 0, rpt2=self.terminal_call, rpt1=self.gateway_call,
+                                          your=your, my=self.gateway_call, my2=pad(suffix, 4)))
+        self.play_queue.extend(frames)
+        self.play_timer.start()
+
+    def _play_next(self):
+        if self.play_queue:
+            self.terminal.write_data(self.play_queue.popleft())
+        else:
+            self._stop_playing()
+
+    def _stop_playing(self):
+        if self.play_timer.isActive():
+            self.play_timer.stop()
+            self.play_queue.clear()
+            self.terminal.write_data(b"", end=True)
