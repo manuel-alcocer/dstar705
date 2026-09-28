@@ -151,6 +151,7 @@
     <p>Debajo de la pantalla están los botones <strong>INT · WiFi</strong> y <strong>EXT · USB/PC</strong>, con un LED en el que está activo. Aparece un ⚠ cuando la radio no está en el modo elegido, por ejemplo si sigue en INT y tú elegiste EXT. Deja el ratón encima para ver qué revisar.</p>
     <p>Después vienen la lista de reflectores con sus botones y las pestañas <strong>Histórico</strong>, <strong>Log</strong>, <strong>D-PRS</strong> y <strong>Meteo</strong>.</p>
     <h3 id="bandeja">Icono en la bandeja del sistema</h3>
+    <figure><img src="/img/tray-states.png" width="192" height="48" alt="Icono de la bandeja: en reposo, recibiendo y transmitiendo" loading="lazy"><figcaption>El icono de la bandeja: en reposo, recibiendo (punto verde) y transmitiendo (punto rojo)</figcaption></figure>
     <p>QDStar pone un icono en la bandeja del sistema. Lleva un punto verde mientras recibes y uno rojo mientras transmites, y su tooltip muestra el modo, el reflector y la estación en el aire. Haz clic en él para mostrar u ocultar la ventana. Con el botón derecho sale el menú, con <em>Mostrar/Ocultar QDStar</em> y <em>Salir</em>.</p>
     <p>Cuando una estación entra en el aire y la ventana de QDStar no está en primer plano, una notificación muestra su indicativo, su nombre y el reflector. Si activas <em>Al cerrar la ventana, QDStar sigue funcionando en la bandeja</em> en los ajustes, el botón de cerrar solo oculta la ventana. Para salir, usa el menú de la bandeja o <em>Radio › Salir</em>.</p>
 
@@ -173,6 +174,7 @@
       <tr><td><code>I</code></td><td>Te dice a qué está enlazado el gateway.</td><td>Linked to … / Not linked</td></tr>
       <tr><td><code>E</code></td><td>Prueba de eco: graba tu pasada y te la devuelve un segundo después (hasta un minuto).</td><td>Tu propio audio</td></tr>
     </table>
+    <figure><img src="/img/es-tab-log-commands.png" width="489" height="250" alt="Log de comandos por el UR" loading="lazy"><figcaption>Desenlazar con <code>U</code> y enlazar con <code>XLX214 D</code>, tal como lo muestra el Log</figcaption></figure>
     <p>El menú de la propia radio escribe estos comandos por ti: <em>TO › Reflector</em>, y luego <em>Link to Reflector</em>, <em>Unlink Reflector</em>, <em>Reflector Info</em> o <em>Echo Test</em>. Después de un comando, QDStar vuelve a poner el UR en CQCQCQ para que la siguiente pasada vaya al reflector. Para eso necesita la radio conectada por WiFi. Tras una prueba de eco el UR se queda como está, para que puedas repetirla. Las pasadas de comando no se añaden al histórico.</p>
 
     <h2 id="reflectores">Reflectores</h2>
@@ -214,7 +216,7 @@
     <p>El passcode de APRS-IS se calcula a partir de tu indicativo, así que no hay que escribir nada. Si quieres, QDStar también puede enviar las posiciones de las estaciones que escucha. Las posiciones que vienen de APRS (objetos, estaciones meteorológicas, informes retransmitidos por otras estaciones) nunca se devuelven.</p>
 
     <h2 id="ajustes">Ajustes</h2>
-    <figure><img src="/img/es-settings.png" width="550" height="592" alt="Ajustes" loading="lazy"><figcaption>Radio › Ajustes…</figcaption></figure>
+    <figure><img src="/img/es-settings.png" width="550" height="814" alt="Ajustes" loading="lazy"><figcaption>Radio › Ajustes…</figcaption></figure>
     <p>Se abren desde <em>Radio › Ajustes…</em>. Los cambios se aplican al pulsar <em>Guardar</em>. Si cambias el idioma, QDStar lo usa a partir del siguiente arranque.</p>
     <h3>Interfaz</h3>
     <table>

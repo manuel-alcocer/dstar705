@@ -151,6 +151,7 @@
     <p>Below the screen are the <strong>INT · WiFi</strong> and <strong>EXT · USB/PC</strong> buttons, with a LED on the active one. A ⚠ sign appears when the radio does not match the chosen mode, for example when the radio is still in INT while you chose EXT. Hover over it to see what to check.</p>
     <p>Next come the reflector list with its buttons, and the <strong>History</strong>, <strong>Log</strong>, <strong>D-PRS</strong> and <strong>Weather</strong> tabs.</p>
     <h3 id="tray">System tray icon</h3>
+    <figure><img src="/img/tray-states.png" width="192" height="48" alt="Tray icon: idle, receiving and transmitting" loading="lazy"><figcaption>The tray icon: idle, receiving (green dot) and transmitting (red dot)</figcaption></figure>
     <p>QDStar puts an icon in the system tray. It has a green dot while you receive and a red one while you transmit, and its tooltip shows the mode, the reflector and the station on the air. Click it to show or hide the window. Right-click it for the menu, with <em>Show/Hide QDStar</em> and <em>Quit</em>.</p>
     <p>When a station comes on the air and the QDStar window is not in front, a notification shows its call sign, name and reflector. If you turn on <em>Closing the window keeps QDStar running in the tray</em> in the settings, the window's close button only hides it. Quit from the tray menu or from <em>Radio › Quit</em>.</p>
 
@@ -173,6 +174,7 @@
       <tr><td><code>I</code></td><td>Tells you what the gateway is linked to.</td><td>Linked to … / Not linked</td></tr>
       <tr><td><code>E</code></td><td>Echo test: records your over and plays it back a second later (up to one minute).</td><td>Your own audio</td></tr>
     </table>
+    <figure><img src="/img/en-tab-log-commands.png" width="489" height="250" alt="Log of UR commands" loading="lazy"><figcaption>Unlinking with <code>U</code> and linking with <code>XLX214 D</code>, as the Log shows them</figcaption></figure>
     <p>The radio's own menu writes these commands for you: <em>TO › Reflector</em>, then <em>Link to Reflector</em>, <em>Unlink Reflector</em>, <em>Reflector Info</em> or <em>Echo Test</em>. After a command, QDStar puts the UR back to CQCQCQ, so the next over goes to the reflector. It needs the radio connected over WiFi to do that. After an echo test the UR is left as it is, so you can repeat the test. Command overs are not added to the history.</p>
 
     <h2 id="reflectors">Reflectors</h2>
@@ -214,7 +216,7 @@
     <p>The APRS-IS passcode is worked out from your call sign, so there is nothing to type. Optionally, QDStar can also send the positions of the stations it hears. Positions that come from APRS (objects, weather stations, reports relayed by other stations) are never sent back.</p>
 
     <h2 id="settings">Settings</h2>
-    <figure><img src="/img/en-settings.png" width="502" height="592" alt="Settings dialog" loading="lazy"><figcaption>Radio › Settings…</figcaption></figure>
+    <figure><img src="/img/en-settings.png" width="502" height="814" alt="Settings dialog" loading="lazy"><figcaption>Radio › Settings…</figcaption></figure>
     <p>Open them from <em>Radio › Settings…</em>. Changes apply when you press <em>Save</em>. If you change the language, QDStar uses it from the next start.</p>
     <h3>Interface</h3>
     <table>
