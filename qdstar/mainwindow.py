@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBox
                                QTabWidget, QVBoxLayout, QWidget)
 
 from . import __author__, __url__, __version__, __website__, config, i18n, startup
-from . import appimage, civ
-from .dialogs import SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
+from . import appimage, aprs, civ
+from .dialogs import SSID_CHOICES, SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
 from .gateway import GatewayClient
 from .lookup import NameLookup
@@ -48,6 +48,8 @@ HISTORY_COLUMNS = [N_("Time"), N_("Call sign"), N_("Name"), N_("Dist."), N_("Ref
 DPRS_COLUMNS = [N_("Time"), N_("Station"), N_("Type"), N_("Dist."), N_("Details"), N_("Via"), N_("Reflector")]
 DPRS_KIND_NAMES = {"position": N_("position"), "object": N_("object"), "item": N_("item"), "weather": N_("weather")}
 GPS_POLL_MS = 60_000
+# Own D-PRS settings: GPS select, manual position, TX mode, symbol choice, symbols 1-4, SSID, comment
+OWN_DPRS_SETTINGS = ("0281", "0286", "0287", "0290", "0291", "0292", "0293", "0294", "0295", "0297")
 LOG_MAX_BYTES = 2_000_000
 WINDOW_WIDTH = 420
 UPDATE_CHECK_MS = 24 * 3600 * 1000
@@ -71,6 +73,8 @@ class MainWindow(QMainWindow):
         self.radio = None
         self.gateway = None
         self.log_file = self._open_log()
+        self.aprs = aprs.AprsIs(self)
+        self.aprs.log.connect(self.log)
 
         self.mode = config.get("dstar/mode")
         self.to = ""
@@ -86,6 +90,7 @@ class MainWindow(QMainWindow):
         self.usb_present = None
         self.radio_connected = False
         self.own_gps = {}          # radio settings 0281 (GPS select), 0286 (manual position), 0287 (TX mode)
+                                   # and 0290-0297 (symbol, SSID, comment), see OWN_DPRS_SETTINGS
         self.gps_fix = None        # (lat, lon) from the radio's GPS when GPS Select = ON
         self._geo_origin = None    # position the displayed distances were computed from
         self.rx_entry = None
@@ -542,7 +547,7 @@ class MainWindow(QMainWindow):
         self.disconnect_action.setEnabled(self.radio is not None)
         self.radio_connected = state == "connected"
         if self.radio_connected:
-            for number in ("0281", "0286", "0287"):
+            for number in OWN_DPRS_SETTINGS:
                 self.radio.read_setting(number)
             self.radio.read_my_position()
             self.gps_timer.start()
@@ -718,6 +723,8 @@ class MainWindow(QMainWindow):
             self._update_mode_hint()
             self._refresh_screen_reflector()
             self._show_dprs_tabs()
+            if not config.get("aprs/enabled"):
+                self.aprs.close()
             if self.radio or config.get("radio/auto_connect"):
                 self.connect_radio()
 
@@ -828,6 +835,7 @@ class MainWindow(QMainWindow):
                                       location=own.get("location") or "")
             self.log(tr("End of TX ({seconds}s)", seconds=int(time.time() - self.tx_since)))
             self.tx_entry = None
+            self._beacon_own()
             # Our over counts as the reflector's last heard right away; the reflector's
             # dashboard catches up a few seconds later
             QTimer.singleShot(3000, self.poller.refresh_now)
@@ -950,7 +958,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, tr("D-PRS position"), tr("Connect to the radio first."))
             return
         DprsDialog(self.radio, self).exec()
-        for number in ("0281", "0286", "0287"):
+        for number in OWN_DPRS_SETTINGS:
             self.radio.read_setting(number)
 
     def own_position(self):
@@ -985,8 +993,9 @@ class MainWindow(QMainWindow):
         return info
 
     def _setting_received(self, number, data):
-        if number in ("0281", "0286", "0287"):
+        if number in OWN_DPRS_SETTINGS:
             self.own_gps[number] = data
+        if number in ("0281", "0286", "0287"):
             sending = self.own_gps.get("0287", b"")[:1] == b"\x01"
             own = self.own_position()
             self.screen.update_state(dprs_on=sending, locator=civ.latlon_to_locator(*own) if own else "")
@@ -1000,6 +1009,7 @@ class MainWindow(QMainWindow):
     def _dprs_received(self, pos):
         base = pos.callsign.split("-")[0].strip()
         self._record_dprs(pos, base)
+        self._gate_heard(pos, base)
         if not self.rx_info or not self.rx_entry:
             return
         # A position report without a name is the position of the station transmitting it
@@ -1022,6 +1032,46 @@ class MainWindow(QMainWindow):
         if self.rx_entry:
             self.storage.update_entry(self.rx_entry, lat=pos.lat, lon=pos.lon)
             self._load_history()
+
+    # --- APRS-IS ------------------------------------------------------------
+
+    def _aprs_ready(self):
+        """Configure the APRS-IS client with the station call sign; False when it cannot send."""
+        call = (config.callsign() or self.my_call).split()
+        if not config.get("aprs/enabled") or not call:
+            return False
+        self.aprs.configure(call[0], config.get("aprs/server") or aprs.DEFAULT_SERVER)
+        return True
+
+    def _beacon_own(self):
+        """After our over, the position the radio sent over D-STAR goes to APRS-IS too."""
+        if self.own_gps.get("0287", b"")[:1] != b"\x01" or not self._aprs_ready():
+            return
+        own = self.own_position()
+        if not own:
+            return
+        altitude = None
+        if self.own_gps.get("0281", b"")[:1] == b"\x02":
+            altitude = civ.decode_altitude(self.own_gps.get("0286", b"")[11:15])
+        chosen = self.own_gps.get("0290", b"\x00")[:1] or b"\x00"
+        symbol = self.own_gps.get(f"029{min(chosen[0], 3) + 1}", b"")[:2].decode("latin-1")
+        ssid_index = (self.own_gps.get("0295", b"") or b"\x00")[0]
+        ssid = SSID_CHOICES[ssid_index] if ssid_index < len(SSID_CHOICES) else "---"
+        source = self.aprs.callsign + ("" if ssid in ("---", "-0") else ssid)
+        comment = self.own_gps.get("0297", b"").decode("latin-1")
+        body = aprs.position_body(own[0], own[1], symbol or "/-", altitude, comment)
+        self.aprs.send_own(source, body)
+
+    def _gate_heard(self, pos, base):
+        """Position of the station on air (never objects, weather or relayed reports) to APRS-IS."""
+        if not config.get("aprs/received") or pos.kind != "position" or not base:
+            return
+        over = self.current_over
+        on_air = over.get("live") or time.time() - over.get("ended", 0) < 10
+        own = (self.my_call.split() or [""])[0]
+        if not on_air or over.get("caller") != base or base == own or not self._aprs_ready():
+            return
+        self.aprs.send_heard(pos.callsign, aprs.position_body(pos.lat, pos.lon, pos.symbol, pos.altitude))
 
     # --- updates --------------------------------------------------------------
 
@@ -1284,6 +1334,7 @@ class MainWindow(QMainWindow):
         config.put("ui/geometry", self.saveGeometry())
         self.poller.stop()
         self._stop_gateway()
+        self.aprs.close()
         if self.radio:
             self.radio.stop()
         if self.log_file:

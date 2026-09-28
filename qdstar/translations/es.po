@@ -1338,3 +1338,39 @@ msgstr "Todavía no se ha leído el indicativo MY de la radio"
 #: qdstar/mainwindow.py
 msgid "User manual"
 msgstr "Manual de usuario"
+
+#: qdstar/dialogs.py
+msgid "Send my D-PRS position to APRS-IS (aprs.fi) after every over"
+msgstr "Enviar mi posición D-PRS a APRS-IS (aprs.fi) tras cada pasada"
+
+#: qdstar/dialogs.py
+msgid "Only when the radio sends its position (GPS TX Mode = D-PRS).\nThe APRS-IS passcode is computed from your call sign."
+msgstr "Solo cuando la radio envía su posición (GPS TX Mode = D-PRS).\nEl passcode de APRS-IS se calcula a partir de tu indicativo."
+
+#: qdstar/dialogs.py
+msgid "Also send the positions of the stations heard"
+msgstr "Enviar también las posiciones de las estaciones escuchadas"
+
+#: qdstar/dialogs.py
+msgid "Positions relayed from APRS are never sent back.\nThe station's own gateway may already forward them."
+msgstr "Las posiciones retransmitidas desde APRS nunca se devuelven.\nEs posible que el gateway de la propia estación ya las reenvíe."
+
+#: qdstar/aprs.py
+msgid "APRS-IS: connecting to {server}"
+msgstr "APRS-IS: conectando con {server}"
+
+#: qdstar/aprs.py
+msgid "APRS-IS ← {packet}"
+msgstr "APRS-IS ← {packet}"
+
+#: qdstar/aprs.py
+msgid "APRS-IS: the server did not verify {login}: {reply}"
+msgstr "APRS-IS: el servidor no ha verificado {login}: {reply}"
+
+#: qdstar/aprs.py
+msgid "APRS-IS: no answer from {server}"
+msgstr "APRS-IS: sin respuesta de {server}"
+
+#: qdstar/aprs.py
+msgid "APRS-IS: {error}"
+msgstr "APRS-IS: {error}"

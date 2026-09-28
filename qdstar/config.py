@@ -42,6 +42,9 @@ DEFAULTS = {
     "ui/language": "",           # empty: the system language
     "updates/check": True,       # look for new releases on GitHub
     "dprs/show_all": True,       # D-PRS tab with every received report, including relayed ones
+    "aprs/enabled": False,       # forward our own D-PRS position to APRS-IS after every over
+    "aprs/received": False,      # also forward the positions of the stations heard (not relayed ones)
+    "aprs/server": "rotate.aprs2.net:14580",
     "updates/skip": "",          # a version the user chose to skip
     "appimage/offer_install": True,  # offer to install the AppImage for the user when run from elsewhere
 }

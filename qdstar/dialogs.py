@@ -99,6 +99,25 @@ class SettingsDialog(QDialog):
         self.dprs_all.setToolTip(tr("Stations such as ED2YAV relay APRS positions and weather stations"))
         self.dprs_all.setChecked(config.get("dprs/show_all"))
 
+        self.aprs_enabled = QCheckBox(tr("Send my D-PRS position to APRS-IS (aprs.fi) after every over"))
+        self.aprs_enabled.setToolTip(tr("Only when the radio sends its position (GPS TX Mode = D-PRS).\n"
+                                        "The APRS-IS passcode is computed from your call sign."))
+        self.aprs_enabled.setChecked(config.get("aprs/enabled"))
+        self.aprs_received = QCheckBox(tr("Also send the positions of the stations heard"))
+        self.aprs_received.setToolTip(tr("Positions relayed from APRS are never sent back.\n"
+                                         "The station's own gateway may already forward them."))
+        self.aprs_received.setChecked(config.get("aprs/received"))
+        self.aprs_server = QLineEdit(config.get("aprs/server"))
+        self.aprs_server.setPlaceholderText("rotate.aprs2.net:14580")
+        self.aprs_enabled.toggled.connect(self._aprs_changed)
+        self._aprs_changed()
+
+        aprs_box = QGroupBox("APRS-IS")
+        form = QFormLayout(aprs_box)
+        form.addRow("", self.aprs_enabled)
+        form.addRow("", self.aprs_received)
+        form.addRow(tr("Server"), self.aprs_server)
+
         ui_box = QGroupBox(tr("Interface"))
         form = QFormLayout(ui_box)
         form.addRow(tr("Language"), self.language)
@@ -113,7 +132,12 @@ class SettingsDialog(QDialog):
         layout.addWidget(radio_box)
         layout.addWidget(int_box)
         layout.addWidget(ext_box)
+        layout.addWidget(aprs_box)
         layout.addWidget(buttons)
+
+    def _aprs_changed(self):
+        for field in (self.aprs_received, self.aprs_server):
+            field.setEnabled(self.aprs_enabled.isChecked())
 
     def _backend_changed(self):
         external = self.backend.currentData() == "ircddbgateway"
@@ -140,6 +164,9 @@ class SettingsDialog(QDialog):
             QMessageBox.information(self, tr("Language"), tr("The new language is used after restarting QDStar."))
         config.put("updates/check", self.check_updates.isChecked())
         config.put("dprs/show_all", self.dprs_all.isChecked())
+        config.put("aprs/enabled", self.aprs_enabled.isChecked())
+        config.put("aprs/received", self.aprs_received.isChecked())
+        config.put("aprs/server", self.aprs_server.text().strip())
         config.put("station/callsign", self.callsign.text().upper().strip())
         config.put("int/terminal_call", self.int_call.text().upper().strip())
         config.put("ext/terminal_call", self.ext_call.text().upper().strip())
