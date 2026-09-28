@@ -874,7 +874,28 @@ class MainWindow(QMainWindow):
         for callsign in missing:
             self.lookup.request(callsign)
 
+    @staticmethod
+    def _bulk_fill(table):
+        """Freeze a table while it is refilled: with its columns sized to their contents, a
+        visible table recalculates them on every setItem (seconds for a few hundred rows)."""
+        class Freeze:
+            def __enter__(self):
+                self.header = table.horizontalHeader()
+                self.modes = [self.header.sectionResizeMode(c) for c in range(table.columnCount())]
+                table.setUpdatesEnabled(False)
+                self.header.setSectionResizeMode(QHeaderView.Interactive)
+
+            def __exit__(self, *exc):
+                for c, mode in enumerate(self.modes):
+                    self.header.setSectionResizeMode(c, mode)
+                table.setUpdatesEnabled(True)
+        return Freeze()
+
     def _load_history(self):
+        with self._bulk_fill(self.history):
+            self._fill_history()
+
+    def _fill_history(self):
         rows = self.storage.recent()
         self.history.setRowCount(len(rows))
         for i, r in enumerate(rows):
@@ -1287,6 +1308,11 @@ class MainWindow(QMainWindow):
                                                      "Stations such as ED2YAV relay nearby weather stations."))
 
     def _load_dprs(self):
+        with self._bulk_fill(self.dprs_table):
+            self._fill_dprs()
+        self._load_weather()
+
+    def _fill_dprs(self):
         import json
         rows = self.storage.recent_dprs()
         self.dprs_table.setRowCount(len(rows))
@@ -1307,7 +1333,6 @@ class MainWindow(QMainWindow):
                 cell = QTableWidgetItem(v)
                 cell.setToolTip(format_position(r["lat"], r["lon"]) if c == 3 else v)
                 self.dprs_table.setItem(i, c, cell)
-        self._load_weather()
 
     def about(self):
         box = QMessageBox(self)
