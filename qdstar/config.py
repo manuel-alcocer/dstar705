@@ -40,6 +40,9 @@ DEFAULTS = {
     "ui/geometry": None,
     "ui/debug_civ": True,
     "ui/language": "",           # empty: the system language
+    "ui/tray": True,             # icon in the system tray (when the desktop has one)
+    "ui/tray_notify": True,      # notification when a station comes on air and the window is not in front
+    "ui/close_to_tray": False,   # closing the window hides it in the tray instead of quitting
     "updates/check": True,       # look for new releases on GitHub
     "dprs/show_all": True,       # D-PRS tab with every received report, including relayed ones
     "aprs/enabled": False,       # forward our own D-PRS position to APRS-IS after every over

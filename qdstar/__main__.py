@@ -38,15 +38,11 @@ def main():
     window.show()
     startup.done()
 
-    def bring_to_front():
-        window.showNormal()
-        window.raise_()
-        window.activateWindow()
-    instance.show_requested.connect(bring_to_front)
+    instance.show_requested.connect(window.show_window)
     # Close the radio session cleanly on Ctrl+C / SIGTERM: a session that is
     # not closed stays stuck in the IC-705 until it is power cycled.
     for sig in (signal.SIGINT, signal.SIGTERM):
-        signal.signal(sig, lambda *_: window.close())
+        signal.signal(sig, lambda *_: window.quit())
     wake = QTimer(interval=300)
     wake.timeout.connect(lambda: None)  # lets Python run signal handlers
     wake.start()

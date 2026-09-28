@@ -99,6 +99,17 @@ class SettingsDialog(QDialog):
         self.dprs_all.setToolTip(tr("Stations such as ED2YAV relay APRS positions and weather stations"))
         self.dprs_all.setChecked(config.get("dprs/show_all"))
 
+        self.tray = QCheckBox(tr("Icon in the system tray"))
+        self.tray.setChecked(config.get("ui/tray"))
+        self.tray_notify = QCheckBox(tr("Notify when a station comes on air"))
+        self.tray_notify.setToolTip(tr("Only while the QDStar window is not in front"))
+        self.tray_notify.setChecked(config.get("ui/tray_notify"))
+        self.close_to_tray = QCheckBox(tr("Closing the window keeps QDStar running in the tray"))
+        self.close_to_tray.setToolTip(tr("Quit from the tray menu or from Radio > Quit"))
+        self.close_to_tray.setChecked(config.get("ui/close_to_tray"))
+        self.tray.toggled.connect(self._tray_changed)
+        self._tray_changed()
+
         self.aprs_enabled = QCheckBox(tr("Send my D-PRS position to APRS-IS (aprs.fi) after every over"))
         self.aprs_enabled.setToolTip(tr("Only when the radio sends its position (GPS TX Mode = D-PRS).\n"
                                         "The APRS-IS passcode is computed from your call sign."))
@@ -123,6 +134,9 @@ class SettingsDialog(QDialog):
         form.addRow(tr("Language"), self.language)
         form.addRow("", self.check_updates)
         form.addRow("", self.dprs_all)
+        form.addRow("", self.tray)
+        form.addRow("", self.tray_notify)
+        form.addRow("", self.close_to_tray)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
@@ -134,6 +148,10 @@ class SettingsDialog(QDialog):
         layout.addWidget(ext_box)
         layout.addWidget(aprs_box)
         layout.addWidget(buttons)
+
+    def _tray_changed(self):
+        for field in (self.tray_notify, self.close_to_tray):
+            field.setEnabled(self.tray.isChecked())
 
     def _aprs_changed(self):
         for field in (self.aprs_received, self.aprs_server):
@@ -164,6 +182,9 @@ class SettingsDialog(QDialog):
             QMessageBox.information(self, tr("Language"), tr("The new language is used after restarting QDStar."))
         config.put("updates/check", self.check_updates.isChecked())
         config.put("dprs/show_all", self.dprs_all.isChecked())
+        config.put("ui/tray", self.tray.isChecked())
+        config.put("ui/tray_notify", self.tray_notify.isChecked())
+        config.put("ui/close_to_tray", self.close_to_tray.isChecked())
         config.put("aprs/enabled", self.aprs_enabled.isChecked())
         config.put("aprs/received", self.aprs_received.isChecked())
         config.put("aprs/server", self.aprs_server.text().strip())

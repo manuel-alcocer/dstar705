@@ -1374,3 +1374,35 @@ msgstr "APRS-IS: sin respuesta de {server}"
 #: qdstar/aprs.py
 msgid "APRS-IS: {error}"
 msgstr "APRS-IS: {error}"
+
+#: qdstar/dialogs.py
+msgid "Icon in the system tray"
+msgstr "Icono en la bandeja del sistema"
+
+#: qdstar/dialogs.py
+msgid "Notify when a station comes on air"
+msgstr "Avisar cuando una estación entra en el aire"
+
+#: qdstar/dialogs.py
+msgid "Only while the QDStar window is not in front"
+msgstr "Solo mientras la ventana de QDStar no está en primer plano"
+
+#: qdstar/dialogs.py
+msgid "Closing the window keeps QDStar running in the tray"
+msgstr "Al cerrar la ventana, QDStar sigue funcionando en la bandeja"
+
+#: qdstar/dialogs.py
+msgid "Quit from the tray menu or from Radio > Quit"
+msgstr "Para salir, usa el menú de la bandeja o Radio > Salir"
+
+#: qdstar/mainwindow.py
+msgid "On air"
+msgstr "En el aire"
+
+#: qdstar/tray.py
+msgid "Show QDStar"
+msgstr "Mostrar QDStar"
+
+#: qdstar/tray.py
+msgid "Hide QDStar"
+msgstr "Ocultar QDStar"

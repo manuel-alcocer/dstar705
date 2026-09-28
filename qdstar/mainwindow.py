@@ -8,13 +8,13 @@ from datetime import datetime
 from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtSerialPort import QSerialPortInfo
-from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
+from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
                                QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
                                QTableWidgetItem,
                                QTabWidget, QVBoxLayout, QWidget)
 
 from . import __author__, __url__, __version__, __website__, config, i18n, startup
-from . import appimage, aprs, civ
+from . import appimage, aprs, civ, tray
 from .dialogs import SSID_CHOICES, SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
 from .gateway import GatewayClient
@@ -75,6 +75,10 @@ class MainWindow(QMainWindow):
         self.log_file = self._open_log()
         self.aprs = aprs.AprsIs(self)
         self.aprs.log.connect(self.log)
+        self.quitting = False      # closing for real (not just hiding in the tray)
+        self.tray = None
+        # The window may live hidden in the tray: quitting is always explicit (see closeEvent)
+        QApplication.setQuitOnLastWindowClosed(False)
 
         self.mode = config.get("dstar/mode")
         self.to = ""
@@ -277,7 +281,7 @@ class MainWindow(QMainWindow):
         self.debug_action.toggled.connect(lambda on: config.put("ui/debug_civ", on))
         radio_menu.addAction(self.debug_action)
         radio_menu.addSeparator()
-        radio_menu.addAction(QAction(tr("Quit"), self, triggered=self.close))
+        radio_menu.addAction(QAction(tr("Quit"), self, triggered=self.quit))
         ref_menu = self.menuBar().addMenu(tr("R&eflectors"))
         ref_menu.addAction(QAction(tr("Manage…"), self, triggered=self.manage_reflectors))
         ref_menu.addAction(QAction(tr("Refresh status"), self, triggered=self._refresh_all))
@@ -381,6 +385,7 @@ class MainWindow(QMainWindow):
             self.log(tr("Mode {mode}", mode=MODE_NAMES[mode]))
         self._fill_reflectors()
         self._refresh_screen_reflector()
+        self._apply_tray()
 
     def _gateway_label(self):
         return "EXT · ircDDBGateway" if self._external_gateway() else tr("EXT · built-in gateway")
@@ -639,6 +644,7 @@ class MainWindow(QMainWindow):
         self.screen.update_state(reflector=item, status=status, to=ref, server_mismatch=mismatch)
         self._update_reflector_leds(status)
         self._update_last_heard()
+        self._update_tray()
 
     def _reflector_status(self, to, status):
         self.status[to] = status
@@ -723,6 +729,7 @@ class MainWindow(QMainWindow):
             self._update_mode_hint()
             self._refresh_screen_reflector()
             self._show_dprs_tabs()
+            self._apply_tray()
             if not config.get("aprs/enabled"):
                 self.aprs.close()
             if self.radio or config.get("radio/auto_connect"):
@@ -767,6 +774,8 @@ class MainWindow(QMainWindow):
         self.screen.update_state(rx=self.rx_info)
         self.lookup.request(base)
         self._load_history()
+        self._update_tray()
+        self._notify_rx(calls)
 
     def _rx_resumed(self, last):
         """The same over again after a gap: keep its history entry and start time."""
@@ -780,6 +789,7 @@ class MainWindow(QMainWindow):
         self.leds["rx"].set("green")
         self.screen.update_state(rx=self.rx_info)
         self._load_history()
+        self._update_tray()
 
     def _log_rx_end(self):
         """Log the end of the last over once it can no longer resume."""
@@ -808,6 +818,7 @@ class MainWindow(QMainWindow):
         self.leds["rx"].set("off")
         if self.current_over.get("live"):
             self.current_over.update(live=False, ended=time.time())
+            self._update_tray()
         if self.rx_info and self.rx_info.get("live"):
             self.rx_info["live"] = False
             self.rx_info["ended"] = time.time()
@@ -840,6 +851,7 @@ class MainWindow(QMainWindow):
             # dashboard catches up a few seconds later
             QTimer.singleShot(3000, self.poller.refresh_now)
         self.screen.update_state(tx=tx, tx_since=self.tx_since, to=ref or self.to)
+        self._update_tray()
         self._load_history()
         if not tx:
             self._update_last_heard()
@@ -1143,7 +1155,7 @@ class MainWindow(QMainWindow):
                 self, tr("Update"), tr("QDStar {version} is ready. Restart now?", version=version))
             if answer == QMessageBox.Yes:
                 self.relaunch_path = path
-                self.close()
+                self.quit()
 
         def failed(error):
             dialog.close()
@@ -1330,7 +1342,79 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, self.showNormal)
         super().changeEvent(event)
 
+    # --- system tray ----------------------------------------------------------
+
+    def _apply_tray(self):
+        wanted = config.get("ui/tray") and tray.available()
+        if wanted and self.tray is None:
+            self.tray = tray.Tray(self)
+            self.tray.toggle_requested.connect(self.toggle_window)
+            self.tray.quit_requested.connect(self.quit)
+        if self.tray:
+            if wanted:
+                self.tray.show()
+                self._update_tray()
+            else:
+                self.tray.hide()
+
+    def is_tray_active(self):
+        return self.tray is not None and self.tray.tray.isVisible()
+
+    def _update_tray(self):
+        if not self.tray:
+            return
+        tx = self.leds["tx"].color == "red"
+        on_air = self.current_over.get("caller") if self.current_over.get("live") else ""
+        self.tray.set_state("tx" if tx else "rx" if on_air else "")
+        lines = [f"QDStar · {MODE_NAMES[self.mode]}"]
+        ref = self.current_reflector()
+        if ref:
+            lines.append(ref.strip())
+        if tx:
+            lines.append("TX")
+        elif on_air:
+            lines.append(f"RX {on_air}")
+        self.tray.set_tooltip("\n".join(lines))
+
+    def _notify_rx(self, calls):
+        if not (self.tray and config.get("ui/tray_notify")) or self.isActiveWindow():
+            return
+        base = calls.caller.split()[0]
+        title = calls.caller.strip() + (f" /{calls.note}" if calls.note else "")
+        known = self.storage.cached_name(base) or {}
+        details = [known.get("name") or "", self.current_reflector().strip()]
+        self.tray.notify(title, " · ".join(d for d in details if d) or tr("On air"))
+
+    def show_window(self):
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
+
+    def toggle_window(self):
+        if self.isVisible() and not self.isMinimized():
+            self.hide()
+        else:
+            self.show_window()
+
+    def quit(self):
+        self.quitting = True
+        self.close()
+
+    def showEvent(self, event):
+        if self.tray:
+            self.tray.set_window_visible(True)
+        super().showEvent(event)
+
+    def hideEvent(self, event):
+        if self.tray:
+            self.tray.set_window_visible(False)
+        super().hideEvent(event)
+
     def closeEvent(self, event):
+        if not self.quitting and config.get("ui/close_to_tray") and self.is_tray_active():
+            event.ignore()
+            self.hide()
+            return
         config.put("ui/geometry", self.saveGeometry())
         self.poller.stop()
         self._stop_gateway()
@@ -1340,4 +1424,7 @@ class MainWindow(QMainWindow):
         if self.log_file:
             self.log_file.close()
             self.log_file = None
+        if self.tray:
+            self.tray.hide()
         super().closeEvent(event)
+        QApplication.quit()
