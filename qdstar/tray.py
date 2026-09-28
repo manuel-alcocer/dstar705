@@ -44,10 +44,10 @@ class Tray(QObject):
         self.tray.activated.connect(self._activated)
         self.tray.messageClicked.connect(self.toggle_requested)
         self.menu = QMenu()
-        self.toggle_action = QAction(tr("Show QDStar"), self.menu, triggered=self.toggle_requested)
+        self.toggle_action = QAction(tr("Show QDStar"), self.menu, triggered=lambda: self.toggle_requested.emit())
         self.menu.addAction(self.toggle_action)
         self.menu.addSeparator()
-        self.menu.addAction(QAction(tr("Quit"), self.menu, triggered=self.quit_requested))
+        self.menu.addAction(QAction(tr("Quit"), self.menu, triggered=lambda: self.quit_requested.emit()))
         self.tray.setContextMenu(self.menu)
 
     def show(self):
