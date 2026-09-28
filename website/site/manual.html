@@ -150,6 +150,9 @@
     <h3>Mode, reflector and tabs</h3>
     <p>Below the screen are the <strong>INT · WiFi</strong> and <strong>EXT · USB/PC</strong> buttons, with a LED on the active one. A ⚠ sign appears when the radio does not match the chosen mode, for example when the radio is still in INT while you chose EXT. Hover over it to see what to check.</p>
     <p>Next come the reflector list with its buttons, and the <strong>History</strong>, <strong>Log</strong>, <strong>D-PRS</strong> and <strong>Weather</strong> tabs.</p>
+    <h3 id="tray">System tray icon</h3>
+    <p>QDStar puts an icon in the system tray. It has a green dot while you receive and a red one while you transmit, and its tooltip shows the mode, the reflector and the station on the air. Click it to show or hide the window. Right-click it for the menu, with <em>Show/Hide QDStar</em> and <em>Quit</em>.</p>
+    <p>When a station comes on the air and the QDStar window is not in front, a notification shows its call sign, name and reflector. If you turn on <em>Closing the window keeps QDStar running in the tray</em> in the settings, the window's close button only hides it. Quit from the tray menu or from <em>Radio › Quit</em>.</p>
 
     <h2 id="modes">INT and EXT modes</h2>
     <table>
@@ -161,6 +164,16 @@
     </table>
     <p>Change mode with the two buttons. Remember to change <em>Gateway Select</em> and the <em>Terminal/AP Call Sign</em> on the radio too (see <a href="#radio">Radio setup</a>).</p>
     <p>In EXT mode, QDStar remembers the reflector you were linked to and links it again the next time it starts.</p>
+    <h3 id="ur-commands">Linking from the radio (EXT)</h3>
+    <p>With the built-in gateway you can also link and unlink from the radio, as with ircDDBGateway. Put a command in the UR field (the TO of the DR screen) and key up for a second. That over does not go to any reflector: the gateway runs the command and answers with a text message on the radio's screen.</p>
+    <table>
+      <tr><th>UR</th><th>What it does</th><th>Answer on the radio</th></tr>
+      <tr><td><code>XLX214DL</code> or <code>XLX214 D</code></td><td>Links reflector XLX214, module D. REF, DCS and XRF reflectors work the same way.</td><td>Linked to XLX214 D</td></tr>
+      <tr><td><code>U</code></td><td>Unlinks.</td><td>Unlinked</td></tr>
+      <tr><td><code>I</code></td><td>Tells you what the gateway is linked to.</td><td>Linked to … / Not linked</td></tr>
+      <tr><td><code>E</code></td><td>Echo test: records your over and plays it back a second later (up to one minute).</td><td>Your own audio</td></tr>
+    </table>
+    <p>The radio's own menu writes these commands for you: <em>TO › Reflector</em>, then <em>Link to Reflector</em>, <em>Unlink Reflector</em>, <em>Reflector Info</em> or <em>Echo Test</em>. After a command, QDStar puts the UR back to CQCQCQ, so the next over goes to the reflector. It needs the radio connected over WiFi to do that. After an echo test the UR is left as it is, so you can repeat the test. Command overs are not added to the history.</p>
 
     <h2 id="reflectors">Reflectors</h2>
     <p>The list comes with a selection of reflectors. Manage it in <em>Reflectors › Manage…</em>:</p>
@@ -196,6 +209,9 @@
       <li><strong>Symbol</strong>, <strong>SSID</strong> and <strong>Comment</strong> of your beacon.</li>
     </ul>
     <p>QDStar uses your position, from the GPS or the manual one, to work out the distances. Nothing is written to the radio until you press <em>Save</em>.</p>
+    <h3 id="aprs">Your position on APRS-IS (aprs.fi)</h3>
+    <p>With <em>Send my D-PRS position to APRS-IS</em> turned on in the settings, QDStar also sends your position to the APRS-IS network after every over, so it shows on aprs.fi. It works in INT and EXT, and only while the radio sends its position (GPS TX Mode = D-PRS). It uses the position, symbol, SSID and comment of the radio's own beacon. An unchanged beacon is sent at most once every 5 minutes.</p>
+    <p>The APRS-IS passcode is worked out from your call sign, so there is nothing to type. Optionally, QDStar can also send the positions of the stations it hears. Positions that come from APRS (objects, weather stations, reports relayed by other stations) are never sent back.</p>
 
     <h2 id="settings">Settings</h2>
     <figure><img src="/img/en-settings.png" width="502" height="592" alt="Settings dialog" loading="lazy"><figcaption>Radio › Settings…</figcaption></figure>
@@ -206,6 +222,9 @@
       <tr><td>Language</td><td>The language of the interface. <em>System language</em> follows your computer, and falls back to English when the system language has no translation.</td></tr>
       <tr><td>Check for new versions on start-up</td><td>On start-up, and once a day while QDStar is open, it asks GitHub whether there is a new version (see <a href="#updates">Updates</a>). Nothing else is sent.</td></tr>
       <tr><td>D-PRS tab with every report received</td><td>Shows the <strong>D-PRS</strong> and <strong>Weather</strong> tabs. Turn it off if you only care about the position of the station on the air, which the screen shows either way.</td></tr>
+      <tr><td>Icon in the system tray</td><td>Shows the <a href="#tray">tray icon</a>. It is not available when the desktop has no system tray.</td></tr>
+      <tr><td>Notify when a station comes on air</td><td>A notification for each new station on the air, only while the QDStar window is not in front.</td></tr>
+      <tr><td>Closing the window keeps QDStar running in the tray</td><td>The close button hides the window instead of quitting. Quit from the tray menu or from <em>Radio › Quit</em>.</td></tr>
     </table>
     <h3>Radio (WiFi)</h3>
     <table>
@@ -240,6 +259,14 @@
       <tr><td>Command when the USB is plugged in</td><td>A command run when the radio's USB appears. DStarRepeater cannot open a port that was missing when it started, so it has to be restarted (for example <code>systemctl --user restart dstarrepeater</code>).</td></tr>
     </table>
 
+    <h3>APRS-IS</h3>
+    <table>
+      <tr><th>Field</th><th>What it does</th></tr>
+      <tr><td>Send my D-PRS position to APRS-IS (aprs.fi) after every over</td><td>See <a href="#aprs">Your position on APRS-IS</a>. Off by default.</td></tr>
+      <tr><td>Also send the positions of the stations heard</td><td>Only the position of the station on the air, never relayed reports. The station's own gateway may already send it. Off by default.</td></tr>
+      <tr><td>Server</td><td>The APRS-IS server and port. The default, <code>rotate.aprs2.net:14580</code>, picks a server near you.</td></tr>
+    </table>
+
     <h2 id="updates">Updates</h2>
     <p>QDStar checks GitHub for a new version on start-up and once a day. When one is out, a <em>⬆ New x.y.z</em> link appears next to the mode buttons, pointing at the right file for your system. You can also check by hand in <em>Help › Check for updates…</em>, and turn the automatic check off in the settings.</p>
     <p>With the Linux AppImage, <em>Update now</em> downloads the new version, checks it against the SHA-256 published on GitHub, puts it in place of the one you run and restarts QDStar. There is no file to replace by hand.</p>
@@ -256,6 +283,10 @@
     <p>Check the cable, and on Linux check that your user is in the <code>dialout</code> (or <code>uucp</code>) group. If the data port is not found, choose it by hand in the settings.</p>
     <h3>A REF reflector does not link</h3>
     <p>DPlus needs your call sign registered in the D-STAR trust network. Try a DCS or XLX reflector to confirm everything else works.</p>
+    <h3>EXT mode: the radio does not transmit</h3>
+    <p>If the PTT does nothing and the log shows <em>USB: the radio refuses the stream</em>, the radio's Terminal Mode is stuck. Leave Terminal Mode on the radio and enter it again.</p>
+    <h3>No notifications appear</h3>
+    <p>Check that the desktop's <em>Do Not Disturb</em> mode is off. While it is on, the notifications only go to the desktop's notification history.</p>
     <h3>⚠ next to the mode buttons</h3>
     <p>The radio's Terminal Mode does not match the mode chosen in QDStar. Hover over it to see what to change on the radio.</p>
 

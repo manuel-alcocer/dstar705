@@ -150,6 +150,9 @@
     <h3>Modo, reflector y pestañas</h3>
     <p>Debajo de la pantalla están los botones <strong>INT · WiFi</strong> y <strong>EXT · USB/PC</strong>, con un LED en el que está activo. Aparece un ⚠ cuando la radio no está en el modo elegido, por ejemplo si sigue en INT y tú elegiste EXT. Deja el ratón encima para ver qué revisar.</p>
     <p>Después vienen la lista de reflectores con sus botones y las pestañas <strong>Histórico</strong>, <strong>Log</strong>, <strong>D-PRS</strong> y <strong>Meteo</strong>.</p>
+    <h3 id="bandeja">Icono en la bandeja del sistema</h3>
+    <p>QDStar pone un icono en la bandeja del sistema. Lleva un punto verde mientras recibes y uno rojo mientras transmites, y su tooltip muestra el modo, el reflector y la estación en el aire. Haz clic en él para mostrar u ocultar la ventana. Con el botón derecho sale el menú, con <em>Mostrar/Ocultar QDStar</em> y <em>Salir</em>.</p>
+    <p>Cuando una estación entra en el aire y la ventana de QDStar no está en primer plano, una notificación muestra su indicativo, su nombre y el reflector. Si activas <em>Al cerrar la ventana, QDStar sigue funcionando en la bandeja</em> en los ajustes, el botón de cerrar solo oculta la ventana. Para salir, usa el menú de la bandeja o <em>Radio › Salir</em>.</p>
 
     <h2 id="modos">Modos INT y EXT</h2>
     <table>
@@ -161,6 +164,16 @@
     </table>
     <p>Cambia de modo con los dos botones. Recuerda cambiar también en la radio el <em>Gateway Select</em> y el <em>Terminal/AP Call Sign</em> (mira <a href="#radio">Configurar la radio</a>).</p>
     <p>En modo EXT, QDStar recuerda el reflector al que estabas enlazado y vuelve a enlazarlo la próxima vez que arranca.</p>
+    <h3 id="comandos-ur">Enlazar desde la radio (EXT)</h3>
+    <p>Con el gateway integrado también puedes enlazar y desenlazar desde la radio, como con ircDDBGateway. Pon un comando en el campo UR (el TO de la pantalla DR) y pulsa el PTT un segundo. Esa pasada no sale a ningún reflector: el gateway ejecuta el comando y contesta con un mensaje de texto en la pantalla de la radio.</p>
+    <table>
+      <tr><th>UR</th><th>Qué hace</th><th>Respuesta en la radio</th></tr>
+      <tr><td><code>XLX214DL</code> o <code>XLX214 D</code></td><td>Enlaza el reflector XLX214, módulo D. Los reflectores REF, DCS y XRF funcionan igual.</td><td>Linked to XLX214 D</td></tr>
+      <tr><td><code>U</code></td><td>Desenlaza.</td><td>Unlinked</td></tr>
+      <tr><td><code>I</code></td><td>Te dice a qué está enlazado el gateway.</td><td>Linked to … / Not linked</td></tr>
+      <tr><td><code>E</code></td><td>Prueba de eco: graba tu pasada y te la devuelve un segundo después (hasta un minuto).</td><td>Tu propio audio</td></tr>
+    </table>
+    <p>El menú de la propia radio escribe estos comandos por ti: <em>TO › Reflector</em>, y luego <em>Link to Reflector</em>, <em>Unlink Reflector</em>, <em>Reflector Info</em> o <em>Echo Test</em>. Después de un comando, QDStar vuelve a poner el UR en CQCQCQ para que la siguiente pasada vaya al reflector. Para eso necesita la radio conectada por WiFi. Tras una prueba de eco el UR se queda como está, para que puedas repetirla. Las pasadas de comando no se añaden al histórico.</p>
 
     <h2 id="reflectores">Reflectores</h2>
     <p>La lista viene con una selección de reflectores. Se gestiona en <em>Reflectores › Gestionar…</em>:</p>
@@ -196,6 +209,9 @@
       <li><strong>Símbolo</strong>, <strong>SSID</strong> y <strong>Comentario</strong> de tu baliza.</li>
     </ul>
     <p>QDStar usa tu posición, la del GPS o la manual, para calcular las distancias. No se escribe nada en la radio hasta que pulsas <em>Guardar</em>.</p>
+    <h3 id="aprs">Tu posición en APRS-IS (aprs.fi)</h3>
+    <p>Con <em>Enviar mi posición D-PRS a APRS-IS</em> activado en los ajustes, QDStar también envía tu posición a la red APRS-IS tras cada pasada, para que salga en aprs.fi. Funciona en INT y en EXT, y solo mientras la radio envía su posición (GPS TX Mode = D-PRS). Usa la posición, el símbolo, el SSID y el comentario de la baliza de la propia radio. Una baliza que no ha cambiado se envía como mucho una vez cada 5 minutos.</p>
+    <p>El passcode de APRS-IS se calcula a partir de tu indicativo, así que no hay que escribir nada. Si quieres, QDStar también puede enviar las posiciones de las estaciones que escucha. Las posiciones que vienen de APRS (objetos, estaciones meteorológicas, informes retransmitidos por otras estaciones) nunca se devuelven.</p>
 
     <h2 id="ajustes">Ajustes</h2>
     <figure><img src="/img/es-settings.png" width="550" height="592" alt="Ajustes" loading="lazy"><figcaption>Radio › Ajustes…</figcaption></figure>
@@ -206,6 +222,9 @@
       <tr><td>Idioma</td><td>El idioma de la interfaz. <em>Idioma del sistema</em> sigue el de tu ordenador, y usa el inglés si no hay traducción para ese idioma.</td></tr>
       <tr><td>Buscar versiones nuevas al arrancar</td><td>Al arrancar, y una vez al día mientras QDStar está abierto, pregunta a GitHub si hay versión nueva (mira <a href="#actualizaciones">Actualizaciones</a>). No se envía nada más.</td></tr>
       <tr><td>Pestaña D-PRS con todos los informes recibidos</td><td>Muestra las pestañas <strong>D-PRS</strong> y <strong>Meteo</strong>. Desactívala si solo te interesa la posición de la estación en el aire, que la pantalla muestra de todas formas.</td></tr>
+      <tr><td>Icono en la bandeja del sistema</td><td>Muestra el <a href="#bandeja">icono de la bandeja</a>. No está disponible si el escritorio no tiene bandeja del sistema.</td></tr>
+      <tr><td>Avisar cuando una estación entra en el aire</td><td>Una notificación por cada estación nueva en el aire, solo mientras la ventana de QDStar no está en primer plano.</td></tr>
+      <tr><td>Al cerrar la ventana, QDStar sigue funcionando en la bandeja</td><td>El botón de cerrar oculta la ventana en vez de salir. Para salir, usa el menú de la bandeja o <em>Radio › Salir</em>.</td></tr>
     </table>
     <h3>Radio (WiFi)</h3>
     <table>
@@ -240,6 +259,14 @@
       <tr><td>Comando al conectar el USB</td><td>Un comando que se ejecuta cuando aparece el USB de la radio. DStarRepeater no puede abrir un puerto que no existía cuando arrancó, así que hay que reiniciarlo (por ejemplo <code>systemctl --user restart dstarrepeater</code>).</td></tr>
     </table>
 
+    <h3>APRS-IS</h3>
+    <table>
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td>Enviar mi posición D-PRS a APRS-IS (aprs.fi) tras cada pasada</td><td>Mira <a href="#aprs">Tu posición en APRS-IS</a>. Desactivado por defecto.</td></tr>
+      <tr><td>Enviar también las posiciones de las estaciones escuchadas</td><td>Solo la posición de la estación en el aire, nunca informes retransmitidos. Es posible que el gateway de esa estación ya la envíe. Desactivado por defecto.</td></tr>
+      <tr><td>Servidor</td><td>El servidor y el puerto de APRS-IS. El de por defecto, <code>rotate.aprs2.net:14580</code>, elige un servidor cercano.</td></tr>
+    </table>
+
     <h2 id="actualizaciones">Actualizaciones</h2>
     <p>QDStar busca en GitHub si hay versión nueva al arrancar y una vez al día. Cuando la hay, aparece un enlace <em>⬆ Nueva x.y.z</em> junto a los botones de modo, que lleva al archivo adecuado para tu sistema. También puedes buscarla a mano en <em>Ayuda › Buscar actualizaciones…</em>, y desactivar la búsqueda automática en los ajustes.</p>
     <p>Con el AppImage de Linux, <em>Actualizar ahora</em> descarga la versión nueva, la comprueba con el SHA-256 publicado en GitHub, la pone en lugar de la que usas y reinicia QDStar. No hay que reemplazar ningún fichero a mano.</p>
@@ -256,6 +283,10 @@
     <p>Revisa el cable y, en Linux, que tu usuario esté en el grupo <code>dialout</code> (o <code>uucp</code>). Si no encuentra el puerto de datos, elígelo a mano en los ajustes.</p>
     <h3>Un reflector REF no enlaza</h3>
     <p>DPlus necesita tu indicativo registrado en la red de confianza D-STAR. Prueba con un reflector DCS o XLX para confirmar que todo lo demás funciona.</p>
+    <h3>Modo EXT: la radio no transmite</h3>
+    <p>Si el PTT no hace nada y en el log sale <em>USB: la radio rechaza la transmisión</em>, el Terminal Mode de la radio se ha quedado colgado. Sal del Terminal Mode en la radio y vuelve a entrar.</p>
+    <h3>No aparecen las notificaciones</h3>
+    <p>Comprueba que el modo <em>No molestar</em> del escritorio está desactivado. Mientras está activo, las notificaciones solo van al historial de notificaciones del escritorio.</p>
     <h3>Un ⚠ junto a los botones de modo</h3>
     <p>El Terminal Mode de la radio no coincide con el modo elegido en QDStar. Deja el ratón encima para ver qué cambiar en la radio.</p>
 

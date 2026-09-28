@@ -28,6 +28,18 @@
 <main class="wrap changes">
   <h1>Cambios</h1>
   <p class="lead">Novedades y correcciones de cada versión. Los ficheros de cada una están en <a href="https://github.com/manuel-alcocer/qdstar/releases">las releases de GitHub</a>.</p>
+  <section class="release" id="v0.6.0">
+    <h2>0.6.0 <time datetime="2026-09-28">2026-09-28</time></h2>
+    <ul>
+      <li>Nuevo: tu posición D-PRS puede ir a APRS-IS (aprs.fi) tras cada pasada, en INT y en EXT. Si quieres, también las posiciones de las estaciones escuchadas. El passcode se calcula a partir de tu indicativo. Mira <a href="/es/manual.html#aprs">el manual</a>.</li>
+      <li>Nuevo: icono en la bandeja del sistema con un punto verde (RX) o rojo (TX), notificación cuando una estación entra en el aire y un ajuste opcional para que QDStar siga en la bandeja al cerrar la ventana.</li>
+      <li>Nuevo (EXT): enlaza y desenlaza desde la radio con comandos en el UR, como con ircDDBGateway. <code>XLX214DL</code> o <code>XLX214 D</code> enlaza, <code>U</code> desenlaza, <code>I</code> te dice el enlace y <code>E</code> hace una prueba de eco. La radio muestra la respuesta en su pantalla. Mira <a href="/es/manual.html#comandos-ur">el manual</a>.</li>
+      <li>Corregido: QDStar se quedaba congelado varios segundos al refrescar la pestaña Histórico o D-PRS mientras estaba visible.</li>
+      <li>Corregido (EXT): el TO vuelve a CQCQCQ tras enlazar. En modo EXT no funcionaba nunca.</li>
+      <li>Corregido: un posible cierre inesperado cuando la conexión con la radio se caía con un mensaje de error abierto.</li>
+      <li>Corregido (EXT): una transmisión que la radio rechaza ya no la deja sin poder transmitir.</li>
+    </ul>
+  </section>
   <section class="release" id="v0.5.4">
     <h2>0.5.4 <time datetime="2026-09-27">2026-09-27</time></h2>
     <ul>

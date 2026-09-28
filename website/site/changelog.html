@@ -28,6 +28,18 @@
 <main class="wrap changes">
   <h1>Changelog</h1>
   <p class="lead">What is new and fixed in each version. The files of every version are on <a href="https://github.com/manuel-alcocer/qdstar/releases">GitHub releases</a>.</p>
+  <section class="release" id="v0.6.0">
+    <h2>0.6.0 <time datetime="2026-09-28">2026-09-28</time></h2>
+    <ul>
+      <li>New: your D-PRS position can go to APRS-IS (aprs.fi) after every over, in INT and EXT. Optionally, the positions of the stations heard too. The passcode is worked out from your call sign. See <a href="/manual.html#aprs">the manual</a>.</li>
+      <li>New: system tray icon with a green (RX) or red (TX) dot, a notification when a station comes on the air, and an optional setting to keep QDStar running in the tray when you close the window.</li>
+      <li>New (EXT): link and unlink from the radio with UR commands, as with ircDDBGateway. <code>XLX214DL</code> or <code>XLX214 D</code> links, <code>U</code> unlinks, <code>I</code> tells you the link and <code>E</code> runs an echo test. The radio shows the answer on its screen. See <a href="/manual.html#ur-commands">the manual</a>.</li>
+      <li>Fixed: QDStar froze for several seconds when the History or D-PRS tab was refreshed while visible.</li>
+      <li>Fixed (EXT): the TO goes back to CQCQCQ after linking. It never worked in EXT mode.</li>
+      <li>Fixed: a possible crash when the radio's connection dropped while an error message was open.</li>
+      <li>Fixed (EXT): a stream the radio refuses no longer leaves it unable to transmit.</li>
+    </ul>
+  </section>
   <section class="release" id="v0.5.4">
     <h2>0.5.4 <time datetime="2026-09-27">2026-09-27</time></h2>
     <ul>
