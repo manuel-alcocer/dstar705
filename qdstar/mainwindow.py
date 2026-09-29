@@ -8,7 +8,8 @@ from datetime import datetime
 from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtSerialPort import QSerialPortInfo
-from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QComboBox, QDockWidget, QHBoxLayout,
+from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QCheckBox, QComboBox, QDockWidget,
+                               QHBoxLayout,
                                QHeaderView, QLabel, QLayout, QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
                                QTableWidgetItem,
                                QSizePolicy, QTabWidget, QVBoxLayout, QWidget)
@@ -304,6 +305,12 @@ class MainWindow(QMainWindow):
             dock.topLevelChanged.connect(self._views_changed)
             dock.visibilityChanged.connect(self._views_changed)
             self.docks[key] = dock
+        # History: hide our own overs
+        self.hide_own = QCheckBox(tr("Hide mine"))
+        self.hide_own.setToolTip(tr("Hide your own overs from the history"))
+        self.hide_own.setChecked(config.get("ui/history_hide_own"))
+        self.hide_own.toggled.connect(self._hide_own_toggled)
+        self.docks["history"].titleBarWidget().extras.addWidget(self.hide_own)
         self._default_views()
         state = config.get("ui/views")
         if state:
@@ -1064,8 +1071,18 @@ class MainWindow(QMainWindow):
         finally:
             self.filling_history = False
 
+    def _hide_own_toggled(self, hide):
+        config.put("ui/history_hide_own", hide)
+        self._load_history()
+
+    def _own_over(self, row):
+        own = (config.callsign() or self.my_call).split()[:1]
+        return row["direction"] == "TX" or (bool(own) and row["callsign"].split()[:1] == own)
+
     def _fill_history(self):
         rows = self.storage.recent()
+        if self.hide_own.isChecked():
+            rows = [r for r in rows if not self._own_over(r)]
         self.history.setRowCount(len(rows))
         for i, r in enumerate(rows):
             started = time.localtime(r["started"])

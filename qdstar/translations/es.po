@@ -1698,3 +1698,11 @@ msgstr "No se ha podido leer: {error}"
 #: qdstar/dialogs.py
 msgid "1 reflector"
 msgstr "1 reflector"
+
+#: qdstar/mainwindow.py
+msgid "Hide mine"
+msgstr "Ocultar las mías"
+
+#: qdstar/mainwindow.py
+msgid "Hide your own overs from the history"
+msgstr "Oculta tus propias pasadas del histórico"

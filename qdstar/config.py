@@ -40,7 +40,8 @@ DEFAULTS = {
     "ui/geometry": None,
     "reflectors/sources": "",     # JSON list of reflector list sources (sources.py)
     "reflectors/sources_migrated": False,  # the pre-0.8 copy of the built-in list was pruned
-    "ui/views": None,            # layout of the History/Log/D-PRS/Weather views (docked, floating, closed)
+    "ui/views": None,
+    "ui/history_hide_own": False,  # History without our own overs            # layout of the History/Log/D-PRS/Weather views (docked, floating, closed)
     "ui/debug_civ": True,
     "ui/language": "",           # empty: the system language
     "ui/tray": True,             # icon in the system tray (when the desktop has one)

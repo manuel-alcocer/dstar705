@@ -463,6 +463,9 @@ class DockTitleBar(QWidget):
         close = QToolButton(autoRaise=True, toolTip=tr("Close (View menu to show it again)"))
         close.setIcon(style.standardIcon(QStyle.SP_TitleBarCloseButton))
         close.clicked.connect(dock.close)
+        self.extras = QHBoxLayout()           # view-specific controls, e.g. the History's "Hide mine"
+        self.extras.setContentsMargins(0, 0, 6, 0)
+        layout.addLayout(self.extras)
         for button in (self.float_button, close):
             button.setIconSize(QSize(12, 12))
             layout.addWidget(button)
