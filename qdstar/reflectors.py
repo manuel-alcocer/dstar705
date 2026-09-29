@@ -22,6 +22,7 @@ ONLINE_MAX_AGE = 3600
 MODULE_ROW_RE = re.compile(r"\|\s*([A-Z])\s*\|\s*([^|]*?)\s*\|\s*(\d+)\s*\|\s*REF\d{3}\1L", re.I)
 
 FIELDS = ("via", "to", "server", "name", "description", "notes", "dashboard", "api")
+INHERITED = ("server", "description", "notes", "dashboard", "api")   # empty in the user's copy: from a source
 
 
 def normalize_to(text, via="int"):
@@ -96,12 +97,19 @@ class Registry(QObject):
         from .sources import display_name
         with self.lock:
             merged = [dict(i, source="", origin="") for i in self.items]
-        seen = {i["to"] for i in merged}
+        by_to = {i["to"]: i for i in merged}
         for source in self.sources.enabled():
             for item in self.sources.source_items(source["id"]):
-                if item["to"] not in seen:
-                    seen.add(item["to"])
-                    merged.append(dict(item, source=source["id"], origin=display_name(source)))
+                own = by_to.get(item["to"])
+                if own is None:
+                    by_to[item["to"]] = dict(item, source=source["id"], origin=display_name(source))
+                    merged.append(by_to[item["to"]])
+                elif not own["source"]:
+                    # The user's copy wins, but a field left empty keeps the source's value: a copy
+                    # renamed or edited must not lose the dashboard/API that tell the link state
+                    for field in INHERITED:
+                        if not own[field] and item.get(field):
+                            own[field] = item[field]
         return merged
 
     def list(self, via=None):
@@ -210,6 +218,10 @@ class StatusPoller(QObject):
         number = reflector[3:]
         xlx = self.xlx.get(reflector) or ({} if reflector.startswith("REF") else self.xlx.get("XLX" + number, {}))
         dashboard = item.get("dashboard") or xlx.get("dashboard", "")
+        # A dashboard only guessed from the XLX directory may not list how we are linked (a
+        # Terminal Mode G3 server links through DCS214, the XLX214 dashboard never shows it):
+        # there, finding our terminal means linked, not finding it means nothing
+        guessed = not item.get("dashboard")
         result = {
             "online": None, "users": None, "module_name": "", "linked": None,
             "heard": [], "nodes": [], "comment": xlx.get("comment", ""), "country": xlx.get("country", ""),
@@ -256,7 +268,8 @@ class StatusPoller(QObject):
             if term_re and result["linked"] is None:
                 try:
                     text = _page_text(_fetch(urllib.parse.urljoin(base, "index.php?show=repeaters")))
-                    result["linked"] = bool(term_re.search(text))
+                    found = bool(term_re.search(text))
+                    result["linked"] = True if found else (None if guessed else False)
                 except OSError:
                     pass
         return item["to"], result
