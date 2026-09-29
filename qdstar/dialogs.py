@@ -3,7 +3,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QGroupBox, QDialogButtonBox, QFormLayout, QHBoxLayout, QLineEdit,
                                QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit, QPushButton, QSpinBox,
-                               QVBoxLayout, QWidget)
+                               QTabWidget, QVBoxLayout, QWidget)
 
 from . import config, i18n
 from .i18n import N_, tr
@@ -134,19 +134,35 @@ class SettingsDialog(QDialog):
         form.addRow(tr("Language"), self.language)
         form.addRow("", self.check_updates)
         form.addRow("", self.dprs_all)
+
+        tray_box = QGroupBox(tr("System tray"))
+        form = QFormLayout(tray_box)
         form.addRow("", self.tray)
         form.addRow("", self.tray_notify)
         form.addRow("", self.close_to_tray)
+
+        # One tab per topic: all the groups at once no longer fit on a laptop screen
+        self.tabs = QTabWidget()
+        pages = {}
+        for key, title, boxes in (("interface", tr("Interface"), (ui_box, tray_box)),
+                                  ("radio", tr("Radio"), (radio_box,)),
+                                  ("modes", "INT / EXT", (int_box, ext_box)),
+                                  ("aprs", "APRS-IS", (aprs_box,))):
+            page = QWidget()
+            page_layout = QVBoxLayout(page)
+            for box in boxes:
+                page_layout.addWidget(box)
+            page_layout.addStretch(1)
+            pages[key] = page
+            self.tabs.addTab(page, title)
+        if not config.get("radio/username"):
+            self.tabs.setCurrentWidget(pages["radio"])    # first run: the radio is what is missing
 
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout = QVBoxLayout(self)
-        layout.addWidget(ui_box)
-        layout.addWidget(radio_box)
-        layout.addWidget(int_box)
-        layout.addWidget(ext_box)
-        layout.addWidget(aprs_box)
+        layout.addWidget(self.tabs)
         layout.addWidget(buttons)
 
     def _tray_changed(self):

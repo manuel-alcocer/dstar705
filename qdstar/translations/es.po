@@ -1442,3 +1442,11 @@ msgstr "HISTÓRICO"
 #: qdstar/widgets.py
 msgid "LIVE"
 msgstr "LIVE"
+
+#: qdstar/dialogs.py
+msgid "System tray"
+msgstr "Bandeja del sistema"
+
+#: qdstar/dialogs.py
+msgid "Radio"
+msgstr "Radio"
