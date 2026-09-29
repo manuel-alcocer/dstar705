@@ -13,7 +13,7 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/es/"><img src="/img/icon.png?v=0.8.0" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
+    <a class="brand" href="/es/"><img src="/img/icon.png?v=0.8.1" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
     <nav>
       <a href="/es/#funciones">Funciones</a>
       <a href="/es/#descarga">Descarga</a>
@@ -158,7 +158,7 @@
     </ul>
     <p><em>Ver › Restablecer disposición</em> devuelve las cuatro vistas a sus pestañas. QDStar recuerda la disposición entre sesiones. Si no queda ninguna vista en la ventana principal, esta se encoge a la pantalla y sus barras, y vuelve a crecer cuando acoplas una.</p>
     <h3 id="bandeja">Icono en la bandeja del sistema</h3>
-    <figure><img src="/img/tray-states.png?v=0.8.0" width="192" height="48" alt="Icono de la bandeja: en reposo, recibiendo y transmitiendo" loading="lazy"><figcaption>El icono de la bandeja: en reposo, recibiendo (punto verde) y transmitiendo (punto rojo)</figcaption></figure>
+    <figure><img src="/img/tray-states.png?v=0.8.1" width="192" height="48" alt="Icono de la bandeja: en reposo, recibiendo y transmitiendo" loading="lazy"><figcaption>El icono de la bandeja: en reposo, recibiendo (punto verde) y transmitiendo (punto rojo)</figcaption></figure>
     <p>QDStar pone un icono en la bandeja del sistema. Lleva un punto verde mientras recibes y uno rojo mientras transmites, y su tooltip muestra el modo, el reflector y la estación en el aire. Haz clic en él para mostrar u ocultar la ventana. Con el botón derecho sale el menú, con <em>Mostrar/Ocultar QDStar</em> y <em>Salir</em>.</p>
     <p>Cuando una estación entra en el aire y la ventana de QDStar no está en primer plano, una notificación muestra su indicativo, su nombre y el reflector. Si activas <em>Al cerrar la ventana, QDStar sigue funcionando en la bandeja</em> en los ajustes, el botón de cerrar solo oculta la ventana. Para salir, usa el menú de la bandeja o <em>Radio › Salir</em>.</p>
 
@@ -181,12 +181,12 @@
       <tr><td><code>I</code></td><td>Te dice a qué está enlazado el gateway.</td><td>Linked to … / Not linked</td></tr>
       <tr><td><code>E</code></td><td>Prueba de eco: graba tu pasada y te la devuelve un segundo después (hasta un minuto).</td><td>Tu propio audio</td></tr>
     </table>
-    <figure><img src="/img/es-tab-log-commands.png?v=0.8.0" width="489" height="250" alt="Log de comandos por el UR" loading="lazy"><figcaption>Desenlazar con <code>U</code> y enlazar con <code>XLX214 D</code>, tal como lo muestra el Log</figcaption></figure>
+    <figure><img src="/img/es-tab-log-commands.png?v=0.8.1" width="489" height="250" alt="Log de comandos por el UR" loading="lazy"><figcaption>Desenlazar con <code>U</code> y enlazar con <code>XLX214 D</code>, tal como lo muestra el Log</figcaption></figure>
     <p>El menú de la propia radio escribe estos comandos por ti: <em>TO › Reflector</em>, y luego <em>Link to Reflector</em>, <em>Unlink Reflector</em>, <em>Reflector Info</em> o <em>Echo Test</em>. Después de un comando, QDStar vuelve a poner el UR en CQCQCQ para que la siguiente pasada vaya al reflector. Para eso necesita la radio conectada por WiFi. Tras una prueba de eco el UR se queda como está, para que puedas repetirla. Las pasadas de comando no se añaden al histórico.</p>
 
     <h2 id="reflectores">Reflectores</h2>
     <p>La lista junta tus propios reflectores y los de sus <a href="#origenes-reflectores">orígenes</a>, como la selección integrada en QDStar. Se gestiona en <em>Reflectores › Gestionar…</em>:</p>
-    <figure><img src="/img/es-reflectors.png?v=0.8.0" width="660" height="470" alt="Gestión de reflectores" loading="lazy"><figcaption>La gestión de reflectores: los tuyos en negro, los de los orígenes en gris</figcaption></figure>
+    <figure><img src="/img/es-reflectors.png?v=0.8.1" width="660" height="470" alt="Gestión de reflectores" loading="lazy"><figcaption>La gestión de reflectores: los tuyos en negro, los de los orígenes en gris</figcaption></figure>
     <ul>
       <li><strong>Tipo</strong>: INT (el TO se escribe en la radio) o EXT (lo enlaza el gateway de QDStar).</li>
       <li><strong>TO / reflector</strong>: en INT, el TO que envía la radio (<code>/XLX214D</code>). En EXT, el reflector y el módulo (<code>REF001 C</code>, <code>DCS214 D</code>, <code>XLX048 A</code>, <code>XRF988 D</code>).</li>
@@ -194,11 +194,11 @@
       <li><strong>Nombre</strong> y <strong>Descripción</strong>: los textos que salen en la pantalla.</li>
       <li><strong>Dashboard</strong> y <strong>API</strong> (opcionales): la web del reflector y su API JSON de xlxd, que se usan para contar los nodos y para los últimos oídos.</li>
     </ul>
-    <p>Los reflectores que vienen de un origen son de solo lectura, y el formulario indica de dónde vienen. <strong>Copiar a mi lista</strong> crea tu propia copia, que puedes cambiar y que gana a la del origen. <strong>Exportar mi lista…</strong> guarda tus reflectores en un fichero JSON, para compartirlos o publicarlos como origen para otros.</p>
+    <p>Los reflectores que vienen de un origen son de solo lectura, y el formulario indica de dónde vienen. <strong>Copiar a mi lista</strong> crea tu propia copia, que puedes cambiar y que gana a la del origen. Los campos que dejes vacíos en tu copia conservan los valores del origen, así que una copia a la que cambies el nombre sigue teniendo el dashboard y la API con los que se sabe si estás enlazado. <strong>Exportar mi lista…</strong> guarda tus reflectores en un fichero JSON, para compartirlos o publicarlos como origen para otros.</p>
     <p><em>Reflectores › Actualizar estado</em> pide al momento el estado de todos los reflectores.</p>
     <h3 id="origenes-reflectores">Orígenes de reflectores</h3>
     <p><em>Orígenes…</em>, en la gestión de reflectores, muestra de dónde vienen los reflectores además de tu propia lista:</p>
-    <figure><img src="/img/es-sources.png?v=0.8.0" width="560" height="320" alt="Orígenes de reflectores" loading="lazy"><figcaption>Los orígenes, con cuántos reflectores trae cada uno y cuándo se actualizó</figcaption></figure>
+    <figure><img src="/img/es-sources.png?v=0.8.1" width="560" height="320" alt="Orígenes de reflectores" loading="lazy"><figcaption>Los orígenes, con cuántos reflectores trae cada uno y cuándo se actualizó</figcaption></figure>
     <ul>
       <li><strong>Integrada en QDStar</strong>: la selección que trae QDStar, que se actualiza con cada versión nueva.</li>
       <li><strong>URL</strong>: una lista publicada en un servidor web (<code>https://…/reflectors.json</code>).</li>
@@ -215,11 +215,11 @@
 ]</code></pre>
 
     <h2 id="historico">Histórico y log</h2>
-    <figure><img src="/img/es-tab-history.png?v=0.8.0" width="404" height="420" alt="Pestaña Histórico" loading="lazy"><figcaption>La pestaña Histórico</figcaption></figure>
-    <p>La pestaña <strong>Histórico</strong> recoge cada pasada, recibida o transmitida. Las columnas son hora (con la duración de la pasada entre paréntesis), indicativo, nombre, distancia, reflector, localidad y mensaje. Tus propias pasadas tienen el indicativo en rojo. Si el nombre o el mensaje llegan cuando la pasada ya ha terminado, se completan en su fila. <em>Histórico › Vaciar histórico…</em> lo borra.</p>
+    <figure><img src="/img/es-tab-history.png?v=0.8.1" width="404" height="420" alt="Pestaña Histórico" loading="lazy"><figcaption>La pestaña Histórico</figcaption></figure>
+    <p>La pestaña <strong>Histórico</strong> recoge cada pasada, recibida o transmitida. Las columnas son hora (con la duración de la pasada entre paréntesis), indicativo, nombre, distancia, reflector, localidad y mensaje. Tus propias pasadas tienen el indicativo en rojo; <strong>Ocultar las mías</strong>, en la barra de título de la vista, las oculta. Si el nombre o el mensaje llegan cuando la pasada ya ha terminado, se completan en su fila. <em>Histórico › Vaciar histórico…</em> lo borra.</p>
     <h3 id="detalle-historico">Una pasada del histórico en la pantalla</h3>
     <p>Haz clic en una fila del Histórico y la pantalla muestra esa pasada en lugar de la actividad en directo, dentro de un marco violeta con la etiqueta <strong>HISTÓRICO</strong>. Ves su fecha, duración, reflector, indicativo, nombre, localidad, mensaje, y la distancia y el rumbo. Las flechas del teclado recorren el histórico y la pantalla las sigue. El bloque del reflector y los últimos escuchados siguen en directo.</p>
-    <figure><img src="/img/es-screen-history.png?v=0.8.0" width="480" height="360" alt="La pantalla mostrando una pasada del histórico" loading="lazy"><figcaption>Una pasada elegida en el Histórico, con el botón LIVE</figcaption></figure>
+    <figure><img src="/img/es-screen-history.png?v=0.8.1" width="480" height="360" alt="La pantalla mostrando una pasada del histórico" loading="lazy"><figcaption>Una pasada elegida en el Histórico, con el botón LIVE</figcaption></figure>
     <p>Para volver al tiempo real, pulsa <strong>▶ LIVE</strong> (o haz clic en cualquier parte de la pantalla) o la tecla <kbd>Esc</kbd>. También vuelve sola en cuanto empieza una pasada nueva, recibida o transmitida, para que no te pierdas ninguna.</p>
     <p>La pestaña <strong>Log</strong> cuenta lo que va haciendo la aplicación: conexiones, enlaces y errores. <em>Radio › Registrar CI-V de RX/TX en el log</em> añade el tráfico CI-V en bruto, que viene bien para informar de un problema.</p>
 
@@ -227,9 +227,9 @@
     <h3>Informes recibidos</h3>
     <p>Muchas estaciones mandan su posición (D-PRS) en cada pasada. QDStar la lee de la radio y muestra la distancia y el rumbo en la pantalla y en el histórico.</p>
     <p>La pestaña <strong>D-PRS</strong> recoge todos los informes recibidos: posiciones, objetos, ítems e informes meteorológicos. Eso incluye los que reenvían otras estaciones, como las pasarelas APRS que repiten informes hacia D-STAR, y la columna <em>Vía</em> dice qué estación trajo cada uno.</p>
-    <figure><img src="/img/es-tab-dprs.png?v=0.8.0" width="404" height="250" alt="Pestaña D-PRS" loading="lazy"><figcaption>La pestaña D-PRS</figcaption></figure>
+    <figure><img src="/img/es-tab-dprs.png?v=0.8.1" width="404" height="250" alt="Pestaña D-PRS" loading="lazy"><figcaption>La pestaña D-PRS</figcaption></figure>
     <p>La pestaña <strong>Meteo</strong> muestra una ficha por cada estación meteorológica oída, con temperatura, humedad, presión, lluvia y viento.</p>
-    <figure><img src="/img/es-tab-weather.png?v=0.8.0" width="404" height="150" alt="Pestaña Meteo" loading="lazy"><figcaption>Una estación meteorológica recibida por D-PRS</figcaption></figure>
+    <figure><img src="/img/es-tab-weather.png?v=0.8.1" width="404" height="150" alt="Pestaña Meteo" loading="lazy"><figcaption>Una estación meteorológica recibida por D-PRS</figcaption></figure>
     <p>Puedes ocultar las dos pestañas en los ajustes. La posición de la estación en el aire se sigue mostrando igualmente.</p>
     <h3>Tu propia posición</h3>
     <p><em>Radio › Posición D-PRS…</em> lee y cambia por CI-V los ajustes D-PRS de la radio:</p>
@@ -247,7 +247,7 @@
     <h2 id="ajustes">Ajustes</h2>
     <p>Se abren desde <em>Radio › Ajustes…</em>. Están repartidos en cuatro pestañas: <strong>Interfaz</strong>, <strong>Radio</strong>, <strong>INT / EXT</strong> y <strong>APRS-IS</strong>. La primera vez, sin la radio configurada todavía, se abren en la pestaña <strong>Radio</strong>. Los cambios se aplican al pulsar <em>Guardar</em>. Si cambias el idioma, QDStar lo usa a partir del siguiente arranque.</p>
     <h3>Interfaz</h3>
-    <figure><img src="/img/es-settings-interface.png?v=0.8.0" width="572" height="327" alt="Ajustes, pestaña Interfaz" loading="lazy"><figcaption>La pestaña Interfaz, con el grupo Bandeja del sistema</figcaption></figure>
+    <figure><img src="/img/es-settings-interface.png?v=0.8.1" width="572" height="327" alt="Ajustes, pestaña Interfaz" loading="lazy"><figcaption>La pestaña Interfaz, con el grupo Bandeja del sistema</figcaption></figure>
 
     <table>
       <tr><th>Campo</th><th>Para qué sirve</th></tr>
@@ -259,7 +259,7 @@
       <tr><td>Al cerrar la ventana, QDStar sigue funcionando en la bandeja</td><td>El botón de cerrar oculta la ventana en vez de salir. Para salir, usa el menú de la bandeja o <em>Radio › Salir</em>.</td></tr>
     </table>
     <h3>Radio (WiFi)</h3>
-    <figure><img src="/img/es-settings-radio.png?v=0.8.0" width="572" height="327" alt="Ajustes, pestaña Radio" loading="lazy"><figcaption>La pestaña Radio</figcaption></figure>
+    <figure><img src="/img/es-settings-radio.png?v=0.8.1" width="572" height="327" alt="Ajustes, pestaña Radio" loading="lazy"><figcaption>La pestaña Radio</figcaption></figure>
     <table>
       <tr><th>Campo</th><th>Para qué sirve</th></tr>
       <tr><td>Indicativo</td><td>Tu indicativo, sin sufijo (<code>EA7KLX</code>). Si lo dejas vacío, QDStar lo rellena con el MY call sign de la radio la primera vez que conecta. El gateway EXT lo usa para identificarse en los reflectores, y también para formar los Terminal/AP Call Sign cuando los dejas vacíos.</td></tr>
@@ -269,7 +269,7 @@
       <tr><td>Usuario de red / Contraseña</td><td>El <em>Network User</em> creado en la radio en <em>Remote Settings</em>. Solo se usan para iniciar sesión en la radio.</td></tr>
       <tr><td>Conectar al arrancar</td><td>Conecta con la radio en cuanto se abre QDStar. Si no está marcado, conecta desde <em>Radio › Conectar</em>.</td></tr>
     </table>
-    <figure><img src="/img/es-settings-modes.png?v=0.8.0" width="572" height="327" alt="Ajustes, pestaña INT / EXT" loading="lazy"><figcaption>La pestaña INT / EXT</figcaption></figure>
+    <figure><img src="/img/es-settings-modes.png?v=0.8.1" width="572" height="327" alt="Ajustes, pestaña INT / EXT" loading="lazy"><figcaption>La pestaña INT / EXT</figcaption></figure>
     <h3>Modo INT (gateway interno, WiFi)</h3>
     <table>
       <tr><th>Campo</th><th>Para qué sirve</th></tr>
@@ -294,7 +294,7 @@
     </table>
 
     <h3>APRS-IS</h3>
-    <figure><img src="/img/es-settings-aprs.png?v=0.8.0" width="572" height="327" alt="Ajustes, pestaña APRS-IS" loading="lazy"><figcaption>La pestaña APRS-IS</figcaption></figure>
+    <figure><img src="/img/es-settings-aprs.png?v=0.8.1" width="572" height="327" alt="Ajustes, pestaña APRS-IS" loading="lazy"><figcaption>La pestaña APRS-IS</figcaption></figure>
     <table>
       <tr><th>Campo</th><th>Para qué sirve</th></tr>
       <tr><td>Enviar mi posición D-PRS a APRS-IS (aprs.fi) tras cada pasada</td><td>Mira <a href="#aprs">Tu posición en APRS-IS</a>. Desactivado por defecto.</td></tr>
