@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 
 from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtSerialPort import QSerialPortInfo
 from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
                                QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
@@ -172,6 +172,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.leds)
 
         self.screen = ReflectorScreen()
+        self.screen.live_requested.connect(self.show_live)
+        self.review_id = None      # history entry shown on the screen instead of live activity
+        self.filling_history = False
         layout.addWidget(self.screen, 0)
 
         mode_bar = QHBoxLayout()
@@ -229,6 +232,12 @@ class MainWindow(QMainWindow):
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
         self.tabs.addTab(self.history, tr("History"))
+        self.history.cellClicked.connect(lambda row, _col: self._review_row(row))
+        # Arrow keys through the history move the detail along; a refill does not
+        self.history.currentCellChanged.connect(
+            lambda row, _c, _pr, _pc: self.review_id is not None and not self.filling_history
+            and self.history.hasFocus() and self._review_row(row))
+        QShortcut(QKeySequence(Qt.Key_Escape), self, activated=self.show_live)
 
         self.log_view = QPlainTextEdit(readOnly=True)
         self.log_view.setMaximumBlockCount(3000)
@@ -767,6 +776,31 @@ class MainWindow(QMainWindow):
             if self.radio or config.get("radio/auto_connect"):
                 self.connect_radio()
 
+    # --- history detail on the screen ------------------------------------
+
+    def _review_row(self, row):
+        item = self.history.item(row, 0)
+        entry = self.storage.entry(item.data(Qt.UserRole)) if item else None
+        if not entry:
+            return
+        if self.rx_entry and entry["id"] == self.rx_entry and self.rx_info and self.rx_info.get("live"):
+            self.show_live()    # the over on air: the live view already shows it
+            return
+        self.review_id = entry["id"]
+        info = {k: entry.get(k) for k in ("callsign", "suffix", "name", "location", "message", "started", "ended",
+                                          "direction", "reflector")}
+        pos = (entry["lat"], entry["lon"]) if entry.get("lat") is not None and entry.get("lon") is not None else None
+        self._with_position(info, pos)
+        self.screen.update_state(review=info)
+
+    def show_live(self):
+        """Back to the real-time view (the LIVE button on the screen, Esc, or a new over)."""
+        if self.review_id is None:
+            return
+        self.review_id = None
+        self.screen.update_state(review=None)
+        self.history.clearSelection()
+
     # --- activity / history ----------------------------------------------
 
     def _is_system_call(self, call):
@@ -782,6 +816,7 @@ class MainWindow(QMainWindow):
         if self._is_system_call(calls.caller):
             self.log(tr("System reply: {caller} → {called}", caller=calls.caller, called=calls.called))
             return
+        self.show_live()        # a new over on air matters more than the one being reviewed
         header = (calls.caller, calls.called, calls.rpt1, calls.rpt2)
         last = self.last_rx
         self.last_rx = None
@@ -869,6 +904,8 @@ class MainWindow(QMainWindow):
 
     def _transmitting(self, tx):
         self.leds["tx"].set("red" if tx else "off")
+        if tx:
+            self.show_live()
         ref = self.current_reflector()
         base = self.my_call.split()[0] if self.my_call.split() else "?"
         # The gateway reads the over's header over USB before CI-V reports the TX; the TO polled
@@ -937,8 +974,12 @@ class MainWindow(QMainWindow):
         return Freeze()
 
     def _load_history(self):
-        with self._bulk_fill(self.history):
-            self._fill_history()
+        self.filling_history = True
+        try:
+            with self._bulk_fill(self.history):
+                self._fill_history()
+        finally:
+            self.filling_history = False
 
     def _fill_history(self):
         rows = self.storage.recent()
@@ -964,7 +1005,11 @@ class MainWindow(QMainWindow):
                 if c == 1 and r["direction"] == "TX":
                     cell.setForeground(Qt.red)   # our own overs
                 cell.setToolTip(time.strftime("%Y-%m-%d %H:%M:%S", started) if c == 0 else v)
+                if c == 0:
+                    cell.setData(Qt.UserRole, r["id"])
                 self.history.setItem(i, c, cell)
+            if r["id"] == self.review_id:
+                self.history.selectRow(i)     # keep the reviewed over highlighted across refills
 
     @staticmethod
     def _duration(seconds):

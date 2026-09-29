@@ -4,7 +4,7 @@ import math
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QGuiApplication, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
@@ -129,6 +129,7 @@ DIM = QColor("#cfc8b8")      # secondary text: light, still distinct from WHITE
 WHITE = QColor("#f2efe6")
 RED = QColor("#ff4d4d")
 CYAN = QColor("#63d8ff")
+VIOLET = QColor("#c9a2ff")   # an over from the history, not what is on air now
 BG = QColor("#050505")
 
 W, H = 640, 480  # virtual canvas
@@ -148,7 +149,11 @@ def _ago(ts):
 
 
 class ReflectorScreen(QWidget):
-    """Black 4:3 display with reflector data and current activity."""
+    """Black 4:3 display with reflector data and current activity.
+    With state['review'] set, the activity block shows that over from the history instead;
+    a click on the screen asks to go back to live (live_requested)."""
+
+    live_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -165,7 +170,15 @@ class ReflectorScreen(QWidget):
 
     def update_state(self, **values):
         self.state.update(values)
+        if "review" in values:
+            self.setCursor(Qt.PointingHandCursor if values["review"] else Qt.ArrowCursor)
+            self.setToolTip(tr("Click (or press Esc) to go back to live") if values["review"] else "")
         self.update()
+
+    def mousePressEvent(self, event):
+        if self.state.get("review") and event.button() == Qt.LeftButton:
+            self.live_requested.emit()
+        super().mousePressEvent(event)
 
     def hasHeightForWidth(self):
         return True
@@ -267,7 +280,9 @@ class ReflectorScreen(QWidget):
 
         # --- activity block
         rx = s.get("rx")
-        if s.get("tx"):
+        if s.get("review"):
+            self._review(p, s["review"], s)
+        elif s.get("tx"):
             self._text(p, L, 176, "TX", 22, RED, True)
             self._text(p, L + 50, 176, tr("transmitting"), 18, RED)
             self._text(p, L, 232, s.get("my_call", ""), 52, RED, True)
@@ -317,6 +332,38 @@ class ReflectorScreen(QWidget):
             footer += " · D-PRS " + ("ON" if s["dprs_on"] else "OFF")
         self._text(p, L, H - 12, footer, 16, DIM, width=R - L - 110)
         self._text(p, R, H - 12, time.strftime("%H:%M:%S"), 16, DIM, align=Qt.AlignRight)
+
+    def _review(self, p, entry, s):
+        """An over picked in the history: same layout as a received over, framed in violet,
+        with its date, duration and reflector, and a LIVE button to go back."""
+        L, R = 24, W - 24
+        p.setPen(QPen(VIOLET, 2))
+        p.setBrush(Qt.NoBrush)
+        p.drawRoundedRect(QRectF(L - 12, 148, R - L + 24, 176), 10, 10)
+        self._text(p, L, 176, tr("HISTORY"), 20, VIOLET, True)
+        details = [time.strftime("%d/%m %H:%M:%S", time.localtime(entry["started"]))]
+        if entry.get("ended"):
+            secs = int(entry["ended"] - entry["started"])
+            details.append(f"{secs // 60}:{secs % 60:02d}" if secs >= 60 else f"{secs}s")
+        if entry.get("reflector"):
+            details.append(entry["reflector"])
+        live = "▶ " + tr("LIVE")
+        pill_w = self._advance(live, 16, True) + 20
+        x = L + self._advance(tr("HISTORY"), 20, True) + 14
+        self._text(p, x, 176, " · ".join(details), 16, DIM, width=R - pill_w - 14 - x)
+        pill = QRectF(R - pill_w, 158, pill_w, 26)
+        p.setPen(QPen(GREEN, 1.5))
+        p.drawRoundedRect(pill, 13, 13)
+        self._text(p, pill.center().x(), 177, live, 16, GREEN, True, align=Qt.AlignHCenter, width=pill_w)
+        call = entry.get("callsign", "")
+        if entry.get("suffix"):
+            call += f" /{entry['suffix']}"
+        self._text(p, L, 232, call, 52, RED if entry.get("direction") == "TX" else AMBER, True)
+        self._text(p, L, 264, entry.get("name") or "", 22, WHITE, width=BOX_X - L - 10)
+        self._text(p, L, 290, entry.get("location") or "", 16, DIM, width=BOX_X - L - 10)
+        self._position_box(p, entry, s)
+        if entry.get("message"):
+            self._text(p, L, 314, f"« {entry['message']} »", 17, CYAN)
 
     def _position_box(self, p, rx, s):
         """Fixed box: distance and direction to the station (D-PRS), or a placeholder.

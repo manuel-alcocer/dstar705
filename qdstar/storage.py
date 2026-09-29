@@ -89,6 +89,12 @@ class Storage:
                 f" AND ({field} IS NULL OR {field} = '')", (value, callsign, since))
             return cur.rowcount
 
+    def entry(self, entry_id):
+        """One history row, or None."""
+        with self.lock:
+            row = self.db.execute("SELECT * FROM history WHERE id = ?", (entry_id,)).fetchone()
+        return dict(row) if row else None
+
     def recent(self, limit=500):
         with self.lock:
             rows = self.db.execute("SELECT * FROM history ORDER BY started DESC LIMIT ?", (limit,)).fetchall()
