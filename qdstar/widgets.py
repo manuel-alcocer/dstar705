@@ -387,8 +387,12 @@ class ReflectorScreen(QWidget):
         elif has_distance:
             bearing = rx.get("bearing") or 0
             self._direction_icon(p, icon, 20, bearing)
-            self._text(p, text_x, 272, f"{rx['distance']:.0f} km", 22, CYAN, True, align=Qt.AlignHCenter,
-                       width=text_w)
+            # 1000 km and more do not fit next to the arrow at the full size: shrink to fit
+            distance = f"{rx['distance']:.0f} km"
+            size = 22
+            while size > 14 and self._advance(distance, size, True) > text_w - 4:
+                size -= 1
+            self._text(p, text_x, 272, distance, size, CYAN, True, align=Qt.AlignHCenter, width=text_w)
             self._text(p, text_x, 297, f"{tr(compass_point(bearing))} · {bearing:.0f}°", 14, WHITE, True,
                        align=Qt.AlignHCenter, width=text_w)
         elif rx.get("pos"):
