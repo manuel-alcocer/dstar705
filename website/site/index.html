@@ -13,7 +13,7 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar</a>
+    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
     <nav>
       <a href="#features">Features</a>
       <a href="#download">Download</a>
@@ -38,8 +38,8 @@
       <p class="version">Free software · GPL-3.0</p>
     </div>
     <div class="photos">
-      <img src="/img/photo-history.jpg" width="634" height="1312" alt="QDStar linked to DCS214 D, receiving a station from California, with the history tab open">
-      <img src="/img/photo-weather.jpg" width="634" height="1312" alt="QDStar linked to DCS214 D with the weather tab showing a D-PRS weather station">
+      <img src="/img/photo-history.jpg" width="525" height="1190" alt="QDStar on XLX214 D receiving a station from Gran Canaria, with the History view open">
+      <img src="/img/photo-weather.jpg" width="525" height="1190" alt="QDStar on XLX214 D with the Weather view showing two D-PRS weather stations">
     </div>
   </div>
 
@@ -55,10 +55,15 @@
       <div class="card"><h3>Over WiFi</h3><p>Talks to the radio with the Icom network protocol (control and CI-V, no audio). No wfview needed.</p></div>
       <div class="card"><h3>Built-in gateway</h3><p>Terminal Mode over USB with its own gateway: DPlus (REF), DCS (DCS, XLX) and DExtra (XRF). No DStarRepeater or ircDDBGateway.</p></div>
       <div class="card"><h3>INT and EXT modes</h3><p>Use the radio's internal gateway with a G3 server, or link reflectors from the PC. Switch with one click.</p></div>
+      <div class="card"><h3>Link from the radio</h3><p>In EXT, link, unlink and run an echo test from the radio's UR field, as with ircDDBGateway.</p></div>
       <div class="card"><h3>Reflector screen</h3><p>Reflector state and nodes, the station on the air with name, location, distance and bearing, and the reflector's last heard list.</p></div>
+      <div class="card"><h3>History</h3><p>Every over is saved: time, call sign, name, reflector, duration, message and location. Click one to see it again on the screen.</p></div>
       <div class="card"><h3>D-PRS</h3><p>Positions, objects, items and weather reports received, relayed ones included. Manage your own D-PRS beacon from the app.</p></div>
+      <div class="card"><h3>APRS-IS</h3><p>Your D-PRS position goes to aprs.fi after every over, and optionally the positions of the stations you hear.</p></div>
       <div class="card"><h3>Weather</h3><p>A card per D-PRS weather station: temperature, humidity, pressure, rain and wind.</p></div>
-      <div class="card"><h3>History</h3><p>Every over is saved: time, call sign, name, reflector, duration, message and location.</p></div>
+      <div class="card"><h3>System tray</h3><p>An icon with the station on the air and a notification when someone comes on, with the window out of sight.</p></div>
+      <div class="card"><h3>Your layout</h3><p>History, Log, D-PRS and Weather can be detached into their own windows, attached back or hidden.</p></div>
+      <div class="card"><h3>Updates</h3><p>QDStar tells you when a new version is out, and the Linux AppImage updates itself after checking the download.</p></div>
       <div class="card"><h3>Windows and Linux</h3><p>Installer for Windows, .deb, AppImage and tar.gz for Linux x86-64 and ARM64 (Raspberry Pi and other mini PCs).</p></div>
       <div class="card"><h3>English and Spanish</h3><p>The interface follows the system language. New translations are welcome.</p></div>
     </div>
@@ -70,7 +75,8 @@
       <figure><img src="/img/en-tab-history.png" width="404" height="420" alt="History tab" loading="lazy"><figcaption>History of overs</figcaption></figure>
       <figure><img src="/img/en-tab-dprs.png" width="404" height="250" alt="D-PRS tab" loading="lazy"><figcaption>D-PRS reports received</figcaption></figure>
       <figure><img src="/img/en-tab-weather.png" width="404" height="150" alt="Weather tab" loading="lazy"><figcaption>D-PRS weather stations</figcaption></figure>
-      <figure><img src="/img/en-settings.png" width="502" height="592" alt="Settings dialog" loading="lazy"><figcaption>Settings</figcaption></figure>
+      <figure><img src="/img/en-screen-history.png" width="480" height="360" alt="The screen showing an over from the history" loading="lazy"><figcaption>An over from the history on the screen</figcaption></figure>
+      <figure><img src="/img/en-settings-interface.png" width="524" height="327" alt="Settings dialog" loading="lazy"><figcaption>Settings</figcaption></figure>
       <figure><img src="/img/en-reflectors.png" width="560" height="460" alt="Reflector manager" loading="lazy"><figcaption>Reflector manager</figcaption></figure>
     </div>
     <p style="color:var(--dim);font-size:14px">Call signs of other stations are hidden in these images.</p>

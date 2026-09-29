@@ -1,4 +1,4 @@
-// Shows the latest release's version next to the download link. Without
+// Shows the latest release's version next to the download link and the logo. Without
 // JavaScript (or if GitHub does not answer) the label keeps its default text.
 (function () {
   fetch("https://api.github.com/repos/manuel-alcocer/qdstar/releases/latest",

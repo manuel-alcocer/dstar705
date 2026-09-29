@@ -68,6 +68,14 @@ header.top .wrap {
   margin-right: auto;
 }
 .brand img { width: 30px; height: 30px; }
+/* Latest release, filled in by latest.js (empty without JavaScript) */
+.brand .ver {
+  font: 500 13px var(--mono);
+  color: var(--dim);
+  align-self: flex-end;
+  margin: 0 0 3px -4px;
+}
+.brand .ver:empty { display: none; }
 
 header.top nav { display: flex; gap: 18px; align-items: center; }
 header.top nav a { color: var(--dim); text-decoration: none; font-size: 15px; }

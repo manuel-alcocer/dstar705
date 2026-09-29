@@ -13,7 +13,7 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar</a>
+    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
     <nav>
       <a href="/#features">Features</a>
       <a href="/#download">Download</a>
@@ -149,7 +149,14 @@
     </ul>
     <h3>Mode, reflector and tabs</h3>
     <p>Below the screen are the <strong>INT · WiFi</strong> and <strong>EXT · USB/PC</strong> buttons, with a LED on the active one. A ⚠ sign appears when the radio does not match the chosen mode, for example when the radio is still in INT while you chose EXT. Hover over it to see what to check.</p>
-    <p>Next come the reflector list with its buttons, and the <strong>History</strong>, <strong>Log</strong>, <strong>D-PRS</strong> and <strong>Weather</strong> tabs.</p>
+    <p>Next come the reflector list with its buttons, and the <strong>History</strong>, <strong>Log</strong>, <strong>D-PRS</strong> and <strong>Weather</strong> views.</p>
+    <h3 id="views">The views: History, Log, D-PRS and Weather</h3>
+    <p>By default the four views sit as tabs under the screen. Each one has a small title bar with two buttons:</p>
+    <ul>
+      <li><strong>Detach</strong> (or a double click on the title bar) moves the view into its own window, which you can move and make as large as you like. The History, for instance, can be much wider than the main window. The same button, or a double click, attaches it back.</li>
+      <li><strong>Close</strong> (✕) hides the view. The <em>View</em> menu has a tick box for each view to show or hide it.</li>
+    </ul>
+    <p><em>View › Reset layout</em> brings the four views back as tabs. QDStar remembers the layout between sessions. With no view left in the main window, it shrinks to the screen and its bars, and it grows back when you attach one.</p>
     <h3 id="tray">System tray icon</h3>
     <figure><img src="/img/tray-states.png" width="192" height="48" alt="Tray icon: idle, receiving and transmitting" loading="lazy"><figcaption>The tray icon: idle, receiving (green dot) and transmitting (red dot)</figcaption></figure>
     <p>QDStar puts an icon in the system tray. It has a green dot while you receive and a red one while you transmit, and its tooltip shows the mode, the reflector and the station on the air. Click it to show or hide the window. Right-click it for the menu, with <em>Show/Hide QDStar</em> and <em>Quit</em>.</p>
@@ -192,6 +199,10 @@
     <h2 id="history">History and log</h2>
     <figure><img src="/img/en-tab-history.png" width="404" height="420" alt="History tab" loading="lazy"><figcaption>The History tab</figcaption></figure>
     <p>The <strong>History</strong> tab lists every over, received and transmitted. The columns are time (with the over's duration in brackets), call sign, name, distance, reflector, location and message. Your own overs have the call sign in red. A name or message that arrives after the over has ended is filled in on its row. <em>History › Clear history…</em> deletes it.</p>
+    <h3 id="history-detail">An over from the history on the screen</h3>
+    <p>Click a row of the History and the screen shows that over in place of the live activity, in a violet frame labelled <strong>HISTORY</strong>. You see its date, duration, reflector, call sign, name, location, message, and the distance and bearing. The arrow keys move through the history, and the screen follows. The reflector block and the last heard list stay live.</p>
+    <figure><img src="/img/en-screen-history.png" width="480" height="360" alt="The screen showing an over from the history" loading="lazy"><figcaption>An over picked in the History, with the LIVE button</figcaption></figure>
+    <p>To go back to the real-time view, press <strong>▶ LIVE</strong> (or click anywhere on the screen) or press <kbd>Esc</kbd>. It also goes back on its own as soon as a new over starts, received or transmitted, so you never miss one.</p>
     <p>The <strong>Log</strong> tab shows what the application is doing: connections, links, errors. <em>Radio › Log RX/TX CI-V frames</em> adds the raw CI-V traffic, which is useful when reporting a problem.</p>
 
     <h2 id="dprs">D-PRS and weather</h2>
@@ -216,19 +227,21 @@
     <p>The APRS-IS passcode is worked out from your call sign, so there is nothing to type. Optionally, QDStar can also send the positions of the stations it hears. Positions that come from APRS (objects, weather stations, reports relayed by other stations) are never sent back.</p>
 
     <h2 id="settings">Settings</h2>
-    <figure><img src="/img/en-settings.png" width="502" height="814" alt="Settings dialog" loading="lazy"><figcaption>Radio › Settings…</figcaption></figure>
-    <p>Open them from <em>Radio › Settings…</em>. Changes apply when you press <em>Save</em>. If you change the language, QDStar uses it from the next start.</p>
+    <p>Open them from <em>Radio › Settings…</em>. They are split into four tabs: <strong>Interface</strong>, <strong>Radio</strong>, <strong>INT / EXT</strong> and <strong>APRS-IS</strong>. The first time, with no radio set up yet, they open on the <strong>Radio</strong> tab. Changes apply when you press <em>Save</em>. If you change the language, QDStar uses it from the next start.</p>
     <h3>Interface</h3>
+    <figure><img src="/img/en-settings-interface.png" width="524" height="327" alt="Settings, Interface tab" loading="lazy"><figcaption>The Interface tab, with the System tray group</figcaption></figure>
+
     <table>
       <tr><th>Field</th><th>What it does</th></tr>
       <tr><td>Language</td><td>The language of the interface. <em>System language</em> follows your computer, and falls back to English when the system language has no translation.</td></tr>
       <tr><td>Check for new versions on start-up</td><td>On start-up, and once a day while QDStar is open, it asks GitHub whether there is a new version (see <a href="#updates">Updates</a>). Nothing else is sent.</td></tr>
-      <tr><td>D-PRS tab with every report received</td><td>Shows the <strong>D-PRS</strong> and <strong>Weather</strong> tabs. Turn it off if you only care about the position of the station on the air, which the screen shows either way.</td></tr>
+      <tr><td>D-PRS tab with every report received</td><td>Shows the <strong>D-PRS</strong> and <strong>Weather</strong> views. Turn it off if you only care about the position of the station on the air, which the screen shows either way.</td></tr>
       <tr><td>Icon in the system tray</td><td>Shows the <a href="#tray">tray icon</a>. It is not available when the desktop has no system tray.</td></tr>
       <tr><td>Notify when a station comes on air</td><td>A notification for each new station on the air, only while the QDStar window is not in front.</td></tr>
       <tr><td>Closing the window keeps QDStar running in the tray</td><td>The close button hides the window instead of quitting. Quit from the tray menu or from <em>Radio › Quit</em>.</td></tr>
     </table>
     <h3>Radio (WiFi)</h3>
+    <figure><img src="/img/en-settings-radio.png" width="524" height="327" alt="Settings, Radio tab" loading="lazy"><figcaption>The Radio tab</figcaption></figure>
     <table>
       <tr><th>Field</th><th>What it does</th></tr>
       <tr><td>Call sign</td><td>Your call sign, without a suffix (<code>EA7KLX</code>). If you leave it empty, QDStar fills it in with the radio's MY call sign the first time it connects. The EXT gateway uses it to log in to reflectors, and to build the Terminal/AP call signs when those are left empty.</td></tr>
@@ -238,6 +251,7 @@
       <tr><td>Network user / Password</td><td>The <em>Network User</em> created on the radio in <em>Remote Settings</em>. They are only used to log in to the radio.</td></tr>
       <tr><td>Connect on start-up</td><td>Connects to the radio as soon as QDStar opens. Otherwise, connect from <em>Radio › Connect</em>.</td></tr>
     </table>
+    <figure><img src="/img/en-settings-modes.png" width="524" height="327" alt="Settings, INT / EXT tab" loading="lazy"><figcaption>The INT / EXT tab</figcaption></figure>
     <h3>INT mode (internal gateway, WiFi)</h3>
     <table>
       <tr><th>Field</th><th>What it does</th></tr>
@@ -262,6 +276,7 @@
     </table>
 
     <h3>APRS-IS</h3>
+    <figure><img src="/img/en-settings-aprs.png" width="524" height="327" alt="Settings, APRS-IS tab" loading="lazy"><figcaption>The APRS-IS tab</figcaption></figure>
     <table>
       <tr><th>Field</th><th>What it does</th></tr>
       <tr><td>Send my D-PRS position to APRS-IS (aprs.fi) after every over</td><td>See <a href="#aprs">Your position on APRS-IS</a>. Off by default.</td></tr>
@@ -309,5 +324,6 @@
   </div>
 </footer>
 <script src="/zoom.js" defer></script>
+<script src="/latest.js" defer></script>
 </body>
 </html>

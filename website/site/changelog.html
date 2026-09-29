@@ -13,7 +13,7 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar</a>
+    <a class="brand" href="/"><img src="/img/icon.png" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
     <nav>
       <a href="/#features">Features</a>
       <a href="/#download">Download</a>
@@ -28,6 +28,15 @@
 <main class="wrap changes">
   <h1>Changelog</h1>
   <p class="lead">What is new and fixed in each version. The files of every version are on <a href="https://github.com/manuel-alcocer/qdstar/releases">GitHub releases</a>.</p>
+  <section class="release" id="v0.7.0">
+    <h2>0.7.0 <time datetime="2026-09-29">2026-09-29</time></h2>
+    <ul>
+      <li>New: click a row of the History to see that over again on the screen, with its date, duration, reflector and distance. <em>▶ LIVE</em>, <kbd>Esc</kbd> or a new over bring back the live view. See <a href="/manual.html#history-detail">the manual</a>.</li>
+      <li>New: the History, Log, D-PRS and Weather views can be detached into their own resizable windows, attached back or hidden, with a new <em>View</em> menu. QDStar remembers the layout. See <a href="/manual.html#views">the manual</a>.</li>
+      <li>Settings are split into four tabs (Interface, Radio, INT / EXT and APRS-IS), so the dialog fits on a laptop screen again.</li>
+      <li>Fixed: distances of 1000 km or more were cut short on the screen ("1352 …").</li>
+    </ul>
+  </section>
   <section class="release" id="v0.6.1">
     <h2>0.6.1 <time datetime="2026-09-28">2026-09-28</time></h2>
     <ul>
@@ -231,5 +240,6 @@
     <span><a href="https://github.com/manuel-alcocer/qdstar">Source code</a> · GPL-3.0-or-later</span>
   </div>
 </footer>
+<script src="/latest.js" defer></script>
 </body>
 </html>
