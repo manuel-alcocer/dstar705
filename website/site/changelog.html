@@ -13,7 +13,7 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/"><img src="/img/icon.png?v=0.7.0" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
+    <a class="brand" href="/"><img src="/img/icon.png?v=0.8.0" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
     <nav>
       <a href="/#features">Features</a>
       <a href="/#download">Download</a>
@@ -28,6 +28,15 @@
 <main class="wrap changes">
   <h1>Changelog</h1>
   <p class="lead">What is new and fixed in each version. The files of every version are on <a href="https://github.com/manuel-alcocer/qdstar/releases">GitHub releases</a>.</p>
+  <section class="release" id="v0.8.0">
+    <h2>0.8.0 <time datetime="2026-09-29">2026-09-29</time></h2>
+    <ul>
+      <li>New: reflector sources. Besides your own reflectors, the list can take reflectors from the selection built into QDStar (now updated with each version), a URL, a file or a git repository, private ones included (with a token, or over SSH). See <a href="/manual.html#reflector-sources">the manual</a>.</li>
+      <li>Reflectors from a source are read only: <em>Copy to my list</em> makes your own copy, which wins over the source's. <em>Export my list…</em> saves your reflectors as JSON, to share them or publish them as a source.</li>
+      <li>Git passwords and tokens are kept in the system keyring (KWallet, GNOME Keyring or the Windows Credential Manager).</li>
+      <li>The built-in reflectors you had not changed now come from the built-in source. The ones you changed or added stay in your list.</li>
+    </ul>
+  </section>
   <section class="release" id="v0.7.0">
     <h2>0.7.0 <time datetime="2026-09-29">2026-09-29</time></h2>
     <ul>

@@ -13,7 +13,7 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/es/"><img src="/img/icon.png?v=0.7.0" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
+    <a class="brand" href="/es/"><img src="/img/icon.png?v=0.8.0" alt="">QDStar<span class="ver" data-version="v{v}"></span></a>
     <nav>
       <a href="/es/#funciones">Funciones</a>
       <a href="/es/#descarga">Descarga</a>
@@ -28,6 +28,15 @@
 <main class="wrap changes">
   <h1>Cambios</h1>
   <p class="lead">Novedades y correcciones de cada versión. Los ficheros de cada una están en <a href="https://github.com/manuel-alcocer/qdstar/releases">las releases de GitHub</a>.</p>
+  <section class="release" id="v0.8.0">
+    <h2>0.8.0 <time datetime="2026-09-29">2026-09-29</time></h2>
+    <ul>
+      <li>Nuevo: orígenes de reflectores. Además de tus propios reflectores, la lista puede tomar reflectores de la selección integrada en QDStar (que ahora se actualiza con cada versión), de una URL, de un fichero o de un repositorio git, también privados (con un token o por SSH). Mira <a href="/es/manual.html#origenes-reflectores">el manual</a>.</li>
+      <li>Los reflectores de un origen son de solo lectura: <em>Copiar a mi lista</em> crea tu propia copia, que gana a la del origen. <em>Exportar mi lista…</em> guarda tus reflectores en JSON, para compartirlos o publicarlos como origen.</li>
+      <li>Las contraseñas y los tokens de git se guardan en el llavero del sistema (KWallet, GNOME Keyring o el Administrador de credenciales de Windows).</li>
+      <li>Los reflectores integrados que no habías cambiado ahora vienen del origen integrado. Los que cambiaste o añadiste se quedan en tu lista.</li>
+    </ul>
+  </section>
   <section class="release" id="v0.7.0">
     <h2>0.7.0 <time datetime="2026-09-29">2026-09-29</time></h2>
     <ul>
