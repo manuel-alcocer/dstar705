@@ -7,7 +7,6 @@ import threading
 import time
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
@@ -23,8 +22,6 @@ ONLINE_MAX_AGE = 3600
 MODULE_ROW_RE = re.compile(r"\|\s*([A-Z])\s*\|\s*([^|]*?)\s*\|\s*(\d+)\s*\|\s*REF\d{3}\1L", re.I)
 
 FIELDS = ("via", "to", "server", "name", "description", "notes", "dashboard", "api")
-
-DEFAULT_REFLECTORS = Path(__file__).with_name("default_reflectors.json")
 
 
 def normalize_to(text, via="int"):
@@ -49,21 +46,33 @@ def split_to(to):
 
 
 class Registry(QObject):
+    """The user's own reflectors (reflectors.json, editable) plus the enabled sources
+    (sources.py: built into QDStar, URL, file, git), read only. When a reflector is in
+    several places, the user's own copy wins, then the sources in their order."""
+
     changed = Signal()
 
     def __init__(self):
         super().__init__()
+        from .sources import BUILTIN_ID, SourceManager
         self.path = config.data_dir() / "reflectors.json"
         self.lock = threading.Lock()
-        self.items = self._load()
+        self.sources = SourceManager(self._clean)
+        self.sources.updated.connect(self.changed)
+        self.items = self._load(BUILTIN_ID)
 
-    def _load(self):
+    def _load(self, builtin_id):
         try:
             items = json.loads(self.path.read_text())
         except (OSError, ValueError):
-            # First run: start from the reflector list shipped with the app
-            items = json.loads(DEFAULT_REFLECTORS.read_text(encoding="utf-8"))
+            items = []           # the shipped list comes from the built-in source
         items = [self._clean(i) for i in items if isinstance(i, dict) and i.get("to")]
+        if not config.get("reflectors/sources_migrated"):
+            # Up to 0.7 the shipped list was copied here on first run: keep only what the user
+            # added or changed, the rest now comes (and gets updated) from the built-in source
+            builtin = self.sources.source_items(builtin_id)
+            items = [i for i in items if i not in builtin]
+            config.put("reflectors/sources_migrated", True)
         self._save(items)
         return items
 
@@ -82,13 +91,29 @@ class Registry(QObject):
         tmp.write_text(json.dumps(items, indent=2, ensure_ascii=False))
         tmp.replace(self.path)
 
-    def list(self, via=None):
+    def _merged(self):
+        """Every reflector once, with 'source' (id, '' = the user's list) and 'origin' (name)."""
+        from .sources import display_name
         with self.lock:
-            return [dict(i) for i in self.items if via is None or i["via"] == via]
+            merged = [dict(i, source="", origin="") for i in self.items]
+        seen = {i["to"] for i in merged}
+        for source in self.sources.enabled():
+            for item in self.sources.source_items(source["id"]):
+                if item["to"] not in seen:
+                    seen.add(item["to"])
+                    merged.append(dict(item, source=source["id"], origin=display_name(source)))
+        return merged
+
+    def list(self, via=None):
+        return [i for i in self._merged() if via is None or i["via"] == via]
 
     def get(self, to):
+        return next((i for i in self._merged() if i["to"] == to), None)
+
+    def local(self):
+        """The user's own reflectors, as saved (for exporting)."""
         with self.lock:
-            return next((dict(i) for i in self.items if i["to"] == to), None)
+            return [dict(i) for i in self.items]
 
     def upsert(self, item, old_to=None):
         item = self._clean(item)

@@ -4,6 +4,8 @@
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import copy_metadata
+
 root = Path(SPECPATH).parent
 pkg = root / "qdstar"
 
@@ -13,6 +15,10 @@ datas = [
     (str(pkg / "fonts"), "qdstar/fonts"),
     (str(pkg / "translations"), "qdstar/translations"),
 ]
+# keyring finds its backends through entry points, which need the package metadata
+datas += copy_metadata("keyring")
+KEYRING_BACKENDS = ["keyring.backends.SecretService", "keyring.backends.kwallet", "keyring.backends.libsecret",
+                    "keyring.backends.Windows", "keyring.backends.macOS", "keyring.backends.chainer"]
 
 # Qt modules the app does not use: keep the bundle small
 excludes = [
@@ -26,7 +32,8 @@ a = Analysis(
     [str(root / "packaging" / "launcher.py")],
     pathex=[str(root)],
     datas=datas,
-    hiddenimports=["PySide6.QtSerialPort", "PySide6.QtNetwork", "PySide6.QtSvg", "certifi", "qdstar.single"],
+    hiddenimports=["PySide6.QtSerialPort", "PySide6.QtNetwork", "PySide6.QtSvg", "certifi", "qdstar.single",
+                   *KEYRING_BACKENDS],
     excludes=excludes,
 )
 # Drop Qt libraries/plugins pulled in indirectly that the app never loads

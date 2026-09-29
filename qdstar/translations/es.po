@@ -1470,3 +1470,231 @@ msgstr "Acoplar a la ventana principal"
 #: qdstar/widgets.py
 msgid "Detach into its own window"
 msgstr "Desacoplar en su propia ventana"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Copy to my list"
+msgstr "Copiar a mi lista"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Reflectors from other sources are read only: copy one to change it"
+msgstr "Los reflectores de otros orígenes son de solo lectura: cópialo para cambiarlo"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Sources…"
+msgstr "Orígenes…"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Reflector lists from QDStar, a URL, a file or a git repository"
+msgstr "Listas de reflectores de QDStar, una URL, un fichero o un repositorio git"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Export my list…"
+msgstr "Exportar mi lista…"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Save your own reflectors as JSON, to share them or publish them as a source"
+msgstr "Guarda tus reflectores en JSON, para compartirlos o publicarlos como origen"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Export my list"
+msgstr "Exportar mi lista"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "{n} reflectors saved in {path}"
+msgstr "{n} reflectores guardados en {path}"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Your own reflector"
+msgstr "Reflector propio"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Reflector sources"
+msgstr "Orígenes de reflectores"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Reflectors from these sources are added to your own list, read only. When a reflector is in several places, your own copy wins."
+msgstr "Los reflectores de estos orígenes se suman a tu lista, en solo lectura. Si un reflector está en varios sitios, gana tu copia."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Add"
+msgstr "Añadir"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Edit…"
+msgstr "Editar…"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Remove"
+msgstr "Quitar"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Update all"
+msgstr "Actualizar todos"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "updating…"
+msgstr "actualizando…"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "{n} reflectors"
+msgstr "{n} reflectores"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "The file is a JSON list of reflectors, like the one Export my list saves."
+msgstr "El fichero es una lista JSON de reflectores, como la que guarda Exportar mi lista."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "File"
+msgstr "Fichero"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "From: {origin} (read only). Copy it to your list to change it."
+msgstr "Origen: {origin} (solo lectura). Cópialo a tu lista para cambiarlo."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "not updated yet"
+msgstr "aún sin actualizar"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "off"
+msgstr "desactivado"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Remove {source}? Its reflectors disappear from the list."
+msgstr "¿Quitar {source}? Sus reflectores desaparecen de la lista."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "optional"
+msgstr "opcional"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Fill in where the list is."
+msgstr "Indica dónde está la lista."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "From: {origin} (read only)"
+msgstr "Origen: {origin} (solo lectura)"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Browse…"
+msgstr "Examinar…"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Forget the saved password or token"
+msgstr "Olvidar la contraseña o el token guardados"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "It is kept in the system keyring."
+msgstr "Se guarda en el llavero del sistema."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "⚠ No system keyring available: it would be kept in QDStar's settings file."
+msgstr "⚠ No hay llavero del sistema: se guardaría en el fichero de ajustes de QDStar."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Repository"
+msgstr "Repositorio"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Branch"
+msgstr "Rama"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "File in the repository"
+msgstr "Fichero en el repositorio"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "User"
+msgstr "Usuario"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Password or token"
+msgstr "Contraseña o token"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "the default one"
+msgstr "la de por defecto"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "only for private repositories"
+msgstr "solo para repositorios privados"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "unchanged"
+msgstr "sin cambios"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "With SSH (git@…), your own SSH keys are used."
+msgstr "Con SSH (git@…) se usan tus propias claves SSH."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "There is no system keyring: the password is kept in QDStar's settings file."
+msgstr "No hay llavero del sistema: la contraseña se guarda en el fichero de ajustes de QDStar."
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "URL"
+msgstr "URL"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Git repository"
+msgstr "Repositorio git"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Built into QDStar"
+msgstr "Integrada en QDStar"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Unknown source type {type}"
+msgstr "Tipo de origen desconocido: {type}"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "{origin} does not contain a list of reflectors"
+msgstr "{origin} no contiene una lista de reflectores"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "git: {error}"
+msgstr "git: {error}"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "No repository given"
+msgstr "No se ha indicado el repositorio"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "The path must be inside the repository"
+msgstr "La ruta tiene que estar dentro del repositorio"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "{n} skipped (invalid)"
+msgstr "{n} descartados (no válidos)"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "{origin} is not valid JSON: {error}"
+msgstr "{origin} no es un JSON válido: {error}"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "git is not installed (it is needed for git repositories)"
+msgstr "git no está instalado (hace falta para los repositorios git)"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "git did not finish in {seconds} s"
+msgstr "git no ha terminado en {seconds} s"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "{path} is not in the repository"
+msgstr "{path} no está en el repositorio"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "The URL must start with http:// or https://"
+msgstr "La URL tiene que empezar por http:// o https://"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Could not download it: {error}"
+msgstr "No se ha podido descargar: {error}"
+
+#: qdstar/dialogs.py qdstar/sources.py
+msgid "Could not read it: {error}"
+msgstr "No se ha podido leer: {error}"
+
+#: qdstar/dialogs.py
+msgid "1 reflector"
+msgstr "1 reflector"

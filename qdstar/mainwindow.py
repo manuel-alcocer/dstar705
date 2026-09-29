@@ -141,6 +141,9 @@ class MainWindow(QMainWindow):
         self.registry.changed.connect(self._fill_reflectors)
         self.registry.changed.connect(self.poller.refresh_now)
         self.registry.changed.connect(self._refresh_screen_reflector)
+        # Reflector lists from URLs, files and git repositories: the cached copies are already
+        # loaded, fetch the current ones once the window is up
+        QTimer.singleShot(2500, self.registry.sources.refresh)
 
         self.weather_timer = QTimer(self, interval=60_000)
         self.weather_timer.timeout.connect(self._load_weather)

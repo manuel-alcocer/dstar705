@@ -6,7 +6,7 @@ authors = [{ name = "Manuel Alcocer Jiménez (EA7KLX)" }]
 readme = "README.md"
 description = "IC-705 D-STAR Terminal Mode (internal gateway, WLAN) controller"
 requires-python = ">=3.10"
-dependencies = ["PySide6>=6.5", "certifi"]
+dependencies = ["PySide6>=6.5", "certifi", "keyring"]
 
 [project.urls]
 Homepage = "https://github.com/manuel-alcocer/qdstar"

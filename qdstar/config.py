@@ -38,6 +38,8 @@ DEFAULTS = {
     "ext/usb_cmd": "systemctl --user restart dstarrepeater" if sys.platform.startswith("linux") else "",
     "ext/stop_cmd": "systemctl --user stop dstar.target" if sys.platform.startswith("linux") else "",
     "ui/geometry": None,
+    "reflectors/sources": "",     # JSON list of reflector list sources (sources.py)
+    "reflectors/sources_migrated": False,  # the pre-0.8 copy of the built-in list was pruned
     "ui/views": None,            # layout of the History/Log/D-PRS/Weather views (docked, floating, closed)
     "ui/debug_civ": True,
     "ui/language": "",           # empty: the system language

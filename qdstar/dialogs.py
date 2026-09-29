@@ -1,9 +1,9 @@
 """Settings and reflector management dialogs."""
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QGroupBox, QDialogButtonBox, QFormLayout, QHBoxLayout, QLineEdit,
-                               QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit, QPushButton, QSpinBox,
-                               QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QGroupBox, QDialogButtonBox, QFileDialog, QFormLayout,
+                               QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox,
+                               QPlainTextEdit, QPushButton, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from . import config, i18n
 from .i18n import N_, tr
@@ -224,7 +224,7 @@ class ReflectorsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(tr("Reflectors"))
         self.default_via = default_via
-        self.resize(560, 460)
+        self.resize(660, 470)
         self.registry = registry
         self.editing = None
 
@@ -243,7 +243,10 @@ class ReflectorsDialog(QDialog):
         self.notes = QPlainTextEdit()
         self.notes.setMaximumHeight(70)
 
+        self.origin = QLabel(wordWrap=True)
+        self.origin.setStyleSheet("color: palette(mid);")
         form = QFormLayout()
+        form.addRow(self.origin)
         form.addRow(tr("Type"), self.via)
         form.addRow("TO / reflector", self.to)
         form.addRow(tr("Server"), self.server)
@@ -259,13 +262,30 @@ class ReflectorsDialog(QDialog):
         save_btn.clicked.connect(self._save)
         del_btn = QPushButton(tr("Delete"))
         del_btn.clicked.connect(self._delete)
+        self.copy_btn = QPushButton(tr("Copy to my list"))
+        self.copy_btn.setToolTip(tr("Reflectors from other sources are read only: copy one to change it"))
+        self.copy_btn.clicked.connect(self._copy)
+        self.save_btn, self.del_btn = save_btn, del_btn
+        sources_btn = QPushButton(tr("Sources…"))
+        sources_btn.setToolTip(tr("Reflector lists from QDStar, a URL, a file or a git repository"))
+        sources_btn.clicked.connect(lambda: SourcesDialog(self.registry, self).exec())
+        export_btn = QPushButton(tr("Export my list…"))
+        export_btn.setToolTip(tr("Save your own reflectors as JSON, to share them or publish them as a source"))
+        export_btn.clicked.connect(self._export)
         close_btn = QPushButton(tr("Close"))
         close_btn.clicked.connect(self.accept)
         buttons = QHBoxLayout()
-        for b in (new_btn, save_btn, del_btn):
+        for b in (new_btn, save_btn, del_btn, self.copy_btn):
             buttons.addWidget(b)
         buttons.addStretch(1)
         buttons.addWidget(close_btn)
+        extra = QHBoxLayout()
+        extra.addWidget(sources_btn)
+        extra.addWidget(export_btn)
+        extra.addStretch(1)
+        self.form_fields = [self.via, self.to, self.server, self.name, self.description, self.dashboard, self.api,
+                            self.notes]
+        registry.changed.connect(self._registry_changed)
 
         right = QWidget()
         right_layout = QVBoxLayout(right)
@@ -278,6 +298,7 @@ class ReflectorsDialog(QDialog):
         top.addWidget(right, 3)
         layout = QVBoxLayout(self)
         layout.addLayout(top)
+        layout.addLayout(extra)
         layout.addLayout(buttons)
         self._reload()
 
@@ -286,6 +307,9 @@ class ReflectorsDialog(QDialog):
         for item in self.registry.list():
             w = QListWidgetItem(f"[{item['via'].upper()}] {item['to']}  {item['name']}")
             w.setData(Qt.UserRole, item)
+            if item.get("source"):
+                w.setForeground(self.palette().placeholderText())
+                w.setToolTip(tr("From: {origin} (read only)", origin=item["origin"]))
             self.list.addItem(w)
             if item["to"] == select:
                 self.list.setCurrentItem(w)
@@ -295,6 +319,15 @@ class ReflectorsDialog(QDialog):
     def _select(self, current, _previous=None):
         item = current.data(Qt.UserRole) if current else {}
         self.editing = item.get("to")
+        self.selected = item
+        from_source = bool(item.get("source"))
+        self.origin.setText(tr("From: {origin} (read only). Copy it to your list to change it.", origin=item["origin"])
+                            if from_source else tr("Your own reflector") if item else "")
+        for field in self.form_fields:
+            field.setEnabled(not from_source)
+        self.save_btn.setEnabled(not from_source)
+        self.del_btn.setEnabled(bool(item) and not from_source)
+        self.copy_btn.setEnabled(from_source)
         self.via.setCurrentIndex(max(0, self.via.findData(item.get("via", self.default_via))))
         self._via_changed()
         self.to.setText(item.get("to", ""))
@@ -305,15 +338,40 @@ class ReflectorsDialog(QDialog):
         self.api.setText(item.get("api", ""))
         self.notes.setPlainText(item.get("notes", ""))
 
+    def _registry_changed(self):
+        self._reload(select=self.editing)
+
+    def _copy(self):
+        item = getattr(self, "selected", None) or {}
+        if item.get("source"):
+            copied = self.registry.upsert(item)
+            self._reload(select=copied["to"])
+
+    def _export(self):
+        path, _ = QFileDialog.getSaveFileName(self, tr("Export my list"), "reflectors.json", "JSON (*.json)")
+        if not path:
+            return
+        import json
+        try:
+            with open(path, "w", encoding="utf-8") as out:
+                json.dump(self.registry.local(), out, indent=2, ensure_ascii=False)
+        except OSError as exc:
+            QMessageBox.warning(self, tr("Export my list"), str(exc))
+            return
+        QMessageBox.information(self, tr("Export my list"), tr("{n} reflectors saved in {path}", n=len(self.registry.local()),
+                                                             path=path))
+
     def _via_changed(self):
         ext = self.via.currentData() == "ext"
         self.to.setPlaceholderText("REF001 C" if ext else "/XLX214D")
-        self.server.setEnabled(not ext)
-        self.api.setEnabled(not ext)
+        editable = not (getattr(self, "selected", None) or {}).get("source")
+        self.server.setEnabled(not ext and editable)
+        self.api.setEnabled(not ext and editable)
 
     def _new(self):
         self.list.setCurrentItem(None)
         self._select(None)
+        self.origin.setText(tr("Your own reflector"))
         self.server.setText(config.get("dstar/server"))
         self.to.setFocus()
 
@@ -337,6 +395,209 @@ class ReflectorsDialog(QDialog):
             self.registry.delete(self.editing)
             self.editing = None
             self._reload()
+
+
+class SourcesDialog(QDialog):
+    """The sources of reflector lists: enable, add, edit, remove, refresh."""
+
+    def __init__(self, registry, parent=None):
+        super().__init__(parent)
+        from . import sources
+        self.sources = sources
+        self.manager = registry.sources
+        self.setWindowTitle(tr("Reflector sources"))
+        self.resize(560, 320)
+        intro = QLabel(tr("Reflectors from these sources are added to your own list, read only. "
+                          "When a reflector is in several places, your own copy wins."), wordWrap=True)
+        self.list = QListWidget()
+        self.list.itemChanged.connect(self._toggled)
+        self.list.itemDoubleClicked.connect(lambda _item: self._edit())
+        self.list.currentRowChanged.connect(lambda _row: self._update_buttons())
+        add_btn = QPushButton(tr("Add"))
+        menu = QMenu(add_btn)
+        for kind, label in sources.TYPES.items():
+            menu.addAction(tr(label), lambda k=kind: self._add(k))
+        add_btn.setMenu(menu)
+        self.edit_btn = QPushButton(tr("Edit…"), clicked=self._edit)
+        self.remove_btn = QPushButton(tr("Remove"), clicked=self._remove)
+        refresh_btn = QPushButton(tr("Update all"), clicked=lambda: self.manager.refresh())
+        close_btn = QPushButton(tr("Close"), clicked=self.accept)
+        buttons = QHBoxLayout()
+        for b in (add_btn, self.edit_btn, self.remove_btn, refresh_btn):
+            buttons.addWidget(b)
+        buttons.addStretch(1)
+        buttons.addWidget(close_btn)
+        layout = QVBoxLayout(self)
+        layout.addWidget(intro)
+        layout.addWidget(self.list)
+        layout.addLayout(buttons)
+        self.manager.status_changed.connect(self._status_changed)
+        self._reload()
+
+    def _status_changed(self, _source_id):
+        self._reload()
+
+    def _status_text(self, source):
+        import time
+        if source["id"] in self.manager.busy:
+            return tr("updating…")
+        st = self.manager.status.get(source["id"])
+        if not st:
+            return tr("not updated yet") if source.get("enabled", True) else tr("off")
+        count = st.get("count")
+        text = "" if count is None else tr("1 reflector") if count == 1 else tr("{n} reflectors", n=count)
+        if source["type"] != "builtin" and st.get("when"):
+            text += " · " + time.strftime("%d/%m %H:%M", time.localtime(st["when"]))
+        if not st["ok"]:
+            text = "⚠ " + st["message"] + (f" ({text})" if text else "")
+        elif st.get("message"):
+            text += " · " + st["message"]
+        return text
+
+    def _reload(self):
+        row = self.list.currentRow()
+        self.list.blockSignals(True)
+        self.list.clear()
+        for source in self.manager.sources():
+            kind = tr(self.sources.TYPES.get(source["type"], "")) if source["type"] != "builtin" else ""
+            label = self.sources.display_name(source) + (f"  [{kind}]" if kind else "")
+            status = self._status_text(source)
+            item = QListWidgetItem(f"{label}\n    {status}")
+            item.setToolTip(f"{label}\n{status}")      # long git errors do not fit in the row
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Checked if source.get("enabled", True) else Qt.Unchecked)
+            item.setData(Qt.UserRole, source["id"])
+            self.list.addItem(item)
+        self.list.blockSignals(False)
+        self.list.setCurrentRow(min(max(row, 0), self.list.count() - 1))
+        self._update_buttons()
+
+    def _current(self):
+        item = self.list.currentItem()
+        source_id = item.data(Qt.UserRole) if item else None
+        return next((s for s in self.manager.sources() if s["id"] == source_id), None)
+
+    def _update_buttons(self):
+        source = self._current()
+        editable = bool(source) and source["type"] != "builtin"
+        self.edit_btn.setEnabled(editable)
+        self.remove_btn.setEnabled(editable)
+
+    def _toggled(self, item):
+        sources = self.manager.sources()
+        for source in sources:
+            if source["id"] == item.data(Qt.UserRole):
+                source["enabled"] = item.checkState() == Qt.Checked
+                enabled = source["enabled"]
+        self.manager.set_sources(sources)
+        if enabled:
+            self.manager.refresh(item.data(Qt.UserRole))
+        self._reload()
+
+    def _add(self, kind):
+        source = self.sources.new_source(kind)
+        if SourceEditDialog(source, self).exec():
+            self.manager.set_sources(self.manager.sources() + [source])
+            self.manager.refresh(source["id"])
+            self._reload()
+            self.list.setCurrentRow(self.list.count() - 1)
+
+    def _edit(self):
+        source = self._current()
+        if not source or source["type"] == "builtin":
+            return
+        if SourceEditDialog(source, self).exec():
+            self.manager.set_sources([source if s["id"] == source["id"] else s for s in self.manager.sources()])
+            self.manager.refresh(source["id"])
+            self._reload()
+
+    def _remove(self):
+        source = self._current()
+        if not source or source["type"] == "builtin":
+            return
+        if QMessageBox.question(self, tr("Reflector sources"),
+                                tr("Remove {source}? Its reflectors disappear from the list.",
+                                   source=self.sources.display_name(source))) == QMessageBox.Yes:
+            self.manager.set_sources([s for s in self.manager.sources() if s["id"] != source["id"]])
+            self._reload()
+
+
+class SourceEditDialog(QDialog):
+    """One source: URL, file or git repository (with an optional user and password/token)."""
+
+    def __init__(self, source, parent=None):
+        super().__init__(parent)
+        from . import credentials, sources
+        self.credentials, self.sources = credentials, sources
+        self.source = source
+        kind = source["type"]
+        self.setWindowTitle(tr(sources.TYPES[kind]))
+        self.setMinimumWidth(480)
+        self.name = QLineEdit(source.get("name", ""), placeholderText=tr("optional"))
+        self.location = QLineEdit(source.get("location", ""))
+        form = QFormLayout()
+        form.addRow(tr("Name"), self.name)
+        if kind == "url":
+            self.location.setPlaceholderText("https://example.org/reflectors.json")
+            form.addRow("URL", self.location)
+        elif kind == "file":
+            browse = QPushButton(tr("Browse…"), clicked=self._browse)
+            row = QHBoxLayout()
+            row.addWidget(self.location, 1)
+            row.addWidget(browse)
+            form.addRow(tr("File"), row)
+        else:
+            self.location.setPlaceholderText("https://github.com/user/repo.git  ·  git@host:user/repo.git")
+            self.branch = QLineEdit(source.get("branch", ""), placeholderText=tr("the default one"))
+            self.path = QLineEdit(source.get("path", "") or "reflectors.json")
+            self.username = QLineEdit(source.get("username", ""), placeholderText=tr("only for private repositories"))
+            self.secret = QLineEdit(echoMode=QLineEdit.Password)
+            self.had_secret = bool(credentials.load(sources.secret_key(source)))
+            self.secret.setPlaceholderText(tr("unchanged") if self.had_secret else tr("only for private repositories"))
+            self.clear_secret = QCheckBox(tr("Forget the saved password or token"))
+            self.clear_secret.setVisible(self.had_secret)
+            where = (tr("It is kept in the system keyring.") if credentials.available() else
+                     tr("⚠ No system keyring available: it would be kept in QDStar's settings file."))
+            form.addRow(tr("Repository"), self.location)
+            form.addRow(tr("Branch"), self.branch)
+            form.addRow(tr("File in the repository"), self.path)
+            form.addRow(tr("User"), self.username)
+            form.addRow(tr("Password or token"), self.secret)
+            form.addRow("", self.clear_secret)
+            note = QLabel(where + " " + tr("With SSH (git@…), your own SSH keys are used."), wordWrap=True)
+            note.setStyleSheet("color: palette(mid);")
+            form.addRow("", note)
+        hint = QLabel(tr("The file is a JSON list of reflectors, like the one Export my list saves."), wordWrap=True)
+        hint.setStyleSheet("color: palette(mid);")
+        buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self._save)
+        buttons.rejected.connect(self.reject)
+        layout = QVBoxLayout(self)
+        layout.addLayout(form)
+        layout.addWidget(hint)
+        layout.addWidget(buttons)
+
+    def _browse(self):
+        path, _ = QFileDialog.getOpenFileName(self, tr("File"), self.location.text(), "JSON (*.json);;* (*)")
+        if path:
+            self.location.setText(path)
+
+    def _save(self):
+        if not self.location.text().strip():
+            QMessageBox.warning(self, self.windowTitle(), tr("Fill in where the list is."))
+            return
+        self.source.update(name=self.name.text().strip(), location=self.location.text().strip())
+        if self.source["type"] == "git":
+            self.source.update(branch=self.branch.text().strip(), path=self.path.text().strip() or "reflectors.json",
+                               username=self.username.text().strip())
+            key = self.sources.secret_key(self.source)
+            if self.clear_secret.isChecked():
+                self.credentials.store(key, "")
+            elif self.secret.text():
+                if self.credentials.store(key, self.secret.text()) == "settings":
+                    QMessageBox.warning(self, self.windowTitle(),
+                                        tr("There is no system keyring: the password is kept in QDStar's settings file."))
+        self.accept()
 
 
 SYMBOL_NAMES = {
