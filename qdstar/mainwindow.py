@@ -8,10 +8,10 @@ from datetime import datetime
 from PySide6.QtCore import QByteArray, QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtSerialPort import QSerialPortInfo
-from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QComboBox, QHBoxLayout, QHeaderView, QLabel,
-                               QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
+from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QComboBox, QDockWidget, QHBoxLayout,
+                               QHeaderView, QLabel, QLayout, QMainWindow, QMessageBox, QPlainTextEdit, QProgressDialog, QPushButton, QTableWidget,
                                QTableWidgetItem,
-                               QTabWidget, QVBoxLayout, QWidget)
+                               QSizePolicy, QTabWidget, QVBoxLayout, QWidget)
 
 from . import __author__, __url__, __version__, __website__, config, i18n, startup
 from . import appimage, aprs, civ, tray
@@ -25,7 +25,7 @@ from .reflectors import Registry, StatusPoller
 from .storage import Storage
 from .qtutil import open_url, start_detached
 from .updates import AppImageUpdate, UpdateChecker
-from .widgets import LedBar, ReflectorScreen, WeatherPanel, load_fonts, mode_led_icon
+from .widgets import DockTitleBar, LedBar, ReflectorScreen, WeatherPanel, load_fonts, mode_led_icon
 from .i18n import N_, tr
 
 # (key, caption, tooltip); translated when the window is built
@@ -53,6 +53,7 @@ GPS_POLL_MS = 60_000
 OWN_DPRS_SETTINGS = ("0281", "0286", "0287", "0290", "0291", "0292", "0293", "0294", "0295", "0297")
 LOG_MAX_BYTES = 2_000_000
 WINDOW_WIDTH = 420
+VIEW_HEIGHT = 300    # room for the views below the screen when the window has to grow for them
 UPDATE_CHECK_MS = 24 * 3600 * 1000
 ALL_TIME = 100 * 365 * 86400
 EXT_UR = "CQCQCQ"
@@ -220,7 +221,6 @@ class MainWindow(QMainWindow):
         bar.addWidget(manage_btn)
         layout.addLayout(bar)
 
-        self.tabs = QTabWidget()
         self.history = QTableWidget(0, len(HISTORY_COLUMNS))
         self.history.setHorizontalHeaderLabels([tr(c) for c in HISTORY_COLUMNS])
         self.history.verticalHeader().setVisible(False)
@@ -231,7 +231,6 @@ class MainWindow(QMainWindow):
         header = self.history.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
-        self.tabs.addTab(self.history, tr("History"))
         self.history.cellClicked.connect(lambda row, _col: self._review_row(row))
         # Arrow keys through the history move the detail along; a refill does not
         self.history.currentCellChanged.connect(
@@ -244,7 +243,6 @@ class MainWindow(QMainWindow):
         font = self.log_view.font()
         font.setFamily("monospace")
         self.log_view.setFont(font)
-        self.tabs.addTab(self.log_view, tr("Log"))
 
         self.dprs_table = QTableWidget(0, len(DPRS_COLUMNS))
         self.dprs_table.setHorizontalHeaderLabels([tr(c) for c in DPRS_COLUMNS])
@@ -256,18 +254,20 @@ class MainWindow(QMainWindow):
         dprs_header = self.dprs_table.horizontalHeader()
         dprs_header.setSectionResizeMode(QHeaderView.ResizeToContents)
         dprs_header.setStretchLastSection(True)
-        self.dprs_tab_index = self.tabs.addTab(self.dprs_table, "D-PRS")
         self.weather_panel = WeatherPanel()
-        self.weather_tab_index = self.tabs.addTab(self.weather_panel, tr("Weather"))
-        self._show_dprs_tabs()
-        layout.addWidget(self.tabs, 1)
-        # The screen keeps its full 4:3 size (the window width is fixed); when the window
-        # gets shorter, the tabs shrink instead, down to a few visible rows
+        # The screen keeps its full 4:3 size (the window width is fixed); the views below
+        # take whatever height is left
         margins = layout.contentsMargins()
         self.screen.setFixedHeight(int((WINDOW_WIDTH - margins.left() - margins.right()) * 3 / 4))
-        self.tabs.setMinimumHeight(150)
-
+        central.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        # Never squeezed by a view docked into a short window (it used to overlap the screen).
+        # The minimum follows the contents, also when the desktop's fonts arrive later.
+        layout.setSizeConstraint(QLayout.SetMinimumSize)
         self.setCentralWidget(central)
+        self.height_with_views = None   # window height before it shrank to the screen alone
+        self.fit_timer = QTimer(self, singleShot=True, interval=150)
+        self.fit_timer.timeout.connect(self._fit_height)
+        self._build_views()
         # Vertical layout: the window grows in height only, the width stays fixed
         self.setFixedWidth(WINDOW_WIDTH)
         # Never maximized or full screen (the title bar double-click included): no maximize
@@ -279,6 +279,81 @@ class MainWindow(QMainWindow):
             self.restoreGeometry(QByteArray(geometry))
         else:
             self.resize(WINDOW_WIDTH, 1000)
+
+    def _build_views(self):
+        """History, Log, D-PRS and Weather as dock widgets: tabbed under the screen by default,
+        each one can be detached into its own (resizable) window, docked back or closed."""
+        self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowTabbedDocks | QMainWindow.AllowNestedDocks)
+        self.setTabPosition(Qt.BottomDockWidgetArea, QTabWidget.North)
+        self.docks = {}
+        self.dprs_hidden = False
+        views = [("history", tr("History"), self.history), ("log", tr("Log"), self.log_view),
+                 ("dprs", "D-PRS", self.dprs_table), ("weather", tr("Weather"), self.weather_panel)]
+        for key, title, widget in views:
+            dock = QDockWidget(title, self)
+            dock.setObjectName(f"view-{key}")          # saveState()/restoreState() need it
+            dock.setWidget(widget)
+            # Only below the screen: the window has a fixed width, so no side areas
+            dock.setAllowedAreas(Qt.BottomDockWidgetArea)
+            dock.setMinimumHeight(120)
+            dock.setTitleBarWidget(DockTitleBar(dock))
+            dock.topLevelChanged.connect(lambda floating, d=dock: self._view_floating(d, floating))
+            dock.topLevelChanged.connect(self._views_changed)
+            dock.visibilityChanged.connect(self._views_changed)
+            self.docks[key] = dock
+        self._default_views()
+        state = config.get("ui/views")
+        if state:
+            self.restoreState(QByteArray(state))
+        self._show_dprs_tabs()
+
+    @staticmethod
+    def _view_floating(dock, floating):
+        """A detached view becomes a normal window with the desktop's own frame, so the
+        window manager moves and resizes it (Qt's frameless floating window needs mouse grabs
+        that Wayland refuses)."""
+        if floating:
+            dock.setWindowFlags(Qt.Window)
+            dock.show()
+
+    def _default_views(self):
+        """All the views docked and tabbed, History in front."""
+        docks = list(self.docks.values())
+        for dock in docks:
+            dock.setFloating(False)
+            self.addDockWidget(Qt.BottomDockWidgetArea, dock)
+            dock.show()
+        for dock in docks[1:]:
+            self.tabifyDockWidget(docks[0], dock)
+        docks[0].raise_()
+
+    def reset_views(self):
+        self._default_views()
+        self._show_dprs_tabs()
+        self._views_changed()
+
+    def _views_changed(self, *_):
+        """With no view left in the window, it shrinks to the screen and its bars. Checked once
+        the views have settled: on Wayland a view docked back becomes visible a little later,
+        and an immediate check still saw it hidden (the window stayed short, the view on top
+        of the buttons)."""
+        self.fit_timer.start()
+
+    def _fit_height(self):
+        """No view left in the window: shrink it to the screen and its bars. A view docked
+        again: grow back to the height it had (a view needs room below the screen)."""
+        docked = any(d.isVisible() and not d.isFloating() for d in self.docks.values())
+        bare = self.minimumSizeHint().height()
+        if not docked:
+            if self.height() > bare:
+                if self.height_with_views is None:      # the height with views, not a halfway one
+                    self.height_with_views = self.height()
+                self.resize(self.width(), bare)
+        else:
+            wanted = max(self.height_with_views or 0, bare + VIEW_HEIGHT)
+            if self.height() < wanted:
+                self.resize(self.width(), wanted)
+            self.height_with_views = None
 
     def _build_menu(self):
         radio_menu = self.menuBar().addMenu(tr("&Radio"))
@@ -298,6 +373,11 @@ class MainWindow(QMainWindow):
         ref_menu = self.menuBar().addMenu(tr("R&eflectors"))
         ref_menu.addAction(QAction(tr("Manage…"), self, triggered=self.manage_reflectors))
         ref_menu.addAction(QAction(tr("Refresh status"), self, triggered=self._refresh_all))
+        view_menu = self.menuBar().addMenu(tr("&View"))
+        for dock in self.docks.values():
+            view_menu.addAction(dock.toggleViewAction())
+        view_menu.addSeparator()
+        view_menu.addAction(QAction(tr("Reset layout"), self, triggered=self.reset_views))
         hist_menu = self.menuBar().addMenu(tr("H&istory"))
         hist_menu.addAction(QAction(tr("Clear history…"), self, triggered=self.clear_history))
         help_menu = self.menuBar().addMenu(tr("&Help"))
@@ -1366,9 +1446,16 @@ class MainWindow(QMainWindow):
         return " · ".join(parts)
 
     def _show_dprs_tabs(self):
+        """The D-PRS and Weather views only exist with 'every report received' on in the settings."""
         shown = config.get("dprs/show_all")
-        self.tabs.setTabVisible(self.dprs_tab_index, shown)
-        self.tabs.setTabVisible(self.weather_tab_index, shown)
+        for key in ("dprs", "weather"):
+            dock = self.docks[key]
+            dock.toggleViewAction().setEnabled(shown)
+            if not shown:
+                dock.hide()
+            elif self.dprs_hidden:
+                dock.show()     # the setting has just been turned back on
+        self.dprs_hidden = not shown
 
     @staticmethod
     def _ago(ts):
@@ -1531,6 +1618,7 @@ class MainWindow(QMainWindow):
             self.hide()
             return
         config.put("ui/geometry", self.saveGeometry())
+        config.put("ui/views", self.saveState())
         self.poller.stop()
         self._stop_gateway()
         self.aprs.close()

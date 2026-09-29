@@ -433,6 +433,55 @@ class ReflectorScreen(QWidget):
             self._text(p, W - 24, 176, f"{secs // 60:02d}:{secs % 60:02d}", 22, color, True, align=Qt.AlignRight)
 
 
+# --- view title bar -------------------------------------------------------------
+
+class DockTitleBar(QWidget):
+    """Title bar of a view (dock widget) with its own detach/attach and close buttons.
+
+    Qt's own title bar starts a mouse drag on every press, and Wayland only lets popups grab
+    the mouse ("This plugin supports grabbing the mouse only for popup windows"): the first
+    click was lost. This bar keeps the mouse to itself, so nothing is dragged; a detached view
+    is a normal window that the window manager moves and resizes."""
+
+    def __init__(self, dock):
+        super().__init__(dock)
+        from PySide6.QtWidgets import QStyle, QToolButton
+        self.dock = dock
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 1, 2, 1)
+        layout.setSpacing(2)
+        self.title = QLabel(dock.windowTitle())
+        layout.addWidget(self.title, 1)
+        style = self.style()
+        self.float_button = QToolButton(autoRaise=True)
+        self.float_button.setIcon(style.standardIcon(QStyle.SP_TitleBarNormalButton))
+        self.float_button.clicked.connect(self.toggle_floating)
+        close = QToolButton(autoRaise=True, toolTip=tr("Close (View menu to show it again)"))
+        close.setIcon(style.standardIcon(QStyle.SP_TitleBarCloseButton))
+        close.clicked.connect(dock.close)
+        for button in (self.float_button, close):
+            button.setIconSize(QSize(12, 12))
+            layout.addWidget(button)
+        dock.topLevelChanged.connect(self._update)
+        self._update(dock.isFloating())
+
+    def toggle_floating(self):
+        self.dock.setFloating(not self.dock.isFloating())
+
+    def _update(self, floating):
+        self.float_button.setToolTip(tr("Attach to the main window") if floating else tr("Detach into its own window"))
+
+    def mouseDoubleClickEvent(self, event):
+        self.toggle_floating()
+        event.accept()
+
+    def mousePressEvent(self, event):
+        event.accept()      # no drag (see the class docstring)
+
+    def mouseMoveEvent(self, event):
+        event.accept()
+
+
 # --- weather cards ------------------------------------------------------------
 
 class WeatherCard(QWidget):

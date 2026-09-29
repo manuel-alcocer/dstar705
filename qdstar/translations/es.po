@@ -1443,6 +1443,14 @@ msgstr "HISTÓRICO"
 msgid "LIVE"
 msgstr "LIVE"
 
+#: qdstar/mainwindow.py
+msgid "&View"
+msgstr "&Ver"
+
+#: qdstar/mainwindow.py
+msgid "Reset layout"
+msgstr "Restablecer disposición"
+
 #: qdstar/dialogs.py
 msgid "System tray"
 msgstr "Bandeja del sistema"
@@ -1450,3 +1458,15 @@ msgstr "Bandeja del sistema"
 #: qdstar/dialogs.py
 msgid "Radio"
 msgstr "Radio"
+
+#: qdstar/widgets.py
+msgid "Close (View menu to show it again)"
+msgstr "Cerrar (el menú Ver la vuelve a mostrar)"
+
+#: qdstar/widgets.py
+msgid "Attach to the main window"
+msgstr "Acoplar a la ventana principal"
+
+#: qdstar/widgets.py
+msgid "Detach into its own window"
+msgstr "Desacoplar en su propia ventana"

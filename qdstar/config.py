@@ -38,6 +38,7 @@ DEFAULTS = {
     "ext/usb_cmd": "systemctl --user restart dstarrepeater" if sys.platform.startswith("linux") else "",
     "ext/stop_cmd": "systemctl --user stop dstar.target" if sys.platform.startswith("linux") else "",
     "ui/geometry": None,
+    "ui/views": None,            # layout of the History/Log/D-PRS/Weather views (docked, floating, closed)
     "ui/debug_civ": True,
     "ui/language": "",           # empty: the system language
     "ui/tray": True,             # icon in the system tray (when the desktop has one)
