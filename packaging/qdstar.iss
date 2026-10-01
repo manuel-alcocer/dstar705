@@ -105,13 +105,18 @@ end;
 // touched (a silent uninstall never deletes them).
 procedure SwitchInstallMode(ToAllUsers: Boolean);
 var
-  Params, OldUninstaller, Ignored: String;
-  Code: Integer;
+  Params, OldUninstaller: String;
+  Code, OldRoot: Integer;
   Done: Boolean;
 begin
-  if ToAllUsers <> RegQueryStringValue(HKCU, UninstallKey, 'DisplayVersion', Ignored) then
+  // The copy to replace is the one in the other mode (both can be there after manual installs)
+  if ToAllUsers then
+    OldRoot := HKCU
+  else
+    OldRoot := HKLM;
+  if not RegQueryStringValue(OldRoot, UninstallKey, 'UninstallString', OldUninstaller) then
     Exit;   // already installed that way
-  OldUninstaller := RemoveQuotes(InstalledValue('UninstallString'));
+  OldUninstaller := RemoveQuotes(OldUninstaller);
   if ToAllUsers then
     Params := '/ALLUSERS'
   else
