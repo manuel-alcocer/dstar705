@@ -132,7 +132,8 @@ class MainWindow(QMainWindow):
         self.update_notified = ""
         self.update_offer = None   # (version, url, page, notes) of the latest release found
         self.relaunch_path = None  # AppImage to start once this window has closed (after an update)
-        self.installer_path = None  # Windows installer to run once this window has closed (after an update)
+        # Windows installer to run once this window has closed: (path, arguments, restart if nothing changed)
+        self.installer = None
         if winupdate.installed():
             winupdate.cleanup()
         if appimage.current() and not appimage.running_installed() and config.get("appimage/offer_install"):
@@ -403,6 +404,10 @@ class MainWindow(QMainWindow):
             help_menu.addAction(self.install_action)
             help_menu.aboutToShow.connect(lambda: self.install_action.setText(
                 tr("Uninstall QDStar…") if appimage.installed() else tr("Install for this user…")))
+        if winupdate.installed():
+            help_menu.addAction(QAction(
+                tr("Install for all users…") if winupdate.per_user() else tr("Install only for me…"),
+                self, triggered=self._switch_install_mode))
         help_menu.addAction(QAction(tr("About QDStar…"), self, triggered=self.about))
 
     @staticmethod
@@ -1351,29 +1356,15 @@ class MainWindow(QMainWindow):
 
     def _update_in_place(self, version, url):
         windows = winupdate.installed()
-        dialog = QProgressDialog(tr("Downloading QDStar {version}…", version=version), "", 0, 0, self)
-        dialog.setWindowTitle(tr("Update"))
-        dialog.setCancelButton(None)   # the download runs to the end or fails
-        dialog.setMinimumDuration(0)
-        dialog.setAutoClose(False)
-        dialog.setAutoReset(False)
-        job = UpdateDownload(winupdate.download if windows else appimage.update, self)
-
-        def progress(done, total):
-            if total:
-                dialog.setMaximum(total // 1024)
-                dialog.setValue(done // 1024)
 
         def finished(path):
-            dialog.close()
-            job.deleteLater()
             if windows:
                 # The installer replaces the program files, so it runs once QDStar has closed
                 answer = QMessageBox.question(
                     self, tr("Update"),
                     tr("QDStar {version} has been downloaded. Close QDStar and install it now?", version=version))
                 if answer == QMessageBox.Yes:
-                    self.installer_path = path
+                    self.installer = (path, winupdate.INSTALLER_ARGS, False)
                     self.quit()
                 return
             self.log(tr("QDStar {version} installed in {path}", version=version, path=path))
@@ -1383,16 +1374,70 @@ class MainWindow(QMainWindow):
                 self.relaunch_path = path
                 self.quit()
 
+        self._download(tr("Update"), tr("Downloading QDStar {version}…", version=version),
+                       winupdate.download if windows else appimage.update, finished,
+                       url, version, self.updates.digests.get(url, ""))
+
+    def _download(self, title, label, fetch, finished, url="", version="", digest=""):
+        """Run fetch (see UpdateDownload) behind a progress dialog; finished(path) when it is done."""
+        dialog = QProgressDialog(label, "", 0, 0, self)
+        dialog.setWindowTitle(title)
+        dialog.setCancelButton(None)   # the download runs to the end or fails
+        dialog.setMinimumDuration(0)
+        dialog.setAutoClose(False)
+        dialog.setAutoReset(False)
+        job = UpdateDownload(fetch, self)
+
+        def progress(done, total):
+            if total:
+                dialog.setMaximum(total // 1024)
+                dialog.setValue(done // 1024)
+
+        def done(path):
+            dialog.close()
+            job.deleteLater()
+            finished(path)
+
         def failed(error):
             dialog.close()
             job.deleteLater()
-            QMessageBox.warning(self, tr("Update"), tr("Could not update QDStar: {error}", error=error))
+            QMessageBox.warning(self, title, tr("Could not update QDStar: {error}", error=error))
 
         job.progress.connect(progress)
-        job.finished.connect(finished)
+        job.finished.connect(done)
         job.failed.connect(failed)
         dialog.show()
-        job.start(url, version, self.updates.digests.get(url, ""))
+        job.start(url, version, digest)
+
+    def _switch_install_mode(self):
+        """Windows: reinstall QDStar for all users, or only for this one (the installer does it)."""
+        to_all_users = winupdate.per_user()
+        box = QMessageBox(self)
+        box.setWindowTitle(tr("Install QDStar"))
+        box.setIcon(QMessageBox.Question)
+        if to_all_users:
+            box.setText(tr("Install QDStar for all the users of this computer?"))
+            box.setInformativeText(tr(
+                "QDStar moves to Program Files, and Windows asks for administrator permission. "
+                "QDStar closes and starts again. Your settings, history and reflectors are kept."))
+        else:
+            box.setText(tr("Install QDStar only for you?"))
+            box.setInformativeText(tr(
+                "QDStar moves to your user folder and is removed for the other users; Windows asks for "
+                "administrator permission. QDStar closes and starts again. Your settings, history and "
+                "reflectors are kept."))
+        install = box.addButton(tr("Install"), QMessageBox.AcceptRole)
+        box.addButton(QMessageBox.Cancel)
+        box.exec()
+        if box.clickedButton() is not install:
+            return
+
+        def finished(path):
+            self.installer = (path, winupdate.switch_args(to_all_users, i18n.language()), True)
+            self.quit()
+
+        self._download(tr("Install QDStar"), tr("Downloading the QDStar installer…"),
+                       lambda url, version, digest, progress: winupdate.download_current(progress), finished)
 
     def _offer_appimage_install(self):
         box = QMessageBox(self)

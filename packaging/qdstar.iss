@@ -49,20 +49,8 @@ english.GoBackTo=Go back to %1
 spanish.GoBackTo=Volver a la %1
 english.Reinstall=Reinstall %1
 spanish.Reinstall=Reinstalar la %1
-english.OtherOptions=Other options…
-spanish.OtherOptions=Otras opciones…
-english.NowPerUser=QDStar is installed only for you
-spanish.NowPerUser=QDStar está instalado solo para ti
-english.NowAllUsers=QDStar is installed for all users
-spanish.NowAllUsers=QDStar está instalado para todos los usuarios
-english.SwitchInfo=Installing for all users puts QDStar in Program Files and needs administrator permission. Changing it keeps your settings, history and reflectors. Close QDStar first.
-spanish.SwitchInfo=Instalar para todos los usuarios pone QDStar en Archivos de programa y necesita permiso de administrador. Al cambiarlo se conservan tus ajustes, histórico y reflectores. Cierra QDStar antes.
 english.SwitchFailed=The installation could not be changed: %1
 spanish.SwitchFailed=No se pudo cambiar la instalación: %1
-english.ForAllUsers=Install for all users
-spanish.ForAllUsers=Instalar para todos los usuarios
-english.ForMeOnly=Install only for me
-spanish.ForMeOnly=Instalar solo para mí
 english.Uninstall=Uninstall
 spanish.Uninstall=Desinstalar
 english.Cancel=Cancel
@@ -109,16 +97,21 @@ begin
   Result := WizardSilent() and (ExpandConstant('{param:RELAUNCH|0}') = '1');
 end;
 
-// Install this version in the other mode (per user <-> all users) and then remove
-// the existing copy. The new install runs first: when it fails or the UAC prompt
-// is declined, the existing copy stays as it was. Settings and data live in the
-// user's profile and are not touched (a silent uninstall never deletes them).
-procedure SwitchInstallMode(ToAllUsers: Boolean; OldUninstaller: String);
+// QDStar changing its own installation between per user and all users (Help menu,
+// qdstar/winupdate.py) runs Setup with /SWITCHMODE=allusers or /SWITCHMODE=currentuser.
+// This version is installed in the other mode and then the existing copy is removed.
+// The new install runs first: when it fails or the UAC prompt is declined, the existing
+// copy stays as it was. Settings and data live in the user's profile and are not
+// touched (a silent uninstall never deletes them).
+procedure SwitchInstallMode(ToAllUsers: Boolean);
 var
-  Params: String;
+  Params, OldUninstaller, Ignored: String;
   Code: Integer;
   Done: Boolean;
 begin
+  if ToAllUsers <> RegQueryStringValue(HKCU, UninstallKey, 'DisplayVersion', Ignored) then
+    Exit;   // already installed that way
+  OldUninstaller := RemoveQuotes(InstalledValue('UninstallString'));
   if ToAllUsers then
     Params := '/ALLUSERS'
   else
@@ -139,17 +132,21 @@ begin
     Exec(OldUninstaller, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, Code);
 end;
 
-// An existing installation (QDStar or the older DStar705): update, switch between
-// per-user and all-users installation, uninstall or cancel.
+// An existing installation (QDStar or the older DStar705): update, uninstall or cancel.
 function InitializeSetup(): Boolean;
 var
-  Installed, Action, Uninstaller, Ignored: String;
+  Installed, Action, Uninstaller, Mode: String;
   OldPacked, NewPacked: Int64;
   Diff, Choice, Code: Integer;
   Labels: TArrayOfString;
-  PerUser: Boolean;
 begin
   Result := True;
+  Mode := ExpandConstant('{param:SWITCHMODE|}');
+  if Mode <> '' then begin
+    Result := False;
+    SwitchInstallMode(CompareText(Mode, 'allusers') = 0);
+    Exit;
+  end;
   if WizardSilent() then
     Exit;
   Installed := InstalledValue('DisplayVersion');
@@ -169,7 +166,7 @@ begin
     Action := FmtMessage(CustomMessage('Reinstall'), ['{#AppVersion}']);
   SetArrayLength(Labels, 3);
   Labels[0] := Action;
-  Labels[1] := CustomMessage('OtherOptions');
+  Labels[1] := CustomMessage('Uninstall');
   Labels[2] := CustomMessage('Cancel');
   Choice := TaskDialogMsgBox(FmtMessage(CustomMessage('AlreadyInstalled'), [Installed]),
     CustomMessage('WhatToDo'),
@@ -177,24 +174,11 @@ begin
   if Choice = IDYES then
     Exit;
   Result := False;
-  if Choice <> IDNO then
-    Exit;
-  // A task dialog takes three buttons at most: the less common actions go in a second one
-  PerUser := RegQueryStringValue(HKCU, UninstallKey, 'DisplayVersion', Ignored);
-  Uninstaller := RemoveQuotes(InstalledValue('UninstallString'));
-  if PerUser then begin
-    Labels[0] := CustomMessage('ForAllUsers');
-    Action := CustomMessage('NowPerUser');
-  end else begin
-    Labels[0] := CustomMessage('ForMeOnly');
-    Action := CustomMessage('NowAllUsers');
+  if Choice = IDNO then begin
+    Uninstaller := RemoveQuotes(InstalledValue('UninstallString'));
+    if Uninstaller <> '' then
+      Exec(Uninstaller, '', '', SW_SHOWNORMAL, ewNoWait, Code);
   end;
-  Labels[1] := CustomMessage('Uninstall');
-  Choice := TaskDialogMsgBox(Action, CustomMessage('SwitchInfo'), mbConfirmation, MB_YESNOCANCEL, Labels, 0);
-  if Choice = IDYES then
-    SwitchInstallMode(PerUser, Uninstaller)
-  else if (Choice = IDNO) and (Uninstaller <> '') then
-    Exec(Uninstaller, '', '', SW_SHOWNORMAL, ewNoWait, Code);
 end;
 
 // On uninstall, optionally remove the user's settings and data too.

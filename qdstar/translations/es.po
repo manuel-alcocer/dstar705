@@ -1288,6 +1288,34 @@ msgid "QDStar {version} has been downloaded. Close QDStar and install it now?"
 msgstr "QDStar {version} se ha descargado. ¿Cerrar QDStar e instalarlo ahora?"
 
 #: qdstar/mainwindow.py
+msgid "Install for all users…"
+msgstr "Instalar para todos los usuarios…"
+
+#: qdstar/mainwindow.py
+msgid "Install only for me…"
+msgstr "Instalar solo para mí…"
+
+#: qdstar/mainwindow.py
+msgid "Install QDStar for all the users of this computer?"
+msgstr "¿Instalar QDStar para todos los usuarios de este equipo?"
+
+#: qdstar/mainwindow.py
+msgid "QDStar moves to Program Files, and Windows asks for administrator permission. QDStar closes and starts again. Your settings, history and reflectors are kept."
+msgstr "QDStar pasa a Archivos de programa y Windows pide permiso de administrador. QDStar se cierra y vuelve a abrirse. Tus ajustes, histórico y reflectores se conservan."
+
+#: qdstar/mainwindow.py
+msgid "Install QDStar only for you?"
+msgstr "¿Instalar QDStar solo para ti?"
+
+#: qdstar/mainwindow.py
+msgid "QDStar moves to your user folder and is removed for the other users; Windows asks for administrator permission. QDStar closes and starts again. Your settings, history and reflectors are kept."
+msgstr "QDStar pasa a tu carpeta de usuario y se quita para los demás usuarios; Windows pide permiso de administrador. QDStar se cierra y vuelve a abrirse. Tus ajustes, histórico y reflectores se conservan."
+
+#: qdstar/mainwindow.py
+msgid "Downloading the QDStar installer…"
+msgstr "Descargando el instalador de QDStar…"
+
+#: qdstar/mainwindow.py
 msgid "Could not update QDStar: {error}"
 msgstr "No se pudo actualizar QDStar: {error}"
 
