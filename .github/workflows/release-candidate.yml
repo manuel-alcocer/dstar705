@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  actions: write   # start build.yml: a push made with GITHUB_TOKEN starts no workflow
+  actions: write   # start build.yml
 
 concurrency:
   group: release
@@ -20,7 +20,6 @@ jobs:
       # GITHUB_TOKEN may not push changes to workflow files: with a RELEASE_TOKEN secret
       # (a token with contents and workflows write access) those go through too
       GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-      OWN_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -41,6 +40,7 @@ jobs:
             exit 1
           fi
           git push origin "origin/dev:refs/heads/release/$version"
-          # With GITHUB_TOKEN the push starts nothing: start the build that publishes the rc
-          [ "$OWN_TOKEN" = true ] || gh workflow run build.yml --ref "release/$version"
+          # A new branch with no commits of its own starts no workflow, whatever the token:
+          # start the build that publishes the rc
+          gh workflow run build.yml --ref "release/$version"
           echo "Branch \`release/$version\` created from dev: the build publishes $version-rc.1" >> "$GITHUB_STEP_SUMMARY"
