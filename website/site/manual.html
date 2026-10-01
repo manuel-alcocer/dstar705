@@ -62,7 +62,7 @@
     <p>Download the file for your system from the <a href="/#download">download section</a> or the <a href="https://github.com/manuel-alcocer/qdstar/releases">releases page</a>.</p>
     <h3>Windows 10/11 (x64)</h3>
     <ul>
-      <li><strong>Installer</strong> (<code>…-windows-x64-setup.exe</code>): it installs QDStar for your user, with no administrator rights needed. If QDStar is already installed, the installer offers to update, reinstall or uninstall it. Updating keeps your settings, history and reflectors.</li>
+      <li><strong>Installer</strong> (<code>…-windows-x64-setup.exe</code>): the first time it asks whether to install QDStar only for you (no administrator rights needed) or for all the users of the computer. If QDStar is already installed, the installer offers to update, reinstall or uninstall it. Updating keeps your settings, history and reflectors. To move later from one kind of installation to the other, use <em>Help › Install for all users…</em> or <em>Help › Install only for me…</em>: QDStar downloads its installer, closes, Windows asks for administrator permission and QDStar opens again.</li>
       <li><strong>Portable</strong> (<code>…-portable.zip</code>): unzip it anywhere and run <code>qdstar.exe</code>.</li>
     </ul>
     <p>Windows SmartScreen may warn you the first time, because the program is not signed. Choose <em>More info → Run anyway</em>.</p>
@@ -305,6 +305,8 @@
     <h2 id="updates">Updates</h2>
     <p>QDStar checks GitHub for a new version on start-up and once a day. When one is out, a <em>⬆ New x.y.z</em> link appears next to the mode buttons, pointing at the right file for your system. You can also check by hand in <em>Help › Check for updates…</em>, and turn the automatic check off in the settings.</p>
     <p>With the Linux AppImage, <em>Update now</em> downloads the new version, checks it against the SHA-256 published on GitHub, puts it in place of the one you run and restarts QDStar. There is no file to replace by hand.</p>
+    <p>With QDStar installed on Windows, <em>Update now</em> downloads the installer of the new version, checks it against the SHA-256 published on GitHub and asks whether to install it right away: QDStar closes, is updated and opens again. With the portable version the link takes you to the download.</p>
+    <p>Test versions (betas and release candidates) are never offered as an update.</p>
 
     <h2 id="trouble">Troubleshooting</h2>
     <h3>The Icom LED never turns green</h3>

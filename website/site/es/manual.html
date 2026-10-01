@@ -62,7 +62,7 @@
     <p>Descarga el archivo de tu sistema en la <a href="/es/#descarga">sección de descargas</a> o en la <a href="https://github.com/manuel-alcocer/qdstar/releases">página de publicaciones</a>.</p>
     <h3>Windows 10/11 (x64)</h3>
     <ul>
-      <li><strong>Instalador</strong> (<code>…-windows-x64-setup.exe</code>): instala QDStar para tu usuario y no pide permisos de administrador. Si QDStar ya está instalado, te ofrece actualizar, reinstalar o desinstalar. Al actualizar se conservan tus ajustes, el histórico y los reflectores.</li>
+      <li><strong>Instalador</strong> (<code>…-windows-x64-setup.exe</code>): la primera vez te pregunta si instalar QDStar solo para ti (sin permisos de administrador) o para todos los usuarios del equipo. Si QDStar ya está instalado, te ofrece actualizar, reinstalar o desinstalar. Al actualizar se conservan tus ajustes, el histórico y los reflectores. Para cambiar más tarde de un tipo de instalación al otro, usa <em>Ayuda › Instalar para todos los usuarios…</em> o <em>Ayuda › Instalar solo para mí…</em>: QDStar descarga su instalador, se cierra, Windows pide permiso de administrador y QDStar vuelve a abrirse.</li>
       <li><strong>Portable</strong> (<code>…-portable.zip</code>): descomprímelo donde quieras y ejecuta <code>qdstar.exe</code>.</li>
     </ul>
     <p>La primera vez puede avisarte Windows SmartScreen, porque el programa no está firmado. Elige <em>Más información → Ejecutar de todas formas</em>.</p>
@@ -305,6 +305,8 @@
     <h2 id="actualizaciones">Actualizaciones</h2>
     <p>QDStar busca en GitHub si hay versión nueva al arrancar y una vez al día. Cuando la hay, aparece un enlace <em>⬆ Nueva x.y.z</em> junto a los botones de modo, que lleva al archivo adecuado para tu sistema. También puedes buscarla a mano en <em>Ayuda › Buscar actualizaciones…</em>, y desactivar la búsqueda automática en los ajustes.</p>
     <p>Con el AppImage de Linux, <em>Actualizar ahora</em> descarga la versión nueva, la comprueba con el SHA-256 publicado en GitHub, la pone en lugar de la que usas y reinicia QDStar. No hay que reemplazar ningún fichero a mano.</p>
+    <p>Con QDStar instalado en Windows, <em>Actualizar ahora</em> descarga el instalador de la versión nueva, lo comprueba con el SHA-256 publicado en GitHub y te pregunta si instalarlo ya: QDStar se cierra, se actualiza y vuelve a abrirse. Con la versión portable el enlace lleva a la descarga.</p>
+    <p>Las versiones de prueba (beta y candidatas) nunca se ofrecen como actualización.</p>
 
     <h2 id="problemas">Problemas frecuentes</h2>
     <h3>El LED Icom nunca se pone verde</h3>
