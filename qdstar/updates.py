@@ -94,7 +94,10 @@ class UpdateChecker(QObject):
             return
         version = release.get("tag_name", "")
         page = release.get("html_url", "")
-        if not version or not is_newer(version):
+        # GitHub's "latest" is never a pre-release; a beta or rc that got there by
+        # mistake (published without the pre-release mark) is not offered either
+        prerelease = release.get("prerelease") or (version and not version_key(version)[1])
+        if not version or prerelease or not is_newer(version):
             safe_emit(self.up_to_date)
             return
         assets = release.get("assets", [])
