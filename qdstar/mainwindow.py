@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (QApplication, QAbstractItemView, QButtonGroup, QC
                                QSizePolicy, QTabWidget, QVBoxLayout, QWidget)
 
 from . import __author__, __url__, __version__, __website__, config, i18n, startup
-from . import appimage, aprs, civ, tray
+from . import appimage, aprs, civ, tray, winupdate
 from .dialogs import SSID_CHOICES, SYMBOL_NAMES, DprsDialog, ReflectorsDialog, SettingsDialog, format_position
 from .dstar.core import LocalGateway
 from .dstar.protocol import ur_command
@@ -25,7 +25,7 @@ from .radio import Radio
 from .reflectors import Registry, StatusPoller
 from .storage import Storage
 from .qtutil import open_url, start_detached
-from .updates import AppImageUpdate, UpdateChecker
+from .updates import UpdateChecker, UpdateDownload
 from .widgets import DockTitleBar, LedBar, ReflectorScreen, WeatherPanel, load_fonts, mode_led_icon
 from .i18n import N_, tr
 
@@ -132,6 +132,9 @@ class MainWindow(QMainWindow):
         self.update_notified = ""
         self.update_offer = None   # (version, url, page, notes) of the latest release found
         self.relaunch_path = None  # AppImage to start once this window has closed (after an update)
+        self.installer_path = None  # Windows installer to run once this window has closed (after an update)
+        if winupdate.installed():
+            winupdate.cleanup()
         if appimage.current() and not appimage.running_installed() and config.get("appimage/offer_install"):
             QTimer.singleShot(1500, self._offer_appimage_install)
         self.update_timer = QTimer(self, interval=UPDATE_CHECK_MS)
@@ -1328,7 +1331,7 @@ class MainWindow(QMainWindow):
         box.exec()
         if box.clickedButton() is download:
             if in_place:
-                self._update_appimage(version, url)
+                self._update_in_place(version, url)
             else:
                 open_url(url)
         elif box.clickedButton() is skip:
@@ -1336,6 +1339,8 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def _can_update_in_place(url):
+        if winupdate.installed():
+            return url.endswith("-setup.exe")
         return bool(appimage.current()) and url.endswith(".AppImage")
 
     def _update_link(self, url):
@@ -1344,14 +1349,15 @@ class MainWindow(QMainWindow):
         else:
             open_url(url)
 
-    def _update_appimage(self, version, url):
+    def _update_in_place(self, version, url):
+        windows = winupdate.installed()
         dialog = QProgressDialog(tr("Downloading QDStar {version}…", version=version), "", 0, 0, self)
         dialog.setWindowTitle(tr("Update"))
         dialog.setCancelButton(None)   # the download runs to the end or fails
         dialog.setMinimumDuration(0)
         dialog.setAutoClose(False)
         dialog.setAutoReset(False)
-        job = AppImageUpdate(self)
+        job = UpdateDownload(winupdate.download if windows else appimage.update, self)
 
         def progress(done, total):
             if total:
@@ -1361,6 +1367,15 @@ class MainWindow(QMainWindow):
         def finished(path):
             dialog.close()
             job.deleteLater()
+            if windows:
+                # The installer replaces the program files, so it runs once QDStar has closed
+                answer = QMessageBox.question(
+                    self, tr("Update"),
+                    tr("QDStar {version} has been downloaded. Close QDStar and install it now?", version=version))
+                if answer == QMessageBox.Yes:
+                    self.installer_path = path
+                    self.quit()
+                return
             self.log(tr("QDStar {version} installed in {path}", version=version, path=path))
             answer = QMessageBox.question(
                 self, tr("Update"), tr("QDStar {version} is ready. Restart now?", version=version))

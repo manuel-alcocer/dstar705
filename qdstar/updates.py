@@ -30,8 +30,23 @@ def version_tuple(text):
     return tuple(parts)
 
 
+def version_key(text):
+    """Sort key that follows semantic versioning: 0.9.0-beta.2 < 0.9.0-rc.1 < 0.9.0.
+
+    Build metadata ('+…') does not count; the '~dev5' of old CI builds is a pre-release.
+    """
+    text = text.strip().lstrip("vV").split("+", 1)[0]
+    cut = min((text.index(mark) for mark in "-~" if mark in text), default=None)
+    numbers = version_tuple(text[:cut])
+    if cut is None:
+        return numbers, 1, ()
+    # Numeric identifiers sort before the others and by value, as semver says
+    parts = tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in text[cut + 1:].split("."))
+    return numbers, 0, parts
+
+
 def is_newer(candidate, current=__version__):
-    return version_tuple(candidate) > version_tuple(current)
+    return version_key(candidate) > version_key(current)
 
 
 def pick_asset(assets):
@@ -88,20 +103,28 @@ class UpdateChecker(QObject):
         safe_emit(self.available, version, url, page, release.get("body") or "")
 
 
-class AppImageUpdate(QObject):
-    """Downloads a new AppImage in the background and puts it in place of the running one."""
+class UpdateDownload(QObject):
+    """Downloads a new version in the background.
+
+    fetch(url, version, digest, progress=) does the work and returns the path of
+    the result: appimage.update (the new AppImage, already in place of the running
+    one) or winupdate.download (the Windows installer, still to be run).
+    """
     progress = Signal(int, int)      # bytes done, total (0 = unknown)
-    finished = Signal(str)           # path of the new AppImage
+    finished = Signal(str)           # path of the downloaded file
     failed = Signal(str)
+
+    def __init__(self, fetch, parent=None):
+        super().__init__(parent)
+        self.fetch = fetch
 
     def start(self, url, version, digest=""):
         threading.Thread(target=self._run, args=(url, version, digest), daemon=True,
-                         name="appimage-update").start()
+                         name="update-download").start()
 
     def _run(self, url, version, digest):
-        from . import appimage
         try:
-            path = appimage.update(url, version, digest, progress=lambda d, t: safe_emit(self.progress, d, t))
+            path = self.fetch(url, version, digest, progress=lambda d, t: safe_emit(self.progress, d, t))
         except OSError as exc:
             safe_emit(self.failed, str(exc))
             return

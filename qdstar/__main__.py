@@ -52,6 +52,11 @@ def main():
         instance.server.close()
         from . import appimage
         appimage.relaunch(window.relaunch_path)
+    elif window.installer_path:
+        # Downloaded Windows installer: it updates the files and starts QDStar again
+        instance.server.close()
+        from . import winupdate
+        winupdate.launch(window.installer_path)
     return code
 
 

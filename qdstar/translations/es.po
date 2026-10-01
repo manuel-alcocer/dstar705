@@ -1284,6 +1284,10 @@ msgid "QDStar {version} is ready. Restart now?"
 msgstr "QDStar {version} está listo. ¿Reiniciar ahora?"
 
 #: qdstar/mainwindow.py
+msgid "QDStar {version} has been downloaded. Close QDStar and install it now?"
+msgstr "QDStar {version} se ha descargado. ¿Cerrar QDStar e instalarlo ahora?"
+
+#: qdstar/mainwindow.py
 msgid "Could not update QDStar: {error}"
 msgstr "No se pudo actualizar QDStar: {error}"
 
