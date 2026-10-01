@@ -57,6 +57,8 @@ english.NowAllUsers=QDStar is installed for all users
 spanish.NowAllUsers=QDStar está instalado para todos los usuarios
 english.SwitchInfo=Installing for all users puts QDStar in Program Files and needs administrator permission. Changing it keeps your settings, history and reflectors. Close QDStar first.
 spanish.SwitchInfo=Instalar para todos los usuarios pone QDStar en Archivos de programa y necesita permiso de administrador. Al cambiarlo se conservan tus ajustes, histórico y reflectores. Cierra QDStar antes.
+english.SwitchFailed=The installation could not be changed: %1
+spanish.SwitchFailed=No se pudo cambiar la instalación: %1
 english.ForAllUsers=Install for all users
 spanish.ForAllUsers=Instalar para todos los usuarios
 english.ForMeOnly=Install only for me
@@ -117,15 +119,23 @@ var
   Code: Integer;
   Done: Boolean;
 begin
-  Params := ' /SILENT /NORESTART /RELAUNCH=1 /LANG=' + ActiveLanguage();
   if ToAllUsers then
-    // Setup asks for administrator rights by itself and this call waits for it
-    Done := Exec(ExpandConstant('{srcexe}'), '/ALLUSERS' + Params, '', SW_SHOWNORMAL, ewWaitUntilTerminated, Code)
+    Params := '/ALLUSERS'
+  else
+    Params := '/CURRENTUSER';
+  // Through cmd.exe: Setup itself is denied access to its own file while it runs
+  Params := '/c ""' + ExpandConstant('{srcexe}') + '" ' + Params + ' /SILENT /NORESTART /RELAUNCH=1 /LANG=' +
+    ActiveLanguage() + '"';
+  if ToAllUsers then
+    // The new Setup asks for administrator rights by itself and this call waits for it
+    Done := Exec(ExpandConstant('{cmd}'), Params, '', SW_HIDE, ewWaitUntilTerminated, Code)
   else
     // This Setup runs elevated: the per-user install must belong to the user who started it
-    Done := ExecAsOriginalUser(ExpandConstant('{srcexe}'), '/CURRENTUSER' + Params, '', SW_SHOWNORMAL,
-      ewWaitUntilTerminated, Code);
-  if Done and (Code = 0) and (OldUninstaller <> '') then
+    Done := ExecAsOriginalUser(ExpandConstant('{cmd}'), Params, '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Log(Format('Install mode switch: started=%d, exit code %d', [Ord(Done), Code]));
+  if not Done then
+    MsgBox(FmtMessage(CustomMessage('SwitchFailed'), [SysErrorMessage(Code)]), mbError, MB_OK)
+  else if (Code = 0) and (OldUninstaller <> '') then
     Exec(OldUninstaller, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, Code);
 end;
 
@@ -147,6 +157,8 @@ begin
     Exit;
   if StrToVersion(Installed, OldPacked) and StrToVersion('{#AppVersion}', NewPacked) then
     Diff := ComparePackedVersion(NewPacked, OldPacked)
+  else if Installed = '{#AppVersion}' then
+    Diff := 0   // a pre-release (0.9.0-beta.1) is not a number StrToVersion takes
   else
     Diff := 1;
   if Diff > 0 then
