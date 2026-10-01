@@ -28,17 +28,17 @@ env:
 
 jobs:
   version:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write   # semantic-release checks that it may push, also in a dry run
     outputs:
       version: ${{ steps.v.outputs.version }}
       release: ${{ steps.v.outputs.release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # semantic-release reads the tags and the commits since the last one
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Next version
@@ -74,8 +74,8 @@ jobs:
           - { runner: ubuntu-22.04-arm, deb_arch: arm64, appimage_arch: aarch64, pyside: "6.7.3" }
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: System libraries for Qt
@@ -99,7 +99,7 @@ jobs:
           packaging/build_deb.sh "$V" "${{ matrix.deb_arch }}"
           packaging/build_appimage.sh "$V" "${{ matrix.appimage_arch }}"
           tar -C dist -czf "dist/QDStar-${V}-linux-${{ matrix.deb_arch }}.tar.gz" qdstar
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-${{ matrix.deb_arch }}
           path: |
@@ -111,8 +111,8 @@ jobs:
     needs: version
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Python dependencies
@@ -130,7 +130,7 @@ jobs:
           choco install innosetup --no-progress -y
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" packaging\qdstar.iss
           Compress-Archive -Path dist\qdstar -DestinationPath "dist\QDStar-$v-windows-x64-portable.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-x64
           path: |
@@ -140,17 +140,17 @@ jobs:
   release:
     if: needs.version.outputs.release == 'true'
     needs: [version, linux, windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
@@ -163,11 +163,11 @@ jobs:
   after-release:
     if: github.ref_name == 'main'
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Delete replaced releases
