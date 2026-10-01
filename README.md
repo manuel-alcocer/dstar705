@@ -126,15 +126,40 @@ requests:**
 
 ## Building
 
-GitHub Actions builds every push. A version tag (`x.y.z`) publishes a release
-with the Windows installer and zip, plus the .deb, AppImage and tar.gz for
-Linux amd64 and arm64. To build locally:
+GitHub Actions builds every push: the Windows installer and zip, plus the .deb,
+AppImage and tar.gz for Linux amd64 and arm64. To build locally:
 
 ```sh
 pip install PySide6 certifi pyinstaller
 python tests/smoke_test.py
 pyinstaller packaging/qdstar.spec
 ```
+
+## Releases
+
+Versions are numbered and published by
+[semantic-release](https://semantic-release.gitbook.io) from the commit
+messages, which follow [Conventional Commits](https://www.conventionalcommits.org):
+
+| Commit message                              | Version   |
+|---------------------------------------------|-----------|
+| `fix: …`, `perf: …`                         | patch     |
+| `feat: …`                                   | minor     |
+| `feat!: …` or a `BREAKING CHANGE:` footer   | major     |
+| `docs:`, `chore:`, `ci:`, `refactor:`, `test:`, anything else | no release |
+
+| Branch          | Publishes                   |
+|-----------------|-----------------------------|
+| `dev`           | pre-release `x.y.z-beta.N`  |
+| `release/x.y.z` | pre-release `x.y.z-rc.N`    |
+| `main`          | public release `x.y.z`      |
+
+Work goes to `dev`; a `release/x.y.z` branch is cut from it to settle a version
+and merged into `main` to publish it (only one `release/` branch at a time:
+delete it once merged). After a public release the workflow merges `main` back
+into `dev` and deletes the releases it replaces: the pre-releases of that
+version and, of every earlier minor line (earlier major, once past 1.0), all
+but its latest release. The git tags stay.
 
 ## Author
 

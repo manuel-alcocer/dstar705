@@ -1,6 +1,6 @@
 [project]
 name = "qdstar"
-version = "0.8.1"
+dynamic = ["version"]
 license = "GPL-3.0-or-later"
 authors = [{ name = "Manuel Alcocer Jiménez (EA7KLX)" }]
 readme = "README.md"
@@ -20,6 +20,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["qdstar", "qdstar.dstar"]
+
+[tool.setuptools.dynamic]
+version = { attr = "qdstar._version.__version__" }
 
 [tool.setuptools.package-data]
 qdstar = ["icon.svg", "fonts/*", "default_reflectors.json", "translations/*.po"]

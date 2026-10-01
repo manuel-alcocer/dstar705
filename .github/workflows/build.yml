@@ -2,8 +2,9 @@ name: build
 
 on:
   push:
-    branches: [main]
-    tags: ["*.*.*"]
+    # semantic-release (.releaserc.json) numbers and publishes the versions from the
+    # commit messages: dev -> x.y.z-beta.N, release/x.y.z -> x.y.z-rc.N, main -> x.y.z
+    branches: [main, dev, "release/**"]
     # The website and its deployment have their own workflow (website.yml)
     paths-ignore: ["website/**", "deploy/**", "argocd/**", ".github/workflows/website.yml"]
   pull_request:
@@ -13,23 +14,52 @@ on:
 permissions:
   contents: read
 
+# One run per branch at a time: a release must not overtake the one before it
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  SEMANTIC_RELEASE: >-
+    -p semantic-release@25 -p @semantic-release/exec@7
+    -p conventional-changelog-conventionalcommits@9
 
 jobs:
   version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # semantic-release checks that it may push, also in a dry run
     outputs:
       version: ${{ steps.v.outputs.version }}
+      release: ${{ steps.v.outputs.release }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # semantic-release reads the tags and the commits since the last one
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Next version
+        id: next
+        if: github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Writes version=x.y.z to the step output when the commits call for a release
+        run: npx --yes $SEMANTIC_RELEASE semantic-release --dry-run
       - id: v
+        env:
+          NEXT: ${{ steps.next.outputs.version }}
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          if [ -n "$NEXT" ]; then
+            echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
           else
-            base=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' qdstar/__init__.py)
-            echo "version=${base}~dev${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            # Nothing to release: a build to try out, numbered after the last tag
+            base=$(git describe --tags --abbrev=0 --match '[0-9]*')
+            echo "version=${base}+dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "release=false" >> "$GITHUB_OUTPUT"
           fi
 
   linux:
@@ -55,6 +85,8 @@ jobs:
             libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libdbus-1-3 fuse libfuse2 tcl8.6 tk8.6
       - name: Python dependencies
         run: pip install "PySide6==${{ matrix.pyside }}" certifi keyring pyinstaller
+      - name: Version
+        run: python tools/set_version.py "${{ needs.version.outputs.version }}"
       - name: Smoke test
         run: python tests/smoke_test.py
       - name: Translations complete
@@ -85,6 +117,8 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Python dependencies
         run: pip install "PySide6==6.9.3" certifi keyring pyinstaller
+      - name: Version
+        run: python tools/set_version.py "${{ needs.version.outputs.version }}"
       - name: Smoke test
         run: python tests/smoke_test.py
       - name: PyInstaller
@@ -93,9 +127,8 @@ jobs:
         shell: pwsh
         run: |
           $v = "${{ needs.version.outputs.version }}"
-          $numeric = ($v -split '~')[0]
           choco install innosetup --no-progress -y
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$numeric" packaging\qdstar.iss
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" packaging\qdstar.iss
           Compress-Archive -Path dist\qdstar -DestinationPath "dist\QDStar-$v-windows-x64-portable.zip"
       - uses: actions/upload-artifact@v4
         with:
@@ -105,18 +138,48 @@ jobs:
             dist/*.zip
 
   release:
-    if: github.ref_type == 'tag'
+    if: needs.version.outputs.release == 'true'
     needs: [version, linux, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - name: Tag and publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx --yes $SEMANTIC_RELEASE semantic-release
+
+  # After a public release: drop the releases it replaces and bring its tag into dev
+  after-release:
+    if: github.ref_name == 'main'
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
         with:
-          name: QDStar ${{ needs.version.outputs.version }}
-          generate_release_notes: true
-          files: artifacts/*
+          fetch-depth: 0
+      - name: Delete replaced releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/prune_releases.py --delete
+      - name: Merge main into dev
+        # dev numbers its betas from the last public tag it contains
+        run: |
+          git ls-remote --exit-code --heads origin dev || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout dev
+          git merge --no-edit origin/main
+          git push origin dev

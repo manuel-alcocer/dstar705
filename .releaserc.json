@@ -1,0 +1,22 @@
+{
+  "tagFormat": "${version}",
+  "branches": [
+    "main",
+    { "name": "dev", "prerelease": "beta", "channel": "beta" },
+    { "name": "release/*", "prerelease": "rc", "channel": "rc" }
+  ],
+  "plugins": [
+    ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
+    ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
+    ["@semantic-release/exec", {
+      "verifyReleaseCmd": "echo \"version=${nextRelease.version}\" >> \"$GITHUB_OUTPUT\""
+    }],
+    ["@semantic-release/github", {
+      "assets": "artifacts/*",
+      "releaseNameTemplate": "QDStar <%= nextRelease.version %>",
+      "successComment": false,
+      "failComment": false,
+      "releasedLabels": false
+    }]
+  ]
+}

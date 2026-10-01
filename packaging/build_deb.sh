@@ -4,6 +4,8 @@
 set -eu
 VERSION="$1"
 ARCH="$2"
+# For dpkg a pre-release sorts before its release only with '~': 0.9.0~beta.1 < 0.9.0
+DEB_VERSION=$(printf '%s' "$VERSION" | tr '-' '~')
 ROOT="build/deb/qdstar_${VERSION}_${ARCH}"
 rm -rf "$ROOT"
 mkdir -p "$ROOT/DEBIAN" "$ROOT/opt" "$ROOT/usr/bin" \
@@ -14,7 +16,7 @@ cp packaging/qdstar.desktop "$ROOT/usr/share/applications/"
 cp packaging/qdstar.png "$ROOT/usr/share/icons/hicolor/256x256/apps/"
 cat > "$ROOT/DEBIAN/control" <<CONTROL
 Package: qdstar
-Version: ${VERSION}
+Version: ${DEB_VERSION}
 Section: hamradio
 Priority: optional
 Architecture: ${ARCH}
