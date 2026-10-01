@@ -1,0 +1,46 @@
+name: release candidate
+
+# Button 1 of 2 (Actions > release candidate > Run workflow): cuts release/x.y.z from
+# dev; build.yml publishes x.y.z-rc.N from it. "publish release" is the other button.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write   # start build.yml: a push made with GITHUB_TOKEN starts no workflow
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  start:
+    runs-on: ubuntu-24.04
+    env:
+      # GITHUB_TOKEN may not push changes to workflow files: with a RELEASE_TOKEN secret
+      # (a token with contents and workflows write access) those go through too
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      OWN_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Cut the release branch
+        run: |
+          if [ -n "$(git branch -r --list 'origin/release/*')" ]; then
+            echo "::error::There is a release branch already: publish it (or delete it) first"
+            exit 1
+          fi
+          # dev is at x.y.z-beta.N: the release is x.y.z
+          version=$(git describe --tags --abbrev=0 --match '[0-9]*' origin/dev)
+          version=${version%%-*}
+          if git rev-parse -q --verify "refs/tags/$version" > /dev/null; then
+            echo "::error::dev has nothing newer than $version"
+            exit 1
+          fi
+          git push origin "origin/dev:refs/heads/release/$version"
+          # With GITHUB_TOKEN the push starts nothing: start the build that publishes the rc
+          [ "$OWN_TOKEN" = true ] || gh workflow run build.yml --ref "release/$version"
+          echo "Branch \`release/$version\` created from dev: the build publishes $version-rc.1" >> "$GITHUB_STEP_SUMMARY"

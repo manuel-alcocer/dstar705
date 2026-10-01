@@ -156,7 +156,9 @@ messages, which follow [Conventional Commits](https://www.conventionalcommits.or
 
 Work goes to `dev`; a `release/x.y.z` branch is cut from it to settle a version
 and merged into `main` to publish it (only one `release/` branch at a time:
-delete it once merged). After a public release the workflow merges `main` back
+delete it once merged). Two workflows do it from the Actions tab (Run
+workflow): `release candidate` cuts the branch, `publish release` merges it
+into `main` and deletes it. After a public release the workflow merges `main` back
 into `dev` and deletes the releases it replaces: the pre-releases of that
 version and, of every earlier minor line (earlier major, once past 1.0), all
 but its latest release. The git tags stay.

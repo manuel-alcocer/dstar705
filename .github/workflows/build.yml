@@ -6,9 +6,9 @@ on:
     # commit messages: dev -> x.y.z-beta.N, release/x.y.z -> x.y.z-rc.N, main -> x.y.z
     branches: [main, dev, "release/**"]
     # The website and its deployment have their own workflow (website.yml)
-    paths-ignore: ["website/**", "deploy/**", "argocd/**", ".github/workflows/website.yml"]
+    paths-ignore: ["website/**", "deploy/**", "argocd/**", ".github/workflows/website.yml", ".github/workflows/release-*.yml"]
   pull_request:
-    paths-ignore: ["website/**", "deploy/**", "argocd/**", ".github/workflows/website.yml"]
+    paths-ignore: ["website/**", "deploy/**", "argocd/**", ".github/workflows/website.yml", ".github/workflows/release-*.yml"]
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,49 @@
+name: publish release
+
+# Button 2 of 2 (Actions > publish release > Run workflow): merges the release branch
+# into main and deletes it; build.yml publishes x.y.z, the public version.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write   # start build.yml: a push made with GITHUB_TOKEN starts no workflow
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    env:
+      # GITHUB_TOKEN may not push changes to workflow files: with a RELEASE_TOKEN secret
+      # (a token with contents and workflows write access) those go through too
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      OWN_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Commit as whoever pressed the button
+        run: |
+          git config user.name "$(gh api "users/${GITHUB_ACTOR}" -q '.name // .login')"
+          git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+      - name: Merge the release branch into main
+        run: |
+          branch=$(git branch -r --list 'origin/release/*' | sed 's#^ *origin/##')
+          if [ "$(printf '%s\n' "$branch" | grep -c .)" != 1 ]; then
+            echo "::error::Expected one release branch, found: ${branch:-none}"
+            exit 1
+          fi
+          git merge --no-ff -m "Merge $branch" "origin/$branch"
+          website=$(git diff --name-only HEAD~1 HEAD -- website .github/workflows/website.yml | head -1)
+          git push origin main
+          git push origin --delete "$branch"
+          if [ "$OWN_TOKEN" != true ]; then
+            gh workflow run build.yml --ref main
+            [ -z "$website" ] || gh workflow run website.yml --ref main
+          fi
+          echo "\`$branch\` merged into main and deleted: the build publishes ${branch#release/}" >> "$GITHUB_STEP_SUMMARY"
